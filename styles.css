@@ -1,0 +1,3071 @@
+/* ---------------------------------------------------------------
+   Design tokens
+--------------------------------------------------------------- */
+:root {
+  --color-cream: #FBF3EA; /* client's exact color-picker value (R251 G243 B234) */
+  --color-blush: #FBDAE5; /* client's exact color-picker value (R251 G218 B229) */
+  --color-ink: #211A14;
+  --color-ink-soft: #6B5645;
+  --color-orange: #C4441A;
+  --color-why: #FF7140; /* client's exact color-picker value (R255 G113 B64) — "WHY?" heading only */
+  --color-pink: #DC346E; /* client's exact color-picker value (R220 G52 B110) */
+  --color-on-ink: #FAF5EC;
+
+  --font-display: "Poppins", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, sans-serif;
+
+  /* the one structural, layout-changing breakpoint in this build:
+     nav collapses to a hamburger, and the JS mobile timeScale/hide
+     gate for the spiral tiles keys off this single value so nothing
+     fights at a mismatched cutoff. */
+  --bp-stack: 720px;
+
+  --container-pad: clamp(1.25rem, 4vw, 3rem);
+  --content-max: 1400px;
+
+  /* extra scroll distance .hero (sticky) reserves beyond its own
+     content height — the headline's blur reveal (initEntrance,
+     script.js) is scrubbed 1:1 over exactly this same distance, so
+     .why-section can't scroll up to cover the headline until it's
+     actually finished sharpening. Read at runtime by script.js
+     (getComputedStyle) rather than a second hardcoded number, so the
+     two can't drift out of sync. */
+  --hero-reveal-buffer: 600px;
+
+  --z-spiral-bg: 1;
+  --z-content: 25;
+  --z-header: 60;
+
+  --fs-nav: 16px;
+  --fs-logo: clamp(1.05rem, 0.6vw + 0.9rem, 1.3rem);
+  /* client's Adobe spec: 56pt @96dpi = 74.667px = 4.667rem — reached
+     at a normal desktop width (~1440-1600px), not just extreme-wide */
+  --fs-headline: clamp(2rem, 2.4vw + 2.2rem, 4.667rem);
+  /* client's Framer spec for "WHY?": 92pt @96dpi = 122.667px =
+     7.667rem — reached at a normal desktop width, same pattern as
+     --fs-headline above. Bigger than even Display XL in the golden
+     ratio scale below, so it's a deliberate one-off display size, not
+     drawn from that scale. */
+  --fs-why: clamp(4.5rem, 8vw + 4rem, 12rem);
+  /* client's Photoshop/Illustrator spec: 28px, reached at a normal
+     desktop width, same pattern as the other client-specified sizes —
+     bumped up a size step past spec per direct request */
+  --fs-statement: clamp(1.6rem, 1.3vw + 1.05rem, 2.25rem);
+
+  /* Client's golden-ratio type scale (Framer design system) — fixed
+     reference sizes as specified, not yet fluid since none of these
+     are wired to a specific element yet. When one gets applied,
+     follow the same pattern as --fs-headline/--fs-why: make the
+     table value a clamp() ceiling reached at a normal desktop width,
+     fluid below that, rather than using these fixed values directly
+     on an element. */
+  --fs-display-xl: 6rem;      /* 96px — landing page hero / opening statement */
+  --fs-display-l: 4.5rem;     /* 72px — hero heading */
+  --fs-scale-h1: 3.5rem;      /* 56px — large section titles */
+  --fs-scale-h2: 2.5rem;      /* 40px — section headings */
+  --fs-scale-h3: 1.75rem;     /* 28px — project titles */
+  --fs-scale-h4: 1.375rem;    /* 22px — subheadings */
+  --fs-scale-body: 1rem;      /* 16px — paragraphs */
+  --fs-scale-small: 0.875rem; /* 14px — labels */
+  --fs-scale-caption: 0.75rem;/* 12px — captions */
+}
+
+/* ---------------------------------------------------------------
+   Reset
+--------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  background: var(--color-cream);
+  /* without this, a dark-mode browser can paint the root element's
+     UA-default dark background, which shows as a sliver above body
+     during overscroll/bounce — pin it to this site's own light theme */
+  color-scheme: light;
+}
+body {
+  margin: 0;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+  /* Poppins reads a little loose at its default tracking — a small
+     global tightening here covers body copy, nav, buttons, etc.
+     (anything that doesn't set its own letter-spacing); the various
+     display headings elsewhere already carry their own explicit,
+     client-specified tracking values and inherit nothing from this. */
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+img { max-width: 100%; display: block; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+a { color: inherit; }
+
+/* ---------------------------------------------------------------
+   Text selection + custom cursor
+   ---------------------------------------------------------------
+   Small, easy-to-miss-in-a-spec touches that read immediately as
+   "this is a designed site," not "this is a document" — the default
+   OS blue/green selection highlight and system arrow are the two
+   most-seen, least-branded pixels on any page. Both stay keyed to
+   this site's own palette instead of the browser's. */
+::selection {
+  background: var(--color-why);
+  color: var(--color-on-ink);
+}
+::-moz-selection {
+  background: var(--color-why);
+  color: var(--color-on-ink);
+}
+
+/* Same silhouette as the OS arrow — not a custom shape, just
+   recoloured into the site's own pink (cream outline for contrast on
+   any of the four section backgrounds), with a second, orange variant
+   swapped in over anything clickable so "this is interactive" is
+   visible at a glance instead of only implied by a plain pointer.
+   Mouse-only: a coarse-pointer/touch device has no cursor to theme,
+   and shipping the image there is wasted weight. See initCustomCursor
+   in script.js for the trailing glow that rides alongside this one —
+   that's the part that actually moves and blooms on hover; this part
+   is deliberately just a still, recoloured shape. */
+@media (pointer: fine) {
+  html {
+    cursor:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 2 L2 19 L6.5 15.2 L9.5 21.5 L12.3 20.2 L9.3 14 L15.5 14 Z' fill='%23DC346E' stroke='%23FBF3EA' stroke-width='1.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E")
+      2 2,
+      auto;
+  }
+  a,
+  button,
+  [role="button"],
+  input,
+  textarea,
+  select,
+  label,
+  .testimonial-card {
+    cursor:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 2 L2 19 L6.5 15.2 L9.5 21.5 L12.3 20.2 L9.3 14 L15.5 14 Z' fill='%23FF7140' stroke='%23FBF3EA' stroke-width='1.3' stroke-linejoin='round' stroke-linecap='round'/%3E%3C/svg%3E")
+      2 2,
+      pointer;
+  }
+}
+
+.cursor-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 70%);
+  /* same trick as .scroll-rail — a flat fill that inverts against
+     whatever's underneath, so one glow reads correctly over cream,
+     blush, pink and ink alike with no per-section theming */
+  mix-blend-mode: difference;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  will-change: transform, opacity;
+}
+@media (pointer: coarse) {
+  .cursor-glow {
+    display: none;
+  }
+}
+
+.cursor-tag {
+  position: fixed;
+  top: 0;
+  left: 0;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+  padding: 0.6rem 1.15rem;
+  border-radius: 999px;
+  box-shadow: 0 10px 24px rgba(33, 26, 20, 0.25);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 9998;
+  opacity: 0;
+  scale: 0.75;
+  will-change: transform, opacity;
+}
+@media (pointer: coarse) {
+  .cursor-tag {
+    display: none;
+  }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: -3rem;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  padding: 0.6rem 1rem;
+  border-radius: 0.4rem;
+  z-index: 100;
+  transition: top 0.2s ease;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-orange);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* ---------------------------------------------------------------
+   Header / nav — glass navbar
+   ---------------------------------------------------------------
+   Ported from the client-supplied reference (portfolio_hero (11)
+   .html): a plain rounded card, not a full pill — bg-white/40 +
+   backdrop-blur-md + border-white/60 + one soft shadow. Kept the
+   cream tint (matches this site's palette) instead of the
+   reference's neutral white; corner radius reduced from the
+   reference's 2rem on request. Hover uses the reference's actual
+   brandPink (--color-pink), which is now an established color here
+   via the headline accent.
+--------------------------------------------------------------- */
+.site-header {
+  /* fixed, not sticky — sticky still reserves its own space in flow
+     (just like a static element) until you scroll past it, which was
+     pushing .hero down by the header's height instead of letting the
+     hero's own spiral field reach the true top of the viewport. fixed
+     removes it from flow entirely, so it floats over the hero from
+     the very first frame, not just after scrolling. */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: var(--z-header);
+  padding-top: 1.5rem; /* float ~24px off the top of the page */
+  padding-inline: var(--container-pad);
+  padding-bottom: 0;
+}
+.site-header__inner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 90%;
+  max-width: 56rem;
+  margin-inline: auto;
+  padding-block: 0.3rem;
+  padding-inline: clamp(1rem, 5vw, 2rem);
+  border-radius: 1rem;
+
+  background: rgba(250, 245, 236, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  /* was blur(12px) — strong enough that a tile passing directly
+     behind the pill looked cut off from the same tile just outside
+     it, reading as a hard rectangle rather than a soft glass effect */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  transition: background 250ms ease, border-color 250ms ease;
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .site-header__inner {
+    background: rgba(250, 245, 236, 0.96);
+  }
+}
+
+/* Dark-over-marquee state is applied as inline styles directly by
+   script.js's initHeaderTheme, not a toggled class — .site-header__
+   inner's transition above still animates it smoothly since CSS
+   transitions apply to inline style changes too, not just class-
+   triggered ones. (A class-based .site-header--on-dark variant was
+   tried first; some of its rules — this file/border, .nav-link's
+   color — never took effect despite correct specificity, seemingly a
+   style-invalidation quirk in the WebKit build used for this site's
+   own screenshot QA. Direct inline styles sidestep it entirely.) */
+.logo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  /* without this, the flex row below would rather wrap the nav links
+     (which can already wrap onto a second row themselves) around a
+     shrunk-down logo than leave the logo at its natural size — the
+     wordmark reading small/squashed looks far worse than the links
+     wrapping, so the logo keeps its natural size and doesn't shrink */
+  flex-shrink: 0;
+}
+.logo__mark {
+  /* real height, not the old text logo's font-size clamp — the PNG's
+     own aspect ratio (icon + wordmark + tagline, ~3.25:1) determines
+     width from this */
+  height: clamp(36px, 3vw + 24px, 54px);
+  width: auto;
+  display: block;
+}
+
+.primary-nav {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* always visible now, at every width — just these 4 flat links
+   (Project/About Me/Resume/Contact, every project type living
+   together under #projects means there's no separate category list
+   anymore), so the hamburger/dropdown this site used to fall back to
+   below 640px isn't needed: four short words plus the logo comfortably
+   share one header pill even on a phone-width screen. flex-wrap is a
+   safety net, not the primary layout — it only engages on truly
+   cramped widths instead of the nav ever clipping. */
+.primary-nav__categories {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem 1.5rem;
+}
+/* below ~480px even the nowrap logo + 4 links can't share one row
+   without the link group getting squeezed into a lopsided wrap (e.g.
+   3 links on row one, 1 stranded alone on row two — flex-wrap just
+   greedily fills each row until the next item doesn't fit, which
+   reads as random rather than deliberate) — wrapping the *pill
+   itself* instead puts the logo on its own row and hands the link
+   group the full row underneath, then a fixed 2-column grid (instead
+   of flex-wrap) guarantees an even 2-and-2 every time regardless of
+   each link's own text width. This has to come *after* the base rule
+   above, not just be wrapped in @media — same specificity means
+   plain source order decides, and a media-scoped rule earlier in the
+   file still loses to an unconditional one declared later. */
+@media (max-width: 480px) {
+  .site-header__inner {
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 0.6rem;
+  }
+  .primary-nav {
+    width: 100%;
+    justify-content: center;
+  }
+  .primary-nav__categories {
+    display: grid;
+    grid-template-columns: repeat(2, auto);
+    justify-content: center;
+    align-items: center;
+    column-gap: 2rem;
+    row-gap: 0.5rem;
+    width: 100%;
+  }
+}
+
+/* reference just does hover:text-brandPink transition-colors — a
+   plain color change, no hover pill/capsule background */
+.nav-link {
+  display: inline-flex;
+  align-items: center;
+  font-weight: 500;
+  font-size: var(--fs-nav);
+  letter-spacing: -0.01em;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  text-decoration: none;
+  color: var(--color-ink);
+  transition: color 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.nav-link:hover,
+.nav-link:focus-visible,
+.nav-link[aria-current="page"] {
+  color: var(--color-pink); /* matches reference's hover:text-brandPink exactly, now that brandPink is an established color on this site (headline accent) */
+}
+
+/* ---------------------------------------------------------------
+   Hero
+--------------------------------------------------------------- */
+.hero {
+  /* sticky, not relative — this is what makes the why-section feel
+     like a distinct overlapping layer instead of just the next chunk
+     of the same page: the hero stays pinned at the top of the
+     viewport for its own scroll range, and .why-section (already
+     stacking above it — see the z-index note below) scrolls up and
+     visually covers it, rather than the two simply scrolling past
+     together as one continuous flow. */
+  position: sticky;
+  top: 0;
+  /* z-index:0 (not just position:sticky) is what actually matters
+     here — it's what makes .hero establish its own stacking context,
+     containing .spiral-field's z-index:1 inside it. Without this,
+     position alone does NOT create a stacking context, so
+     spiral-field's z-index was being compared against the entire
+     page instead of staying scoped to the hero — which is why tiles
+     were painting above .why-section's curve (z-index:auto) despite
+     the curve coming later in the document. That same z-index:0 is
+     also exactly why .why-section (position:relative, z-index:auto,
+     later in the DOM) stacks above the now-pinned hero as it scrolls
+     up to cover it — equal effective z-index falls back to DOM order. */
+  z-index: 0;
+  overflow: hidden;
+  /* min-height (not just a floor now, the actual governing height —
+     content+padding falls well short of this) needs to be *exactly*
+     100dvh + --hero-reveal-buffer, not roughly close to it: the
+     scroll distance .why-section's own top takes to go from "just
+     touching the viewport bottom" to "starting to peek in" is
+     literally (this element's height - viewport height), and that
+     needs to equal --hero-reveal-buffer exactly, since the headline's
+     scroll-scrubbed reveal (initEntrance, script.js) is scrubbed over
+     that same distance and finishes right at its end. Falling short
+     here (e.g. the old 92dvh baseline) means .why-section starts
+     covering the headline before the reveal is actually done. The
+     ", 600px" fallback on every var(--hero-reveal-buffer) below isn't
+     decorative — if this custom property ever failed to resolve (a
+     stale cached stylesheet missing the :root declaration, say), an
+     un-fallback'd var() would make the whole calc() invalid, and
+     min-height would silently collapse to auto instead: .hero would
+     shrink down to content-size, and align-items:center would center
+     the headline within that much smaller box instead of the
+     viewport — reading as "pinned to the top, not centered" even
+     though nothing about the flex centering itself is broken. */
+  min-height: calc(100dvh + var(--hero-reveal-buffer, 600px));
+  /* the bottom value carries that same buffer as extra padding, on
+     top of the extra min-height above — this is a flex/
+     align-items:center container, so growing min-height alone would
+     center the headline within the new, much taller box and shift it
+     down out of the visible sticky slice entirely. Padding added
+     equally to both the box's total height and its own bottom inset
+     cancels out for centering purposes (the content still centers
+     within the exact same space above the padding it always did), so
+     the headline's position is untouched — the extra reserved scroll
+     distance just sits below it as inert space, invisible but still
+     extending how long .hero holds at top:0 before .why-section can
+     cover it. */
+  padding: clamp(2rem, 6vw, 4rem) var(--container-pad) calc(clamp(4rem, 9vw, 7.5rem) + var(--hero-reveal-buffer, 600px));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero__content {
+  position: relative;
+  z-index: var(--z-content);
+  max-width: min(90%, 900px);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.85rem, 2vw, 1.5rem);
+}
+
+.hero__headline {
+  font-family: var(--font-display);
+  /* client's Adobe spec: Medium weight, 56pt/65pt leading (ratio
+     65/56 kept unitless so it scales with the fluid font-size instead
+     of drifting loose/tight at other viewports), -32 tracking
+     (Adobe's tracking unit is 1/1000 em) */
+  font-weight: 500;
+  font-size: var(--fs-headline);
+  line-height: 1.161;
+  letter-spacing: -0.032em;
+  font-kerning: auto;
+  text-wrap: balance;
+  max-width: 29ch;
+}
+
+.hero__headline .word {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* client's spec: closing phrase highlighted in brandPink, matching
+   text-brandPink in the reference files */
+.hero__headline-accent {
+  color: var(--color-pink);
+}
+
+/* ---------------------------------------------------------------
+   Spiral tile field — the hero's only tile layer (ambient, always
+   behind the headline/UI card). script.js computes each tile's
+   screen position/scale/opacity every frame from a single progress
+   value; this file only supplies the base (progress=0 / full-size)
+   dimensions and the per-tile fill color. Sized larger and fewer in
+   count than earlier passes so tiles read as substantial, well-
+   spaced photos spanning the full hero, not a dense field of small
+   confetti in a smaller central area.
+--------------------------------------------------------------- */
+.spiral-field {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* not inset:0 — .hero now carries an extra --hero-reveal-buffer of
+     bottom padding reserved for the headline's scroll-scrubbed reveal
+     (see .hero), which has nothing to do with the spiral field.
+     Insetting the bottom edge by that same amount keeps this field
+     exactly the size .hero used to be, so .spiral-tile's
+     top:50%/left:50% centering still centers on the visible headline
+     instead of drifting down into the new reserved space below it. */
+  bottom: var(--hero-reveal-buffer, 600px);
+  z-index: var(--z-spiral-bg);
+  overflow: hidden;
+  opacity: 1;
+  pointer-events: auto;
+  /* pulled back in again (was opaque-to-15%/transparent-by-75%) — with
+     real photo tiles now, that wide dissolve zone meant most of the
+     field sat at partial mask-alpha on top of each tile's own fade
+     cycle, compounding into a permanently faded look; more of the
+     radius now stays fully opaque, with the taper compressed into
+     just the outer edge so the vignette still reads as a soft scatter
+     rather than a hard-edged circle */
+  -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0) 82%);
+  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1) 45%, rgba(0, 0, 0, 0) 82%);
+}
+
+.spiral-tile {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* was clamp(90px, 12.22vw, 176px) (the reference's literal 176px) —
+     downsized per direct request now that the field carries 40 tiles
+     instead of 24, for a denser small-thumbnail scatter rather than
+     fewer, larger ones */
+  width: clamp(45px, 6.1vw, 88px);
+  aspect-ratio: 1;
+  border-radius: clamp(4px, 0.4vw, 8px);
+  /* --fill (the flat per-tile color below) stays as the background —
+     shows briefly while each tile's real thumbnail decodes, and as a
+     fallback if --tile-img (set inline per tile in Index.html, one of
+     the 32 hero-section case-study crops) is ever missing */
+  background-color: var(--fill, #ccc);
+  background-image: var(--tile-img, none);
+  background-size: cover;
+  background-position: center;
+  overflow: hidden;
+  /* tight contact shadow, not a lifted/floating one — tiles read as
+     flat on the surface, not hovering above it */
+  box-shadow: 0 1px 3px rgba(33, 26, 20, 0.2);
+  will-change: transform;
+}
+/* the spiral's own radius (maxR in initSpiralField) scales linearly
+   with viewport width with no floor, but this rule's 45px floor
+   doesn't shrink any further below ~737px — so on an actual phone the
+   tiles stay close to their tablet size while the orbit they're
+   scattered across keeps shrinking, reading as crowded/overlapping.
+   Phone-only override, well clear of any laptop/tablet width, so the
+   spiral geometry itself (JS) and every wider breakpoint stay exactly
+   as they were. */
+@media (max-width: 640px) {
+  .spiral-tile {
+    width: clamp(26px, 7vw, 45px);
+  }
+}
+
+.spiral-tile:nth-of-type(9n+1) { --fill: #C99A78; }
+.spiral-tile:nth-of-type(9n+2) { --fill: #DCC9A3; }
+.spiral-tile:nth-of-type(9n+3) { --fill: #A7B79B; }
+.spiral-tile:nth-of-type(9n+4) { --fill: #B7CFC9; }
+.spiral-tile:nth-of-type(9n+5) { --fill: #E2B7A4; }
+.spiral-tile:nth-of-type(9n+6) { --fill: #C2A0C2; }
+.spiral-tile:nth-of-type(9n+7) { --fill: #9FB6C7; }
+.spiral-tile:nth-of-type(9n+8) { --fill: #DAB262; }
+.spiral-tile:nth-of-type(9n)   { --fill: #B98C77; }
+
+/* ---------------------------------------------------------------
+   Curved section transition + WHY section
+--------------------------------------------------------------- */
+.why-section {
+  /* .why-pause and .projects-strip flow one after the other and are
+     centered as a group inside a full-viewport-height wrapper, so
+     this section always fills the screen on its own — the next
+     section (.projects-section, dark pink) can't peek in at the
+     bottom on short-content/tall-viewport combinations. Scroll
+     choreography (pausing, scrubbed reveals, etc.) is deferred — see
+     initScrollReveals in script.js. */
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100dvh;
+  background: var(--color-blush);
+  container-type: inline-size;
+  container-name: why;
+}
+
+.why-pause {
+  /* z-index:0 establishes its own stacking context (contains
+     .accent-icon's z-index:1) and is what lets .projects-strip,
+     later in the DOM, compare correctly against it once both are
+     scrolled into view. */
+  position: relative;
+  z-index: 0;
+  /* content-sized, not min-height:100dvh — WHY + the statement are
+     meant to sit compactly above the marquee so both are visible
+     together in one screen, not stretched to fill their own separate
+     viewport-height beat */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* floor (6.5rem) is deliberately well above the fixed .site-header's
+     rendered height (~101px) at every viewport — at desktop widths
+     --fs-why's own huge line-height leaves enough leading above the
+     glyphs to clear the header on its own, but at small viewports the
+     heading shrinks enough that its leading can't be relied on, so
+     this can't just track the header's height via vw the way the
+     rest of the fluid spacing does */
+  padding-top: clamp(6.5rem, 7vw, 7.5rem);
+  /* smaller than padding-top on purpose — pulls .projects-strip up
+     closer to the statement text instead of matching the top's full
+     breathing room */
+  padding-bottom: clamp(1rem, 2.5vw, 2rem);
+  padding-inline: var(--container-pad);
+}
+
+.curve {
+  position: absolute;
+  /* bottom:100% (not top:0 + transform:translateY(-99%)) so the
+     static seam-alignment offset lives outside `transform` entirely —
+     script.js animates this element's `y` for float/parallax, and
+     GSAP's `y` sets transform as an absolute value, which would
+     otherwise silently overwrite a transform-based static offset */
+  bottom: 100%;
+  /* was -2px — the float animation moves this element up to 8px on
+     its own (see FLOAT_AMPLITUDE in initCurveFloat), so a 2px static
+     overlap wasn't enough to keep the seam covered through the whole
+     cycle: at the top of the float, the curve's bottom edge lifted
+     clear of .why-section, exposing the hero's cream background as a
+     thin line. Overlap now comfortably exceeds the float's full
+     range — safe to overshoot since the curve's fill and
+     .why-section's background are the same color, so extra overlap
+     is invisible either way. */
+  margin-bottom: -12px;
+  left: 0;
+  width: 100%;
+  /* bumped again — the path now swings almost the full viewBox height
+     (y=5 to y=115, out of 0-120) and a thin container was squashing
+     that swing back down into something that read as a soft ripple
+     rather than an actual wave regardless of how dramatic the path
+     itself was. A meaningfully taller band is what makes the same
+     curvy path actually look heavy on screen. */
+  height: clamp(90px, 13vw, 190px);
+  display: block;
+}
+.curve path { fill: var(--color-blush); }
+
+.why-section__inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+
+.why-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1.5rem);
+  margin-bottom: clamp(0.15rem, 0.4vw, 0.4rem);
+}
+.why-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-why);
+  /* tight leading to prevent massive gap under the huge text */
+  line-height: 1;
+  color: var(--color-why);
+  /* client's Framer spec: -39 tracking = -0.039em (Framer's tracking
+     unit, like Adobe's, is 1/1000 em) */
+  letter-spacing: -0.039em;
+  font-kerning: auto;
+}
+
+.why-grid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: clamp(0.35rem, 1vw, 0.75rem);
+}
+.why-statement {
+  font-family: var(--font-display);
+  /* client's Photoshop/Illustrator spec: Medium weight, 65px/28px
+     leading (kept unitless so it scales with the fluid font-size
+     instead of a fixed px value drifting at other viewports), -32
+     tracking = -0.032em (same 1/1000-em convention as the client's
+     other specs, despite the "%" label in that panel) */
+  font-weight: 500;
+  font-size: var(--fs-statement);
+  line-height: 2.3214;
+  letter-spacing: -0.032em;
+  max-width: 20ch;
+  text-align: center;
+  text-wrap: balance;
+}
+
+@container why (min-width: 700px) {
+  .why-statement {
+    max-width: none;
+  }
+}
+/* the 2.3214 ratio above reads fine at the width the client's spec
+   was measured against (the statement barely wraps past 1-2 lines
+   there), but combined with max-width:20ch it wraps to 3-4 lines on
+   a phone, and that same generous leading compounds across every one
+   of them — the paragraph ends up looking like it has huge random
+   gaps between lines rather than reading as one deliberate block. */
+@media (max-width: 480px) {
+  .why-statement {
+    line-height: 1.45;
+  }
+}
+
+/* flanks the statement text directly, one on each side (see the two
+   <svg class="why-statement__icon"> around .why-statement) — same
+   sparkle shape as the corner accents, but full-color and sized up
+   since these read as an intentional pair, not background texture */
+.why-statement__icon {
+  flex-shrink: 0;
+  width: clamp(18px, 2.2vw, 28px);
+  color: var(--color-why);
+}
+
+.accent-icon {
+  position: absolute;
+  color: var(--color-ink);
+  opacity: 0.55;
+  z-index: 1;
+}
+.accent-icon--plus-1 { top: 12%; right: 8%; width: clamp(14px, 1.4vw, 20px); }
+.accent-icon--plus-2 { bottom: 12%; left: 8%; width: clamp(14px, 1.4vw, 20px); }
+
+/* ---------------------------------------------------------------
+   Projects marquee — continuous horizontal thumbnail strip
+   ---------------------------------------------------------------
+   Ported from the client reference "portfolio_full_website (6).html"
+   — same pink as .why-pause (they're literally one <section> in that
+   reference, hence no curve/color transition here), with the whole
+   strip clipped by an hourglass-shaped mask instead of individual
+   card shaping. Track's two identical groups sitting edge to edge —
+   see script.js for the loop/drag math.
+--------------------------------------------------------------- */
+/* [hidden] alone doesn't actually hide this — the UA stylesheet's
+   [hidden]{display:none} and this class's own display:flex below are
+   equal specificity, and an author rule always beats a UA rule
+   regardless of source order, so display:flex was winning. This one
+   needs the attribute AND the class together (higher specificity) to
+   actually override it. Only matters while the TV showcase
+   experiment (Index.html) has this hidden — see the comment there. */
+.projects-strip[hidden] {
+  display: none;
+}
+.projects-strip {
+  /* position+z-index:0, same reasoning as .hero/.why-pause — without
+     this, a plain static element can paint behind sticky z-index:0
+     siblings regardless of DOM order */
+  position: relative;
+  z-index: 0;
+  /* content-sized, not min-height:100dvh — sits right under .why-pause
+     so WHY, the statement, and the marquee are all visible together
+     in one screen instead of each claiming its own viewport-height beat */
+  display: flex;
+  flex-direction: column;
+  background: var(--color-blush);
+  /* smaller than padding-bottom on purpose — mirrors .why-pause's
+     shrunk padding-bottom above so the marquee sits close under the
+     statement text instead of the two gaps stacking */
+  padding-top: clamp(0.5rem, 1.5vw, 1.25rem);
+  padding-bottom: clamp(2.5rem, 6vw, 4.5rem);
+  cursor: grab;
+}
+.projects-strip:active {
+  cursor: grabbing;
+}
+.projects-viewport {
+  overflow-x: hidden;
+  /* explicit height (reference: h-[350px] md:h-[500px]) — the
+     hourglass mask needs a real height to pinch against; height:auto
+     would just fit the cards with nothing for the mask to shape */
+  height: clamp(350px, 40vw, 500px);
+  /* hourglass: full height at the left/right edges, pinched down to a
+     40%-tall band at the horizontal center — literal path from the
+     reference's inline mask, moved into an external data URI here
+     since this is a stylesheet, not an inline style attribute */
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,0 Q50,30 100,0 L100,100 Q50,70 0,100 Z' fill='black'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' preserveAspectRatio='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0,0 Q50,30 100,0 L100,100 Q50,70 0,100 Z' fill='black'/%3E%3C/svg%3E");
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+}
+.projects-track {
+  display: flex;
+  height: 100%;
+  width: max-content;
+  touch-action: pan-y; /* let vertical page scroll through; horizontal drag is handled in JS */
+}
+.projects-track__group {
+  display: flex;
+  flex-shrink: 0;
+  height: 100%;
+}
+.project-card {
+  flex-shrink: 0;
+  height: 100%;
+  width: clamp(240px, 26vw, 380px);
+  background: var(--fill, #ccc);
+  /* simple divider, not a wavy tessellated edge — the hourglass mask
+     above is what shapes this section now, not the individual cards */
+  border-right: 4px solid var(--color-ink);
+  pointer-events: none; /* dragging is handled on .projects-strip; cards shouldn't intercept it */
+}
+
+.project-card[data-card="1"] { --fill: #C99A78; }
+.project-card[data-card="2"] { --fill: #DCC9A3; }
+.project-card[data-card="3"] { --fill: #A7B79B; }
+.project-card[data-card="4"] { --fill: #B7CFC9; }
+.project-card[data-card="5"] { --fill: #E2B7A4; }
+.project-card[data-card="6"] { --fill: #C2A0C2; }
+.project-card[data-card="7"] { --fill: #9FB6C7; }
+.project-card[data-card="8"] { --fill: #DAB262; }
+
+/* ---------------------------------------------------------------
+   TV showcase (Index.html) — EXPERIMENTAL replacement for
+   .projects-strip above, per direct request. See the HTML comment
+   there for how to revert.
+   ---------------------------------------------------------------
+   tv/tv-frame.png is the illustration with its screen area already
+   cut to transparent (offline, not runtime chroma-key) — .tv-frame__
+   video and .tv-frame__noise are plain rectangles sized to that
+   cutout's own bounding box (as a % of the full frame image, read
+   directly off the source files), and the frame image sitting on top
+   of both is what actually gives them the screen's true curved shape;
+   neither the video nor the noise need their own clip-path/mask.
+--------------------------------------------------------------- */
+.tv-showcase {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-block: clamp(1rem, 3vw, 2rem);
+  /* lets .tv-frame's cursor-tilt rotationX/rotationY (script.js) read
+     as an actual 3D lean instead of a flat, undistorted rotate */
+  perspective: 1200px;
+}
+
+/* ---- decorative room-scene dressing around the TV ---- */
+.tv-scene-glow {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  width: min(70vw, 900px);
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 209, 102, 0.55) 0%, rgba(255, 113, 64, 0.25) 38%, rgba(255, 113, 64, 0) 70%);
+  filter: blur(6px);
+  pointer-events: none;
+  animation: tv-glow-pulse 4.5s ease-in-out infinite;
+}
+@keyframes tv-glow-pulse {
+  0%, 100% { opacity: 0.75; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+}
+.tv-scene-shadow {
+  position: absolute;
+  bottom: clamp(-0.5rem, 1vw, 0.5rem);
+  left: 50%;
+  width: clamp(220px, 38vw, 560px);
+  height: clamp(24px, 3vw, 48px);
+  translate: -50% 0;
+  z-index: 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgba(33, 26, 20, 0.28) 0%, rgba(33, 26, 20, 0) 72%);
+  pointer-events: none;
+}
+.tv-prop {
+  position: absolute;
+  z-index: 1;
+  width: clamp(56px, 7vw, 104px);
+  pointer-events: none;
+  animation: tv-prop-float 5s ease-in-out infinite;
+}
+.tv-prop img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 16px rgba(33, 26, 20, 0.2));
+}
+.tv-prop--left {
+  left: clamp(-1rem, 2vw, 2rem);
+  bottom: 8%;
+  animation-delay: -1.2s;
+}
+.tv-prop--right {
+  right: clamp(-0.5rem, 3vw, 3rem);
+  top: 6%;
+  animation-delay: -3s;
+}
+@keyframes tv-prop-float {
+  0%, 100% { transform: translateY(0) rotate(-4deg); }
+  50% { transform: translateY(-16px) rotate(4deg); }
+}
+@media (max-width: 700px) {
+  .tv-prop { display: none; }
+}
+
+.tv-antenna {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 26%;
+  translate: -50% -52%;
+  z-index: 1;
+  overflow: visible;
+  transform-origin: 50% 100%;
+  animation: tv-antenna-sway 6s ease-in-out infinite;
+}
+.tv-antenna__rod,
+.tv-antenna__tip {
+  transform-origin: 100px 112px;
+}
+.tv-antenna__rod--left,
+.tv-antenna__tip--left {
+  animation: tv-antenna-rod-left 6s ease-in-out infinite;
+}
+.tv-antenna__rod--right,
+.tv-antenna__tip--right {
+  animation: tv-antenna-rod-right 6s ease-in-out infinite;
+}
+@keyframes tv-antenna-sway {
+  0%, 100% { rotate: -1.5deg; }
+  50% { rotate: 1.5deg; }
+}
+@keyframes tv-antenna-rod-left {
+  0%, 100% { rotate: 0deg; }
+  50% { rotate: -3deg; }
+}
+@keyframes tv-antenna-rod-right {
+  0%, 100% { rotate: 0deg; }
+  50% { rotate: 3deg; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tv-scene-glow,
+  .tv-prop,
+  .tv-antenna,
+  .tv-antenna__rod,
+  .tv-antenna__tip {
+    animation: none;
+  }
+}
+
+.tv-frame {
+  position: relative;
+  z-index: 2;
+  transform-style: preserve-3d;
+  width: clamp(370px, 64vw, 980px);
+  /* matches tv-frame.png's own pixel dimensions (3645x2317) exactly
+     — anything else would let the browser's own aspect-ratio guess
+     drift from the real image and throw off the screen-cutout math
+     below, which is expressed in %s of this same box. This frame
+     (tv-77.png) already ships with its screen cut to transparent —
+     no green-screen prep needed like the previous frame required;
+     the bbox below was found by isolating the transparent region
+     that doesn't touch the image's own edges (i.e. the hole, not the
+     outer background) rather than colour-detecting a green fill. */
+  aspect-ratio: 3645 / 2317;
+}
+.tv-frame__video,
+.tv-frame__noise {
+  position: absolute;
+  /* the screen cutout's bounding box, as a % of the full frame image
+     — left: 476/3645, top: 314/2317, width: (2491-476)/3645,
+     height: (1475-314)/2317 */
+  left: 13.06%;
+  top: 13.55%;
+  width: 55.28%;
+  height: 50.11%;
+  overflow: hidden;
+}
+.tv-frame__video {
+  z-index: 1;
+  width: 55.28%;
+  height: 50.11%;
+  object-fit: cover;
+  background: #000;
+}
+/* vintage CRT static — heavier and animated, not a quiet background
+   texture, since this is the one thing selling "old TV" once a crisp
+   modern video is sitting behind fairly literal illustrated glass */
+.tv-frame__noise {
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0.16;
+  mix-blend-mode: overlay;
+  background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%25" height="100%25" filter="url(%23n)"/></svg>');
+  animation: tv-static 0.5s steps(3) infinite;
+}
+.tv-frame__noise::after {
+  /* faint scanlines on top of the static — cheap, but it's the detail
+     that reads as "CRT" rather than just "grainy" */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.35) 0px,
+    rgba(0, 0, 0, 0.35) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  opacity: 0.5;
+}
+@keyframes tv-static {
+  0% { transform: translate(0, 0); }
+  33% { transform: translate(-1%, 1%); }
+  66% { transform: translate(1%, -1%); }
+  100% { transform: translate(0, 0); }
+}
+.tv-frame__shell {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  filter: drop-shadow(0 24px 40px rgba(33, 26, 20, 0.25));
+}
+.tv-frame__sound {
+  position: absolute;
+  z-index: 4;
+  right: 14%;
+  bottom: 28%;
+  width: clamp(28px, 4.5vw, 40px);
+  height: clamp(28px, 4.5vw, 40px);
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--color-ink);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 200ms ease, background 200ms ease;
+}
+.tv-frame__sound:hover,
+.tv-frame__sound:focus-visible {
+  transform: scale(1.08);
+  background: var(--color-cream);
+}
+.tv-frame__sound-icon {
+  width: 52%;
+  height: 52%;
+}
+.tv-frame__sound-icon--on { display: none; }
+.tv-frame__sound[aria-pressed="true"] .tv-frame__sound-icon--off { display: none; }
+.tv-frame__sound[aria-pressed="true"] .tv-frame__sound-icon--on { display: block; }
+@media (prefers-reduced-motion: reduce) {
+  .tv-frame__noise {
+    animation: none;
+  }
+}
+
+/* Below the 700px container-query threshold (see `@container why
+   (min-width:700px)` above), .why-statement wraps to several lines
+   and the arc/curve effect skips itself entirely (isSingleLine in
+   initScrollReveals, script.js, is computed purely from each char's
+   real layout position — it re-enables automatically the moment the
+   text is single-line again, no JS changes needed here). Rather than
+   let the heading/statement/marquee reflow independently on phones,
+   this freezes the whole block at the exact sizing it renders at a
+   1024px ("laptop") viewport — comfortably past the single-line
+   breakpoint — and shrinks that frozen block down as one uniform unit
+   via `zoom`, so the arc, the statement's single line, and the
+   marquee thumbnails' aspect ratio all scale together in a fixed
+   proportion instead of wrapping/resizing on their own. `vw`-based
+   clamp() values always resolve against the real device viewport
+   regardless of an ancestor's zoom, so every fluid value inside this
+   block gets an explicit fixed fallback here — zoom alone would leave
+   those still shrinking independently underneath it. */
+/* Below the 700px single-line breakpoint (see the container query on
+   .why-statement above), the statement can't stay on one line at a
+   size anyone could actually read — a forced shrink-to-fit (an
+   earlier version of this rule) technically kept it on one line, but
+   the arc effect and the marquee both got shrunk down to a small
+   block adrift in .why-section's full-viewport-height min-height,
+   leaving a dead gap above and below roughly the height of the
+   content itself. initScrollReveals in script.js already degrades
+   the arc gracefully to a flat reveal once the text wraps (see the
+   comment there), so this leans into that instead of fighting it:
+   the section is content-sized like every other section on the page
+   — real padding, not a forced min-height with empty space around a
+   shrunk block — and the heading/statement/marquee all render at
+   their own natural, legible fluid sizes. */
+@media (max-width: 699px) {
+  .why-section {
+    min-height: 0;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Projects (pinned scroll reel)
+   ---------------------------------------------------------------
+   Ported from the client-supplied reference
+   "creative_scroll_projects (3).html" and re-themed onto this site's
+   own tokens — see the long comment on this section in Index.html
+   for the full porting notes. .projects-reel is pinned (GSAP
+   ScrollTrigger pin:true, same mechanism as .philosophy-pin-wrapper,
+   not the reference's native position:sticky — this section already
+   relies on overflow:hidden for the shared post-hero z-index fix
+   below, and sticky positioning inside an overflow:hidden ancestor is
+   a known fragile combination, whereas GSAP's own pin is already
+   proven safe in that exact pairing on this site) for one long scroll
+   pass while .projects-reel__card cycles through the 4 category
+   images (clip-path reveal + blur/scale, not a plain slide) and its
+   matching .projects-reel__word pair travels past on either side —
+   left upward, right downward. See initProjectsReel in script.js for
+   the scroll-scrubbed timeline and the 3D mouse-tilt handlers.
+--------------------------------------------------------------- */
+.projects-section {
+  /* position+z-index:0, same reasoning as every other section after
+     .hero — .hero is sticky with no height cap of its own (bound by
+     <main>'s full height), so it stays "stuck" and visible for as
+     long as nothing later properly contains it; a plain static
+     section paints behind that sticky z-index:0 layer regardless of
+     DOM order, which is exactly what was happening here (hero's
+     spiral tiles and headline bleeding through on top of this
+     section) before this was added. */
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  padding-top: clamp(4rem, 9vw, 6.5rem);
+}
+/* same treatment as .curve--about-top: a wave at the top of this
+   section, flat-filled to match the section right before it
+   (.philosophy-pin-wrapper's pink) — the wave shape's own colour
+   never fades, it's the section it's sitting on top of that does the
+   actual color-changing underneath it as you scroll past. */
+.curve--projects-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: clamp(90px, 14vw, 220px);
+  margin-top: -2px;
+  display: block;
+}
+.curve--projects-top path {
+  fill: var(--color-pink);
+}
+
+.projects-reel {
+  position: relative;
+}
+.projects-reel__sticky {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+/* faint film-grain texture, scoped to just this section rather than
+   the reference's fixed/global overlay — a subtly noisy SVG
+   fractal-noise pattern tiled at a fixed pixel size (not %, so the
+   grain's own texture scale stays constant regardless of viewport)
+   sitting above the pinned content at low opacity via mix-blend-mode,
+   rather than a filter on the content itself */
+.projects-reel__grain {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/></filter><rect width="100%25" height="100%25" filter="url(%23n)"/></svg>');
+  background-size: 200px 200px;
+}
+
+.projects-reel__text-track {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-inline: clamp(2rem, 6vw, 6rem);
+  pointer-events: none;
+}
+.projects-reel__word-col {
+  flex: 1;
+  overflow: hidden;
+  /* tall enough that a single word's own yPercent:100/-100 travel
+     never clips against the column's own edges */
+  height: 14rem;
+  display: flex;
+  align-items: center;
+}
+.projects-reel__word-col--left {
+  justify-content: flex-end;
+  text-align: right;
+  padding-right: clamp(1rem, 4vw, 3rem);
+}
+.projects-reel__word-col--right {
+  justify-content: flex-start;
+  text-align: left;
+  padding-left: clamp(1rem, 4vw, 3rem);
+}
+.projects-reel__word-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.projects-reel__word {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.5rem, 3.5vw + 1.5rem, 5.5rem);
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  line-height: 1;
+  /* the 3D swing's hinge point — see initProjectsReel in script.js */
+  transform-origin: center bottom;
+}
+/* pushed outward (was flex-end/flex-start, hugging the card in the
+   center) — per direct request, the words now sit toward the far
+   edge of their own side instead of tucking in right against the
+   image and getting clipped under it */
+.projects-reel__word-col--left .projects-reel__word {
+  justify-content: flex-start;
+}
+.projects-reel__word-col--right .projects-reel__word {
+  justify-content: flex-end;
+}
+.projects-reel__word--accent {
+  color: var(--color-pink);
+}
+
+.projects-reel__image-track {
+  position: relative;
+  z-index: 2;
+  width: clamp(280px, 32vw, 460px);
+  aspect-ratio: 4 / 5;
+  perspective: 1600px;
+}
+.projects-reel__card {
+  position: absolute;
+  inset: 0;
+  /* matches the reference's own 6px — sharper corners than the
+     1.2rem used on the rest of this site's cards, deliberately, per
+     direct request to keep the thumbnail true to the reference */
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--color-cream);
+  text-decoration: none;
+  box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.9);
+  /* clip-path/filter/scale/x/y here are exclusively GSAP's (the pin
+     timeline's slide transitions plus the mouse-tilt parallax) — the
+     hover feedback below lives one level in, on .projects-reel__card-
+     media, specifically so a plain CSS :hover transform never fights
+     an inline GSAP one on the same element */
+  will-change: transform, clip-path, filter, opacity;
+}
+/* the only card actually clickable at any given time already gets
+   pointer-events:auto toggled by initProjectsReel in sync with the
+   slide transitions, so this hover state only ever engages on the
+   one currently in front */
+.projects-reel__card-media {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 400ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.projects-reel__card:hover .projects-reel__card-media,
+.projects-reel__card:focus-visible .projects-reel__card-media {
+  transform: scale(1.06);
+}
+.projects-reel__placeholder {
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-align: center;
+  padding-inline: 1rem;
+}
+.projects-reel__card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.projects-reel__progress {
+  position: absolute;
+  bottom: clamp(1.5rem, 4vw, 2.5rem);
+  left: 50%;
+  translate: -50% 0;
+  z-index: 3;
+  width: min(60vw, 320px);
+}
+.projects-reel__progress-track {
+  position: relative;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.projects-reel__progress-bar {
+  width: 100%;
+  height: 100%;
+  background: var(--color-pink);
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+@media (max-width: 768px) {
+  .projects-reel__text-track {
+    flex-direction: column;
+    /* left word pins to the top, right word to the bottom, leaving
+       the vertically-centered image-track (a separate flex child of
+       .projects-reel__sticky, unaffected by this overlay) the room
+       in between — matches the reference's stacked mobile layout */
+    justify-content: space-between;
+    padding-block: clamp(2rem, 8vw, 3.5rem);
+    padding-inline: var(--container-pad);
+  }
+  .projects-reel__word-col--left,
+  .projects-reel__word-col--right {
+    text-align: center;
+    width: 100%;
+    /* the desktop side-by-side layout's inner padding (pulling each
+       word toward the centered thumbnail) doesn't apply once the
+       columns stack vertically above/below the image instead */
+    padding-inline: 0;
+  }
+  /* matches the reference's own mobile sizing exactly — 80vw, square
+     instead of landscape */
+  .projects-reel__image-track {
+    width: 80vw;
+    max-width: none;
+    aspect-ratio: 1 / 1;
+  }
+}
+
+
+/* ---------------------------------------------------------------
+   About
+   ---------------------------------------------------------------
+   Ported from the client reference "portfolio_full_website (6).html"
+   (#about). Stat cards start hidden/scaled-down behind the portrait
+   and spread out on scroll-in — see initAboutStats in script.js,
+   which ports that reference's own IntersectionObserver + class-
+   toggle technique (not GSAP) since it's already a complete, working
+   pattern on its own.
+--------------------------------------------------------------- */
+.about-section {
+  /* position+z-index:0, same reasoning as every section after .hero
+     (see the long-form comment on .projects-section) */
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  text-align: center;
+  padding-block: clamp(6rem, 14vw, 11rem);
+}
+.curve--about-top,
+.curve--about-bottom {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  /* matches .curve's own clamp (the hero curve) — bumped again along
+     with it: .curve--about-bottom's fill is a cream-to-pink gradient
+     (Index.html), not a flat colour, and a short band gave that
+     gradient almost no room to work with — the blend happened, but
+     across such a thin strip that .philosophy-pin-wrapper's solid
+     pink immediately after it still read as an abrupt wall rather
+     than a continuation of the same transition. Taller band, same
+     gradient, much more of the transition actually visible. */
+  height: clamp(90px, 14vw, 220px);
+  display: block;
+}
+.curve--about-top {
+  top: 0;
+  margin-top: -2px;
+}
+.curve--about-bottom {
+  bottom: 0;
+  margin-bottom: -2px;
+  /* same path reused, flipped — matches the reference's own
+     rotate-180 rather than a hand-mirrored second path */
+  transform: rotate(180deg);
+}
+.curve--about-top path {
+  /* matches .why-section's own background exactly — about-section now
+     sits directly after WHY (projects moved to after about), so this
+     tracks that adjacent section's real color, not an arbitrary
+     accent */
+  fill: var(--color-blush);
+}
+/* flat fill matching .philosophy-pin-wrapper's own background exactly
+   — a cream-to-pink gradient was tried here, but this path's fill only
+   ever covers the wave's own crest-to-trough sliver (see the wave's
+   `d`), so at any given column most of that sliver sat far enough into
+   the gradient's cream end that the wave read as a washed-out pale
+   pink, distinctly lighter than the solid section right below it,
+   instead of the "same shape, same color" the wave is meant to read
+   as. The curve's own silhouette already is the soft/organic edge —
+   it doesn't also need a color fade to avoid looking like a hard seam. */
+.curve--about-bottom path {
+  fill: var(--color-pink);
+}
+
+.about-section__inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+.about-heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.5rem, 4.2vw + 1.2rem, calc(var(--fs-scale-h2) * 1.3));
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(3.5rem, 9vw, 6.5rem);
+}
+.about-heading__accent {
+  color: var(--color-why);
+}
+
+.stats-cluster {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* was 42rem — widened per the reference's own note on this change
+     ("expanded max-w to give doodles more room"), since the stat
+     cards now spread by fixed px amounts (up to 260px either side on
+     desktop) rather than percentages, so they need more breathing
+     room before the doodles start feeling crowded */
+  max-width: 56rem;
+  margin-inline: auto;
+  min-height: clamp(380px, 50vw, 580px);
+}
+
+/* Fixed-position illustration field (script.js's initAboutDoodles) —
+   NOT scoped to #about's own box, so these can visibly drift across
+   the whole About -> Philosophy scroll stretch instead of being
+   clipped the moment a section's own overflow:hidden crosses them.
+   Positions below are viewport-relative (vw/vh), not section-relative.
+   Opacity is JS-driven (fades in/out across that scroll range). */
+.about-doodle-field {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  opacity: 0;
+}
+/* Two layers per doodle, each owning its own transform so the two
+   motions never fight:
+   .about-doodle (outer)  — continuous drift + the scroll-linked
+                             parallax that makes the "flow" possible
+   .about-doodle__inner   — cursor-proximity repel/scale, on top of
+                             whatever position the drift left it at */
+.about-doodle {
+  position: absolute;
+  width: clamp(140px, 14vw, 240px);
+  pointer-events: none;
+  display: none;
+}
+.about-doodle__inner {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.about-doodle img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
+}
+/* base box is square (matches most of the source illustrations'
+   real proportions closely enough for object-fit:contain to barely
+   letterbox); the key (--3) is the one tall outlier */
+.about-doodle { aspect-ratio: 1; }
+.about-doodle--3 { aspect-ratio: 298 / 852; width: clamp(80px, 8vw, 132px); }
+
+.about-doodle--1 { width: clamp(180px, 18vw, 300px); top: 8%; left: 4vw; }
+.about-doodle--2 { top: 14%; right: 6vw; }
+.about-doodle--3 { top: 78%; left: 8vw; }
+.about-doodle--6 { width: clamp(100px, 10vw, 160px); top: 50%; right: 8vw; }
+
+@media (min-width: 720px) {
+  .about-doodle { display: block; }
+}
+
+.portrait-placeholder {
+  /* invisible measurement anchor for #flying-card (see script.js's
+     initFlyingCard) — kept in normal flow, same size the visible
+     portrait should read as, so getBoundingClientRect() reports the
+     right rect for the card to sit over at rest. z-index:2 stays even
+     though it's invisible: it's what the stat cards (z-index:1) sit
+     "behind," matching the layering the flying card needs to match. */
+  position: relative;
+  z-index: 2;
+  /* floor was 240px, 64% of a 375px phone's width on its own — not
+     technically clipped (it's centered, so it stayed on-screen), but
+     left barely any room for the stat cards to spread around it
+     without running off the edges (see .stat-card below) */
+  width: clamp(190px, 46vw, 320px);
+  aspect-ratio: 4 / 5;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* pink glass, same family as .site-header__inner's glass but tinted
+   with the brand pink instead of cream, per the client annotation
+   ("every card... same effect that transparent glass effect like
+   apple but my colours matching with nav bar") */
+.stat-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  background: var(--color-pink);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #FDD9E5;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.1rem, 4.4vw, 2.25rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* both floors were tuned against desktop widths and never actually
+     scaled down below them — 210px alone is 56% of a 375px phone, and
+     combined with the spread-out offsets further down this pushed
+     most of each card off-screen entirely. clamp() now genuinely
+     shrinks under ~530px instead of pinning at the old floor. */
+  width: clamp(120px, 34vw, 260px);
+  height: clamp(50px, 15vw, 90px);
+  padding: clamp(0.5rem, 2vw, 0.85rem) clamp(0.7rem, 3vw, 1.3rem);
+  border-radius: 0.9rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  /* centers properly first (-50%,-50%), *then* the shown state below
+     offsets by a fixed px amount — ported from a newer version of the
+     reference ("portfolio_full_website (10).html") that fixed the
+     original's translate(0,0) start (which wasn't actually centered,
+     just close enough to read as "behind the portrait" at scale 0.5)
+     and switched the spread-out positions from percentages of each
+     card's own (inconsistent) rendered width to fixed pixel offsets */
+  transform: translate(-50%, -50%) scale(0.5);
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+#stats-section.show-stats .stat-card {
+  pointer-events: auto;
+}
+/* single-line cards can carry a bigger size than the two-line ones
+   without outgrowing the shared card height */
+.stat-card--3, .stat-card--4 {
+  font-size: clamp(1.25rem, 5vw, 2.75rem);
+}
+.stat-card--3, .stat-card--4 {
+  justify-content: flex-end;
+  text-align: right;
+}
+.stat-card--1, .stat-card--2 {
+  justify-content: flex-start;
+  text-align: left;
+}
+/* rotation alternates sign top-to-bottom on each side (--1 negative/
+   --2 positive on the left, --3 negative/--4 positive on the right)
+   per the client reference — each side reads as its own small X
+   crossing behind the portrait, not four cards all leaning the same
+   way */
+/* was a fixed px offset (155/155/130/170) regardless of viewport —
+   fine at tablet widths but on a real phone (~375px) that pushed each
+   card's center well past the screen edge, since the card's own
+   "-50%" half-width plus a flat 155px offset doesn't scale down with
+   a narrower viewport. --stat-offset-x/y below scale with vw instead,
+   same fix already applied to the desktop tier further down. */
+#stats-section {
+  --stat-offset-x: clamp(58px, 22vw, 100px);
+  --stat-offset-y: clamp(24px, 9vw, 42px);
+}
+#stats-section.show-stats .stat-card--1 { opacity: 1; transform: translate(calc(-50% - var(--stat-offset-x)), calc(-50% - var(--stat-offset-y))) rotate(10deg) scale(0.85); }
+#stats-section.show-stats .stat-card--2 { opacity: 1; transform: translate(calc(-50% - var(--stat-offset-x)), calc(-50% + var(--stat-offset-y) + 8px)) rotate(-15deg) scale(0.85); }
+#stats-section.show-stats .stat-card--3 { opacity: 1; transform: translate(calc(-50% + var(--stat-offset-x) - 10px), calc(-50% - var(--stat-offset-y) + 6px)) rotate(-8deg) scale(0.85); }
+#stats-section.show-stats .stat-card--4 { opacity: 1; transform: translate(calc(-50% + var(--stat-offset-x) + 8px), calc(-50% + var(--stat-offset-y) + 12px)) rotate(12deg) scale(0.85); }
+@media (min-width: 720px) {
+  /* the old fixed-px offsets (+-195/200px) only cleared the portrait
+     at the viewport width they were measured against — .portrait-
+     placeholder's own width keeps growing with viewport (clamp(240px,
+     22vw,320px)) up to ~1454px, so at wider screens the portrait
+     outgrew these fixed offsets and swallowed 60-70px of each card
+     again. --stat-offset-x/--stat-offset-y scale alongside that same
+     22vw rate (measured against real rendered rects at 888px and
+     1600px, then solved for a clamp that keeps a small constant
+     overlap at both ends instead of a fixed px number that was only
+     ever correct at one width) so the gap stays a tucked corner at
+     any width instead of ballooning back into buried text. */
+  #stats-section {
+    --stat-offset-x: clamp(170px, 6vw + 120px, 215px);
+    --stat-offset-y: clamp(33px, 3.5vw, 58px);
+  }
+  #stats-section.show-stats .stat-card--1 { transform: translate(calc(-50% - var(--stat-offset-x)), calc(-50% - var(--stat-offset-y))) rotate(10deg) scale(1); }
+  #stats-section.show-stats .stat-card--2 { transform: translate(calc(-50% - var(--stat-offset-x)), calc(-50% + var(--stat-offset-y) + 10px)) rotate(-15deg) scale(1); }
+  #stats-section.show-stats .stat-card--3 { transform: translate(calc(-50% + var(--stat-offset-x) - 30px), calc(-50% - var(--stat-offset-y) + 10px)) rotate(-8deg) scale(1); }
+  #stats-section.show-stats .stat-card--4 { transform: translate(calc(-50% + var(--stat-offset-x) + 20px), calc(-50% + var(--stat-offset-y) + 20px)) rotate(12deg) scale(1); }
+}
+
+/* ---------------------------------------------------------------
+   Philosophy / storytelling ("The Way I See The World")
+   ---------------------------------------------------------------
+   Ported from the client reference "interactive_canvas_studio (3)
+   .html", superseding the single-viewport version ((2).html): a real
+   two-column layout (.philosophy-layout, row-reverse on desktop so
+   the photo sits on the right) instead of everything overlapping in
+   one absolutely-positioned stage. #ph-photo stays put in its own
+   column (.philosophy-visual-col), getting only small scale/rotation/
+   border-radius nudges per stage rather than roaming the viewport;
+   .philosophy-text-col holds four numbered stages that slide up-and-
+   out / in-and-up in turn (see initPhilosophyScroll in script.js: one
+   GSAP timeline, ScrollTrigger pin:true over +=400% of scroll
+   distance — one stage per ~100%) while their words karaoke-fill from
+   15% to full opacity. Colours use this site's own --color-pink/
+   --color-ink tokens in place of the reference's literal
+   #E22E64/#1a1a1a, since those are already the established brand
+   tokens everywhere else. */
+.philosophy-pin-wrapper {
+  position: relative;
+  background: var(--color-pink);
+  color: var(--color-on-ink);
+}
+.philosophy-scene {
+  position: relative;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+.philosophy-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+@media (min-width: 768px) {
+  .philosophy-layout {
+    flex-direction: row;
+  }
+}
+
+.philosophy-visual-col {
+  flex: 0.9;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+.philosophy-text-col {
+  flex: 1.1;
+  position: relative;
+}
+@media (min-width: 768px) {
+  .philosophy-visual-col {
+    flex: 1;
+    padding: 0;
+  }
+  .philosophy-text-col {
+    flex: 1;
+  }
+}
+
+.philosophy-photo-container {
+  /* `aspect-ratio` + independent max-width/max-height does NOT behave
+     like object-fit:contain on a plain element — that bidirectional
+     "shrink the other axis too" re-derivation only happens for
+     replaced elements (img/video) with their own intrinsic ratio.
+     Here, whichever max-* clamps last just wins outright: e.g. 35vw/
+     70vh at a 2000x1100 viewport resolved to a flat 700x770 box
+     (0.91 ratio, visibly squashed) because max-height clamped the
+     height without pulling width back down to match. Folding both
+     caps into a single min()'d *width* (the second term converts the
+     height cap into its ratio-equivalent width) means only one
+     dimension is ever explicitly set, so aspect-ratio derives the
+     other correctly no matter which cap is tighter — same trick used
+     for the base (<768px) 400x500 cap below. */
+  width: min(100%, 400px);
+  height: auto;
+  aspect-ratio: 4 / 5;
+  border-radius: 1.4rem;
+  z-index: 2;
+  overflow: hidden;
+  will-change: transform;
+}
+@media (min-width: 768px) {
+  .philosophy-photo-container {
+    width: min(35vw, 70vh * 4 / 5);
+  }
+}
+/* box-shadow only once the photo has actually landed — this container
+   has no background of its own (the real content is #flying-card
+   until it lands), so a shadow here at rest just draws a "ghost" card
+   outline with nothing in it, sitting in the pink section well before
+   the flying card ever arrives. Gated on the same .is-visible class
+   the portrait-placeholder crossfade already uses, so the shadow
+   appears in the same instant the photo does. */
+.philosophy-photo-container:has(.portrait-placeholder.is-visible) {
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+}
+/* visible here, unlike #start-placeholder in .about-section — that
+   one stays an invisible measurement anchor for #flying-card the
+   whole time (see initFlyingCard), but this one becomes the real,
+   on-screen photo for the rest of the scene once the flying card has
+   landed and faded out over it (see the opacity fade in
+   initFlyingCard's updateCard) */
+.philosophy-photo-container .portrait-placeholder {
+  /* stays invisible (like #start-placeholder in .about-section) until
+     #flying-card has actually landed on it — see initFlyingCard's
+     updateCard in script.js. .philosophy-pin-wrapper sits in normal
+     document flow before its own pin engages, so without this it was
+     rendering fully visible the moment any part of the section
+     scrolled into view — long before the flying card, still mid-
+     flight from #about, had gotten anywhere close. That read as two
+     separate portraits on screen at once instead of one continuous
+     photo moving from "Hi, I'm Prachi" into this section. */
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  background: var(--color-ink);
+  border-radius: inherit;
+  overflow: hidden;
+  transition: opacity 200ms ease;
+}
+.philosophy-photo-container .portrait-placeholder.is-visible {
+  opacity: 1;
+}
+.portrait-placeholder__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* the window: a fixed-height viewport onto .philosophy-text-track,
+   which is much taller than this and scrolls vertically past it (see
+   initPhilosophyScroll in script.js) — everything outside this box is
+   clipped, same idea as a teleprompter's own frame */
+.philosophy-text-col {
+  overflow: hidden;
+  height: 70vh;
+  align-self: center;
+  padding-inline: 5%;
+}
+@media (min-width: 768px) {
+  .philosophy-text-col {
+    padding-inline: 0 15%;
+  }
+}
+
+.philosophy-text-track {
+  position: relative;
+  will-change: transform;
+}
+.philosophy-block {
+  margin-bottom: clamp(4rem, 12vh, 8rem);
+}
+.philosophy-block:last-child {
+  margin-bottom: 0;
+}
+
+.stage-badge {
+  /* base opacity here is just a fallback for a pre-JS flash — script.js
+     overrides this per-frame via inline style once it's running (see
+     the focus-window fade in initPhilosophyScroll) */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 50px;
+  padding: 0.25rem 0.875rem;
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 1.5rem;
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 0.2;
+}
+@media (max-width: 767px) {
+  .philosophy-text-col {
+    text-align: center;
+  }
+  .stage-badge {
+    display: table;
+    margin-inline: auto;
+  }
+}
+
+.philosophy-copy__heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.6rem, 5.3vw, 4.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.5rem;
+}
+.philosophy-copy__heading-accent {
+  color: var(--color-ink);
+}
+
+.philosophy-copy__para {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.15rem, 2.1vw, 1.6rem);
+  line-height: 1.6;
+}
+
+.philosophy-copy__quote {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-style: italic;
+  font-size: clamp(1.4rem, 2.5vw, 2.2rem);
+  line-height: 1.3;
+}
+
+.philosophy-copy__tags-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+  margin-bottom: 1.2rem;
+}
+.philosophy-copy__tags {
+  margin-top: 2.5rem;
+}
+.philosophy-copy__tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-start;
+}
+@media (max-width: 767px) {
+  .philosophy-copy__tag-list {
+    justify-content: center;
+  }
+}
+.philosophy-tag {
+  display: inline-block;
+  padding: 0.5rem 1.125rem;
+  background: var(--color-on-ink);
+  color: var(--color-pink);
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-story-heading] .word,
+[data-story-p1] .word,
+[data-story-p2] .word,
+[data-story-p3] .word,
+[data-story-quote] .word {
+  will-change: opacity;
+}
+
+/* ---------------------------------------------------------------
+   Flying/flipping portrait card
+   ---------------------------------------------------------------
+   The visible half of the #about -> #philosophy-section flip — see
+   initFlyingCard in script.js and the long comment on
+   #philosophy-section in Index.html for how the two invisible
+   .portrait-placeholder anchors (#start-placeholder, #end-placeholder)
+   drive this element's position/size/rotation.
+--------------------------------------------------------------- */
+.flying-card {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 45;
+  /* only ever gets translate3d(...)/scale(...) from updateCard
+     (script.js) — the rotateY lives one level in, on .flying-card__
+     flipper, specifically so `perspective` can go here without
+     consequence. `perspective`/`transform` on an element establishes
+     it as the containing block for fixed-position DESCENDANTS, not
+     for the element itself — but this element's own position:fixed
+     is what needs to stay resolved against the real viewport (every
+     rect in calculateBounds is viewport-relative). Putting perspective
+     on an ANCESTOR of this .flying-card (e.g. body) would silently
+     break that. Putting it here instead, one level below the fixed
+     element, keeps the flip's 3D depth without touching how this
+     element itself is positioned. */
+  perspective: 1600px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  opacity: 0;
+  /* NOT a transition — initFlyingCard's updateCard (script.js) writes
+     this element's opacity directly every scroll frame, already
+     smoothly tied to scroll progress. A CSS transition on top of that
+     means every one of those frequent writes retargets/interrupts the
+     previous 300ms ease before it finishes, so opacity visibly lags
+     and stutters behind the real progress instead of tracking it 1:1
+     — worst right at launch and landing, exactly where the 3D flip's
+     fade-in/fade-out crossfade needs to read as smooth, not glitchy. */
+}
+.flying-card__flipper {
+  position: absolute;
+  inset: 0;
+  transform-origin: center center;
+  transform-style: preserve-3d;
+}
+.flying-card__face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 1.4rem;
+  background: var(--color-ink);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.flying-card__face--back {
+  transform: rotateY(180deg);
+}
+.flying-card__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ---------------------------------------------------------------
+   Custom scroll rail (fixed, right edge, whole-page)
+   ---------------------------------------------------------------
+   Track + thumb are both plain white with mix-blend-mode:difference —
+   that inverts them against whatever's directly behind at any given
+   moment, so the same two elements stay clearly visible over every
+   section's background (cream, blush, pink, dark ink) without needing
+   a per-section IntersectionObserver toggle the way .site-header's
+   glass pill does. See initScrollRail in script.js for the drag/
+   click-to-jump handling and the ScrollTrigger-driven progress sync.
+--------------------------------------------------------------- */
+.scroll-rail {
+  position: fixed;
+  top: 50%;
+  right: clamp(0.85rem, 2vw, 1.75rem);
+  transform: translateY(-50%);
+  z-index: 55;
+  height: min(46vh, 340px);
+  width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.scroll-rail__track {
+  position: relative;
+  width: 3px;
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.55);
+  mix-blend-mode: difference;
+  cursor: grab;
+  opacity: 0.55;
+  transition: opacity 250ms ease;
+}
+/* generous invisible hit area either side of the visually-thin 3px
+   line — without this the rail is nearly impossible to actually grab
+   with a mouse */
+.scroll-rail__track::before {
+  content: '';
+  position: absolute;
+  inset: 0 -11px;
+}
+.scroll-rail:hover .scroll-rail__track,
+.scroll-rail.is-dragging .scroll-rail__track {
+  opacity: 1;
+}
+.scroll-rail.is-dragging .scroll-rail__track {
+  cursor: grabbing;
+}
+.scroll-rail__thumb {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 9px;
+  height: 16%;
+  border-radius: 999px;
+  background: #fff;
+  mix-blend-mode: difference;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.55);
+  transform: translateX(-50%);
+  pointer-events: none;
+  transition: box-shadow 250ms ease;
+}
+.scroll-rail:hover .scroll-rail__thumb,
+.scroll-rail.is-dragging .scroll-rail__thumb {
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.85);
+}
+/* mouse-only, and only once there's enough spare width beside the
+   page content for it to not feel cramped against .site-header or
+   the sections' own edge padding */
+@media (pointer: coarse), (max-width: 900px) {
+  .scroll-rail {
+    display: none;
+  }
+}
+/* ---------------------------------------------------------------
+   Testimonials
+   ---------------------------------------------------------------
+   Not in the client's HTML reference file — built from the annotated
+   screenshot as an expand-on-click accordion (see script.js's
+   initTestimonials): one card wide and showing a quote, the rest
+   collapsed to a narrow strip, exactly one expanded at a time.
+--------------------------------------------------------------- */
+.testimonials-section {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  text-align: center;
+  padding-block: clamp(4.5rem, 10vw, 8rem);
+}
+/* same treatment as .curve--about-top/.curve--projects-top — flat
+   match to the section right before this one (.projects-section's
+   ink), not a gradient */
+.curve--testimonials-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: clamp(90px, 14vw, 220px);
+  margin-top: -2px;
+  display: block;
+}
+.curve--testimonials-top path {
+  fill: var(--color-ink);
+}
+.testimonials-section__inner {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+.testimonials-heading {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(2rem, 3.5vw + 1rem, var(--fs-scale-h1));
+  letter-spacing: -0.02em;
+  margin-bottom: clamp(2.5rem, 6vw, 4rem);
+}
+.testimonials-heading__accent {
+  color: var(--color-why);
+}
+
+.testimonial-row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(0.5rem, 1.5vw, 1rem);
+  height: clamp(340px, 38vw, 440px);
+  overflow-x: auto;
+}
+.testimonial-card {
+  flex: 0 0 clamp(64px, 6vw, 90px);
+  background: var(--color-why);
+  border-radius: 1.5rem;
+  overflow: hidden;
+  cursor: pointer;
+  /* flex-basis (not width) so the row's other cards fill in the
+     freed-up space automatically instead of leaving a gap */
+  transition: flex-basis 550ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.testimonial-card[aria-expanded="true"] {
+  flex-basis: clamp(320px, 40vw, 460px);
+}
+.testimonial-card__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  text-align: left;
+  color: var(--color-on-ink);
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+.testimonial-card[aria-expanded="true"] .testimonial-card__content {
+  opacity: 1;
+  transition-delay: 200ms;
+}
+.testimonial-card__quote {
+  font-family: var(--font-display);
+  font-size: clamp(0.95rem, 1.4vw, 1.15rem);
+  line-height: 1.6;
+  font-weight: 500;
+}
+.testimonial-card__author {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+.testimonial-card__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: var(--color-ink);
+  flex-shrink: 0;
+}
+.testimonial-card__meta {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+/* ---------------------------------------------------------------
+   Contact + footer
+   ---------------------------------------------------------------
+   Not in the client's HTML reference file — built from the annotated
+   screenshot alone.
+--------------------------------------------------------------- */
+.contact-section {
+  position: relative;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--color-ink);
+  color: var(--color-on-ink);
+  padding-block: clamp(4rem, 9vw, 7rem);
+}
+.curve--contact-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  /* matches .curve--about-top/bottom/philosophy-top's clamp — see the
+     comment on .curve--about-top for why the taller range matters */
+  height: clamp(50px, 8vw, 120px);
+  margin-top: -2px;
+  display: block;
+}
+.curve--contact-top path {
+  fill: var(--color-cream);
+}
+.contact-section__inner {
+  max-width: 46rem;
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+  text-align: center;
+}
+.contact-heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.75rem, 6vw + 1rem, 5.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.contact-subhead {
+  font-size: clamp(1rem, 1.5vw + 0.5rem, 1.25rem);
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 1rem;
+}
+
+.contact-form {
+  margin-top: clamp(2.5rem, 6vw, 3.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 2rem);
+}
+.contact-form__row {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
+}
+.contact-form__field {
+  flex: 1 1 180px;
+}
+.contact-form__input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid var(--color-pink);
+  border-radius: 999px;
+  color: var(--color-on-ink);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  padding: 0.85rem 1.4rem;
+}
+.contact-form__input::placeholder {
+  color: rgba(250, 245, 236, 0.55);
+}
+.contact-form__input:focus-visible {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 2px;
+}
+.contact-form__input--select {
+  appearance: none;
+  -webkit-appearance: none;
+  color: rgba(250, 245, 236, 0.55);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23DC346E' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.2rem center;
+  background-size: 16px;
+  padding-right: 2.75rem;
+}
+.contact-form__input--select:valid {
+  color: var(--color-on-ink);
+}
+/* CTA pill — the one reusable button style for the whole site (see
+   client annotation: "the cta buttons should be same everywhere the
+   curveness"), not scoped to any one section */
+.btn-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-on-ink);
+  color: var(--color-pink);
+  font-weight: 700;
+  font-size: 1.05rem;
+  padding: 0.9rem 2.2rem;
+  border-radius: 999px;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transition: transform 250ms ease, background 250ms ease;
+}
+.btn-pill:hover,
+.btn-pill:focus-visible {
+  background: #fff;
+  transform: scale(1.05);
+}
+.btn-pill--accent {
+  background: var(--color-why);
+  color: var(--color-on-ink);
+}
+.btn-pill--accent:hover,
+.btn-pill--accent:focus-visible {
+  background: var(--color-why);
+  filter: brightness(1.1);
+}
+
+.footer {
+  max-width: var(--content-max);
+  margin: clamp(4rem, 10vw, 7rem) auto 0;
+  padding-inline: var(--container-pad);
+  text-align: left;
+}
+.footer__inner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 2.5rem;
+  padding-bottom: clamp(2rem, 5vw, 3rem);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+.footer__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+}
+.footer__links {
+  display: flex;
+  gap: clamp(2.5rem, 6vw, 4.5rem);
+}
+.footer__col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.footer__col-title {
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 0.2rem;
+}
+.footer__col a {
+  color: var(--color-on-ink);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 200ms ease;
+}
+.footer__col a:hover,
+.footer__col a:focus-visible {
+  color: var(--color-pink);
+}
+.footer__copyright {
+  margin-top: clamp(1.5rem, 4vw, 2rem);
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+.footer__wordmark {
+  /* true full-bleed, not just "cancel .footer's own padding" — the
+     old negative-margin approach (matching .contact-section's own
+     padding) only escaped .footer's padding, not its
+     `max-width: var(--content-max); margin-inline: auto;` centering,
+     so on any viewport wider than that max-width (a normal Mac
+     browser window) the wordmark stopped short of the real screen
+     edge on both sides instead of reaching it. 100vw anchored to the
+     viewport via the negative half-vw margins breaks out of every
+     ancestor's width constraint at once, regardless of how wide the
+     screen is. */
+  width: 100vw;
+  margin: 0;
+  margin-top: clamp(1rem, 3vw, 2rem);
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  /* the window: clips the track's two looping copies down to this
+     element's own auto width (unchanged from before — still the same
+     bled-out-via-negative-margin width as the plain-text version) */
+  overflow: hidden;
+  /* the marquee's own text is always mid-word at both edges of this
+     window at any given moment (that's the nature of an infinite
+     scroll) — a hard clip there reads as a mistake, like the text got
+     randomly chopped, rather than an intentional bleed. Fading it out
+     right at the edge instead of cutting it dead makes the same
+     clipping look deliberate. */
+  mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+}
+.footer__wordmark-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+}
+.footer__wordmark-group {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(4rem, 18vw, 18rem);
+  line-height: 0.8;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: #FCF3EA;
+}
+
+/* ---------------------------------------------------------------
+   Reduced motion
+--------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+
+  /* script.js's initPhilosophyScroll skips the pin/timeline entirely
+     under reduced motion (a scroll-jacked, +=400% pinned scene with a
+     continuously scrolling text track is exactly the kind of motion
+     this preference exists to avoid) — so the scene needs to stop
+     being pinned with most of its own text clipped outside the
+     .philosophy-text-col window, and become plain stacked, always-
+     visible content someone can read by scrolling normally. */
+  .philosophy-scene {
+    height: auto;
+    width: auto;
+  }
+  .philosophy-layout {
+    flex-direction: column;
+    height: auto;
+    align-items: center;
+    gap: clamp(2rem, 5vw, 3rem);
+    padding-block: clamp(3.5rem, 8vw, 6rem);
+    padding-inline: var(--container-pad);
+  }
+  .philosophy-visual-col {
+    padding: 0;
+  }
+  .philosophy-photo-container {
+    max-width: min(90vw, 32rem);
+    max-height: none;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 5;
+  }
+  .philosophy-text-col {
+    overflow: visible;
+    height: auto;
+    width: 100%;
+    max-width: 32rem;
+    padding-inline: 0;
+    text-align: center;
+  }
+  .philosophy-text-track {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2.5rem, 6vw, 4rem);
+    transform: none !important;
+  }
+  .philosophy-block {
+    margin-bottom: 0;
+  }
+  .stage-badge {
+    display: table;
+    margin-inline: auto;
+    opacity: 1;
+  }
+
+  /* script.js's initProjectsReel skips its own pin/timeline (and the
+     mouse-tilt handlers) entirely under reduced motion, same reasoning
+     as philosophy above — the 3-stacked-column layout (all 4 left
+     words, all 4 cards, all 4 right words each absolutely layered on
+     top of themselves) needs to unwind into a plain 4-row list
+     instead. Each column keeps its own markup order (word/card 1..4);
+     display:contents on every wrapper between the words/cards and
+     .projects-reel__text-track lifts them straight into one shared
+     grid, and nth-of-type there (still counted against each item's
+     real DOM parent, contents doesn't change that) reassembles them
+     into word/image/word rows without touching markup order. */
+  .projects-reel__sticky {
+    height: auto;
+    padding-block: clamp(3rem, 8vw, 5rem);
+    flex-direction: column;
+  }
+  .projects-reel__grain {
+    display: none;
+  }
+  .projects-reel__text-track {
+    position: static;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: clamp(1.5rem, 4vw, 2.5rem) clamp(1rem, 4vw, 3rem);
+    width: 100%;
+    max-width: var(--content-max);
+    margin-inline: auto;
+  }
+  .projects-reel__word-col,
+  .projects-reel__word-wrapper,
+  .projects-reel__image-track {
+    display: contents;
+  }
+  .projects-reel__word {
+    position: static;
+  }
+  .projects-reel__word-col--left .projects-reel__word {
+    grid-column: 1;
+    text-align: right;
+  }
+  .projects-reel__word-col--right .projects-reel__word {
+    grid-column: 3;
+    text-align: left;
+  }
+  .projects-reel__card {
+    position: static;
+    grid-column: 2;
+    width: clamp(180px, 26vw, 320px);
+    aspect-ratio: 5 / 4;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    margin-inline: auto;
+    clip-path: none !important;
+    filter: none !important;
+  }
+  .projects-reel__word-col--left .projects-reel__word:nth-of-type(1),
+  .projects-reel__word-col--right .projects-reel__word:nth-of-type(1),
+  .projects-reel__image-track .projects-reel__card:nth-of-type(1) {
+    grid-row: 1;
+  }
+  .projects-reel__word-col--left .projects-reel__word:nth-of-type(2),
+  .projects-reel__word-col--right .projects-reel__word:nth-of-type(2),
+  .projects-reel__image-track .projects-reel__card:nth-of-type(2) {
+    grid-row: 2;
+  }
+  .projects-reel__word-col--left .projects-reel__word:nth-of-type(3),
+  .projects-reel__word-col--right .projects-reel__word:nth-of-type(3),
+  .projects-reel__image-track .projects-reel__card:nth-of-type(3) {
+    grid-row: 3;
+  }
+  .projects-reel__word-col--left .projects-reel__word:nth-of-type(4),
+  .projects-reel__word-col--right .projects-reel__word:nth-of-type(4),
+  .projects-reel__image-track .projects-reel__card:nth-of-type(4) {
+    grid-row: 4;
+  }
+  .projects-reel__word-col--left .projects-reel__word:nth-of-type(5),
+  .projects-reel__word-col--right .projects-reel__word:nth-of-type(5),
+  .projects-reel__image-track .projects-reel__card:nth-of-type(5) {
+    grid-row: 5;
+  }
+}
+
+/* ---------------------------------------------------------------
+   Case-study template (project.html) — one file, reused per project.
+   Two pieces: a quiet cream hero (title/intro/tags, same visual
+   language as the rest of the site — not the reference's dark
+   theme) and the actual ask, .case-grid — an alternating asymmetric
+   two-image row that collapses to one stacked column per image on
+   narrow screens, so there's no separate mobile layout to maintain.
+
+   Each image's hover treatment (flat/muted → colour, scale, lift)
+   is this site's own take on the reference's "pixelated hover"
+   idea — borrows the "resolves out of scatter" language already
+   established by the hero spiral, applied to a single frame instead
+   of many tiles, rather than transplanting pixelation literally.
+--------------------------------------------------------------- */
+.case-hero {
+  position: relative;
+  z-index: 0;
+  background: var(--color-cream);
+  color: var(--color-ink);
+  text-align: center;
+  padding-block: clamp(7rem, 14vw, 10rem) clamp(3rem, 6vw, 4rem);
+  padding-inline: var(--container-pad);
+}
+.case-hero__inner {
+  max-width: 46rem;
+  margin-inline: auto;
+}
+.case-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-ink-soft);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+.case-back svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 200ms ease;
+}
+.case-back:hover,
+.case-back:focus-visible {
+  color: var(--color-pink);
+}
+.case-back:hover svg,
+.case-back:focus-visible svg {
+  transform: translateX(-3px);
+}
+.case-hero__tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 2rem;
+}
+.case-tag {
+  border: 1.5px solid var(--color-ink);
+  color: var(--color-ink);
+  font-size: var(--fs-scale-caption);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+}
+.case-hero__title {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(2.5rem, 5vw + 1rem, 4.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+  margin-top: 1.25rem;
+}
+.case-hero__intro {
+  font-size: clamp(1.05rem, 0.5vw + 0.95rem, 1.25rem);
+  color: var(--color-ink-soft);
+  line-height: 1.6;
+  max-width: 38rem;
+  margin: 1.5rem auto 0;
+}
+/* the big first-look image every case study was missing — previously
+   nothing but text until whatever the first gallery happened to be,
+   several beats in. One large frame right under the intro, same
+   reveal timing as the rest of the hero (initCaseStudyReveals). */
+.case-hero__figure {
+  max-width: 64rem;
+  margin: clamp(2.5rem, 6vw, 4rem) auto 0;
+}
+.case-hero__figure img {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border-radius: 1.75rem;
+  box-shadow: 0 40px 80px -20px rgba(33, 26, 20, 0.35);
+  display: block;
+}
+
+/* a campaign film, inline within .case-story — same frame language as
+   .case-hero__figure (rounded, shadowed) so it reads as part of the
+   same visual family, just sized/placed like a beat rather than the
+   hero. preload="none" + poster on the <video> itself keeps the file
+   from downloading until the viewer actually presses play. */
+.case-video {
+  max-width: 64rem;
+  margin: clamp(2.5rem, 6vw, 4rem) auto 0;
+}
+.case-video video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 1.75rem;
+  box-shadow: 0 40px 80px -20px rgba(33, 26, 20, 0.35);
+  display: block;
+  background: var(--color-ink);
+}
+.case-video__caption {
+  text-align: center;
+  margin-top: 0.85rem;
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}
+
+/* separates two full case studies stacked on one page (campaigns.html,
+   and eventually branding.html once BGL is added) — just a quiet
+   label + rule, not another hero, so the page doesn't read as if it
+   restarted from scratch */
+.case-project-divider {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: clamp(3rem, 7vw, 5rem) var(--container-pad) 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  text-align: center;
+}
+.case-project-divider::before,
+.case-project-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(33, 26, 20, 0.12);
+  max-width: 8rem;
+}
+.case-project-divider__label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.case-grid {
+  position: relative;
+  z-index: 0;
+  background: var(--color-cream);
+  padding-block: clamp(2rem, 6vw, 4rem) clamp(5rem, 10vw, 7rem);
+  padding-inline: var(--container-pad);
+}
+.case-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  max-width: var(--content-max);
+  margin-inline: auto;
+}
+.case-row + .case-row {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+@media (min-width: 860px) {
+  .case-row {
+    grid-template-columns: repeat(5, 1fr);
+    align-items: start;
+  }
+  /* asymmetry comes from span width, not source order, so a row
+     just needs its large image listed first in the markup to read
+     as "large-leading" — no separate reverse/mirror modifier class
+     required to alternate the rhythm row to row */
+  .case-image--sm {
+    grid-column: span 2;
+  }
+  .case-image--lg {
+    grid-column: span 3;
+  }
+}
+
+.case-image {
+  margin: 0;
+}
+.case-image__frame {
+  position: relative;
+  aspect-ratio: 4 / 5;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.case-image--lg .case-image__frame {
+  aspect-ratio: 4 / 3;
+}
+/* rest state: flat and muted — colour, contrast and lift all resolve
+   together on hover/focus. Stands in for a real photo via --case-tint
+   (set inline per figure); once a real <img> replaces the frame, the
+   same before/after pair (grayscale+dim -> full colour+scale) applies
+   directly to the image instead of this solid tint. */
+.case-image__frame::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--case-tint, var(--color-ink-soft));
+  filter: grayscale(85%) brightness(0.85);
+  transform: scale(1.02);
+  transition: filter 500ms ease, transform 500ms ease;
+}
+.case-image:hover .case-image__frame::before,
+.case-image:focus-within .case-image__frame::before {
+  filter: grayscale(0%) brightness(1);
+  transform: scale(1.08);
+}
+.case-image__placeholder {
+  position: relative;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.9rem;
+  font-weight: 500;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+.case-image:hover .case-image__placeholder,
+.case-image:focus-within .case-image__placeholder {
+  opacity: 0.85;
+}
+.case-caption {
+  font-size: 0.95rem;
+  color: var(--color-ink-soft);
+  line-height: 1.55;
+  max-width: 32ch;
+  margin-top: 1rem;
+}
+.case-caption em {
+  color: var(--color-pink);
+  font-style: italic;
+}
+.case-caption strong {
+  color: var(--color-ink);
+  font-weight: 700;
+}
+
+/* ---------------------------------------------------------------
+   Case-study "story" layout (branding.html — Common Ground)
+   ---------------------------------------------------------------
+   A simpler alternative to .case-grid above: one column, one beat at
+   a time — text, then a single image, alternating which side that
+   image slides in from as it scrolls into view (initCaseStudyReveals,
+   script.js), rather than .case-grid's paired asymmetric rows. Built
+   for this specific project per direct request ("very simple... left
+   side and right side"); .case-grid stays as-is for the other project
+   pages already using it. */
+.case-story {
+  position: relative;
+  z-index: 0;
+  background: var(--color-cream);
+  padding-block: clamp(2rem, 6vw, 4rem) clamp(5rem, 10vw, 7rem);
+  padding-inline: var(--container-pad);
+}
+.case-beat {
+  max-width: 42rem;
+  margin-inline: auto;
+}
+.case-beat + .case-beat {
+  margin-top: clamp(2.5rem, 6vw, 4rem);
+}
+.case-beat--text {
+  text-align: center;
+}
+/* small numbered rule above each heading — editorial structure/rhythm
+   down the page, matching the "01 / 02" language already used
+   elsewhere on this site (the project reel, editorial.html's collage) */
+.case-beat__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-pink);
+  margin-bottom: 0.85rem;
+}
+.case-beat__eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 2px;
+  background: currentColor;
+  display: inline-block;
+}
+.case-beat__heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.5rem, 1.6vw + 1.1rem, 2.25rem);
+  letter-spacing: -0.01em;
+  margin-bottom: 1rem;
+}
+.case-beat--text p {
+  font-size: clamp(1rem, 0.3vw + 0.95rem, 1.1rem);
+  color: var(--color-ink-soft);
+  line-height: 1.7;
+}
+.case-beat--text p + p {
+  margin-top: 1rem;
+}
+/* My Role reads as a quick, scannable fact list, not prose — set
+   apart with its own pill background so it's the one thing on this
+   page a skimming reviewer can't miss */
+.case-role-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  max-width: 34rem;
+  margin-inline: auto;
+}
+.case-role-list li {
+  background: var(--color-blush);
+  color: var(--color-ink);
+  font-weight: 600;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+}
+.case-beat--closing {
+  padding-top: clamp(1rem, 3vw, 2rem);
+  border-top: 1px solid rgba(33, 26, 20, 0.12);
+}
+
+/* one big featured line per case study, breaking the plain-paragraph
+   flow at its strongest moment — reveals exactly like a .case-beat
+   (initCaseStudyReveals treats it as one) */
+.case-pullquote {
+  max-width: 46rem;
+  margin-inline: auto;
+  text-align: center;
+}
+.case-pullquote__mark {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 4.5rem;
+  line-height: 1;
+  color: var(--color-pink);
+  opacity: 0.3;
+  margin-bottom: -0.75rem;
+}
+.case-pullquote p {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 2.2vw + 1rem, 2.5rem);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  color: var(--color-ink);
+}
+
+/* ---------------------------------------------------------------
+   Case-study image galleries (branding.html — Common Ground)
+   ---------------------------------------------------------------
+   One gallery per source folder of real assets, not a single
+   representative image — per direct request to use everything.
+   --masonry (designs/process): a plain CSS column layout, since those
+   two folders mix a near-square badge, a 5.5:1 wordmark lockup and
+   everything between — forcing one shared aspect-ratio would crop
+   into whichever ones don't match it. Columns let every image keep
+   its own real proportions and just flow into the shortest column.
+   --grid (mockups): every mockup image was resized to the same 4:5
+   crop (see the prep script), so a plain uniform grid reads as more
+   deliberate than columns would for a set that's already consistent.
+--------------------------------------------------------------- */
+.case-gallery {
+  max-width: var(--content-max);
+  margin: clamp(2rem, 5vw, 3rem) auto 0;
+}
+.case-gallery--masonry {
+  columns: 3 240px;
+  column-gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+.case-gallery--masonry .case-gallery__item {
+  break-inside: avoid;
+  margin-bottom: clamp(1rem, 2.4vw, 1.75rem);
+  /* scattered corkboard tilt, not a rigid grid — each item gets a
+     slightly different angle (nth-child pattern below), straightening
+     out and lifting on hover so it reads as "picking the photo up
+     off the board," same rotated-sticker language as the stat cards
+     on the homepage About section */
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 450ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 450ms ease;
+}
+.case-gallery--masonry .case-gallery__item:nth-child(6n+1) { --tilt: -2.5deg; }
+.case-gallery--masonry .case-gallery__item:nth-child(6n+2) { --tilt: 1.5deg; }
+.case-gallery--masonry .case-gallery__item:nth-child(6n+3) { --tilt: -1deg; }
+.case-gallery--masonry .case-gallery__item:nth-child(6n+4) { --tilt: 2deg; }
+.case-gallery--masonry .case-gallery__item:nth-child(6n+5) { --tilt: -1.75deg; }
+.case-gallery--masonry .case-gallery__item:nth-child(6n) { --tilt: 1.25deg; }
+.case-gallery--masonry .case-gallery__item:hover,
+.case-gallery--masonry .case-gallery__item:focus-within {
+  transform: rotate(0deg) scale(1.045) translateY(-6px);
+  box-shadow: 0 28px 55px rgba(33, 26, 20, 0.22);
+  z-index: 2;
+}
+.case-gallery--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+}
+.case-gallery__item {
+  margin: 0;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+.case-gallery--grid .case-gallery__item {
+  aspect-ratio: 4 / 5;
+}
+.case-gallery__item img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  /* muted/dim at rest, resolving to full clarity + a slight lift on
+     hover — the same "scattered → resolves" language as this site's
+     older case-image template, now applied to a real photo instead
+     of a flat tint */
+  filter: grayscale(55%) brightness(0.9);
+  transform: scale(1.03);
+  transition: filter 450ms ease, transform 450ms ease, box-shadow 450ms ease;
+}
+.case-gallery__item:hover img,
+.case-gallery__item:focus-within img {
+  filter: grayscale(0%) brightness(1);
+  transform: scale(1.08) rotate(-0.5deg);
+}
+
+/* ---------------------------------------------------------------
+   Case-study section nav (branding.html — Common Ground)
+   ---------------------------------------------------------------
+   Fixed to the right edge, a sliding pill indicator tracks whichever
+   section is active (initCaseNav, script.js sets --case-nav-active
+   as a 0-based index; the indicator's translateY reads that). Text
+   labels only show on hover/focus of the whole nav, or permanently
+   next to the active link — collapsed the rest of the time so it
+   reads as a slim, unobtrusive rail rather than a full menu sitting
+   over the page content.
+--------------------------------------------------------------- */
+.case-nav {
+  position: fixed;
+  top: 50%;
+  right: clamp(1rem, 3vw, 2.5rem);
+  transform: translateY(-50%);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  padding: 0.9rem 0.6rem;
+}
+.case-nav__indicator {
+  position: absolute;
+  left: 0.6rem;
+  top: 0.9rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-pink);
+  transform: translateY(calc(var(--case-nav-active, 0) * 1.9rem));
+  transition: transform 450ms cubic-bezier(0.65, 0, 0.35, 1);
+  pointer-events: none;
+}
+.case-nav__link {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+  color: var(--color-ink-soft);
+}
+.case-nav__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-ink-soft);
+  flex-shrink: 0;
+  transition: border-color 300ms ease, background-color 300ms ease, transform 300ms ease;
+}
+.case-nav__label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 250ms ease, transform 250ms ease, color 300ms ease;
+}
+.case-nav:hover .case-nav__label,
+.case-nav__link:focus-visible .case-nav__label,
+.case-nav__link--active .case-nav__label {
+  opacity: 1;
+  transform: translateX(0);
+}
+.case-nav__link--active .case-nav__dot {
+  background: var(--color-pink);
+  border-color: var(--color-pink);
+  transform: scale(1.15);
+}
+.case-nav__link--active .case-nav__label,
+.case-nav__link:hover .case-nav__label {
+  color: var(--color-pink);
+}
+@media (max-width: 900px) {
+  .case-nav {
+    display: none;
+  }
+}
+
+.case-close {
+  position: relative;
+  z-index: 0;
+  background: var(--color-cream);
+  text-align: center;
+  padding-block: clamp(3rem, 7vw, 5rem);
+  padding-inline: var(--container-pad);
+}
+.case-close__label {
+  font-size: var(--fs-scale-small);
+  color: var(--color-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  margin-bottom: 1.25rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case-image__frame::before {
+    transition-duration: 0.01ms !important;
+  }
+}

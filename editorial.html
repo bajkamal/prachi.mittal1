@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campaigns — Prachi Mittal</title>
+<meta name="description" content="Hamleys — Share A Smile and Mattel — Barbie Campaign, campaign design work by Prachi Mittal.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="index.html#top" class="logo">Prachi Mittal</a>
+
+    <nav class="primary-nav" aria-label="Primary">
+      <ul class="primary-nav__categories">
+        <li><a class="nav-link" href="index.html#projects">Project</a></li>
+        <li><a class="nav-link" href="index.html#about">About Me</a></li>
+        <li><a class="nav-link" href="index.html#resume">Resume</a></li>
+        <li><a class="nav-link" href="index.html#connect">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content">
+
+  <!--
+    Campaigns — two projects stacked on one page, same convention as
+    branding.html will use for Common Ground + BGL: a full .case-hero/
+    .case-nav/.case-story for the first project (Hamleys — Share A
+    Smile, in full), a quiet .case-project-divider, then a second
+    .case-hero + .case-story for the second (Mattel — Barbie Campaign).
+    Both now use the SAME shared template as branding.html/motion.html
+    (previously this page had its own bespoke .ed-* magazine template
+    — replaced per direct request that every project's detailed
+    breakdown share one identical layout). initCaseStudyReveals and
+    initCaseNav (script.js) both already support more than one
+    .case-hero per page.
+
+    Hamleys assets: /hamleys-assets (source: "3) campaigns/hamleys"),
+    including campaign-video.mp4 (a copy of hamleys/2.mp4) embedded via
+    .case-video. Barbie has no image assets yet, only its own campaign
+    film (/assets/barbie/campaign-video.mp4) and the one paragraph of
+    copy provided so far — no numbered beats until fuller case-study
+    text (Role/Brief/Idea/Learned) is supplied, matching how BGL's
+    copy is still pending for branding.html.
+
+    Both videos are large (58–68MB, no compression tooling available
+    on this machine) and use preload="metadata" + controls so nothing
+    downloads beyond a first frame until the viewer presses play.
+  -->
+
+  <section class="case-hero" id="case-hero">
+    <div class="case-hero__inner">
+      <a class="case-back" href="index.html#projects">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Work
+      </a>
+      <div class="case-hero__tags">
+        <span class="case-tag">Campaign</span>
+        <span class="case-tag">Social Impact</span>
+      </div>
+      <h1 class="case-hero__title split-text">Hamleys — Share A Smile</h1>
+      <p class="case-hero__intro">Reimagining Hamleys as a more inclusive, accessible brand for children across India.</p>
+    </div>
+    <figure class="case-hero__figure">
+      <img src="assets/hamleys/thumbnail-1.jpg" alt="Children drawing a Hamleys Smile chalk mural on the pavement, seen from above." loading="lazy">
+    </figure>
+  </section>
+
+  <nav class="case-nav" aria-label="Case study sections">
+    <span class="case-nav__indicator" aria-hidden="true"></span>
+    <a class="case-nav__link" href="#role" data-case-nav="role"><span class="case-nav__dot"></span><span class="case-nav__label">My Role</span></a>
+    <a class="case-nav__link" href="#brief" data-case-nav="brief"><span class="case-nav__dot"></span><span class="case-nav__label">The Brief</span></a>
+    <a class="case-nav__link" href="#idea" data-case-nav="idea"><span class="case-nav__dot"></span><span class="case-nav__label">The Idea</span></a>
+    <a class="case-nav__link" href="#campaign" data-case-nav="campaign"><span class="case-nav__dot"></span><span class="case-nav__label">The Campaign</span></a>
+    <a class="case-nav__link" href="#life" data-case-nav="life"><span class="case-nav__dot"></span><span class="case-nav__label">In Practice</span></a>
+    <a class="case-nav__link" href="#learned" data-case-nav="learned"><span class="case-nav__dot"></span><span class="case-nav__label">Learned</span></a>
+  </nav>
+
+  <section class="case-story" aria-label="Hamleys project story">
+
+    <div class="case-beat case-beat--text case-beat--role" id="role">
+      <p class="case-beat__eyebrow">01</p>
+      <h2 class="case-beat__heading">My Role</h2>
+      <ul class="case-role-list">
+        <li>Campaign Concept &amp; Ideation</li>
+        <li>Visual Identity</li>
+        <li>Art Direction</li>
+        <li>Illustration</li>
+        <li>Social Media Design</li>
+        <li>Outdoor &amp; Print Collaterals</li>
+        <li>Mockups</li>
+      </ul>
+    </div>
+
+    <div class="case-beat case-beat--text" id="brief">
+      <p class="case-beat__eyebrow">02</p>
+      <h2 class="case-beat__heading">The Brief</h2>
+      <p>Reimagine Hamleys and its positioning to make the joy of play feel accessible to every child, especially in Tier 2 and Tier 3 cities and underserved communities.</p>
+      <p>The challenge was to move beyond a premium toy-store perception and build a campaign around inclusivity, play, and community.</p>
+    </div>
+
+    <div class="case-beat case-beat--text" id="idea">
+      <p class="case-beat__eyebrow">03</p>
+      <h2 class="case-beat__heading">The Idea</h2>
+      <p>Share A Smile was built around a simple thought: every child deserves the chance to play.</p>
+      <p>The campaign brings children from different backgrounds together through creativity, sharing, and play — turning everyday public spaces into places where children can draw, create, exchange toys, and share joy.</p>
+    </div>
+
+    <div class="case-gallery case-gallery--masonry" aria-label="Campaign design process">
+      <figure class="case-gallery__item"><img src="assets/hamleys/social-1.jpg" alt="Hamleys Smile social media post — The Bay of Smiles." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/social-2.jpg" alt="Hamleys Smile social media post — toy exchange." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/social-3.jpg" alt="Hamleys Smile social media post — event countdown." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/social-4.jpg" alt="Hamleys Smile social media post." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/social-5.jpg" alt="Hamleys Smile social media post — Share A Smile badge." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/social-6.jpg" alt="Hamleys Smile social media post — street doodle zone." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/social-7.jpg" alt="Instagram profile mockup for HamleysSmileOfficial showing the full Share A Smile social grid." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/illustration-sheet.jpg" alt="Hand-drawn illustration sheet developed for the Share A Smile campaign." loading="lazy"></figure>
+    </div>
+
+    <div class="case-beat case-beat--text" id="campaign">
+      <p class="case-beat__eyebrow">04</p>
+      <h2 class="case-beat__heading">The Campaign</h2>
+      <p>The campaign centred around three simple actions: Draw. Share. Give.</p>
+      <p>Children could participate in street doodle zones, exchange pre-loved toys for new ones, and donate refurbished toys to children who may not have access to them.</p>
+    </div>
+
+    <div class="case-pullquote">
+      <span class="case-pullquote__mark" aria-hidden="true">&ldquo;</span>
+      <p>Draw. Share. Give.</p>
+    </div>
+
+    <div class="case-video">
+      <video src="assets/hamleys/campaign-video.mp4" poster="assets/hamleys/thumbnail-1.jpg" controls preload="metadata" playsinline></video>
+      <p class="case-video__caption">Share A Smile — campaign film</p>
+    </div>
+
+    <div class="case-beat case-beat--text" id="life">
+      <p class="case-beat__eyebrow">05</p>
+      <h2 class="case-beat__heading">Bringing It To Life</h2>
+      <p>I developed the campaign&rsquo;s visual identity and communication system across social media, flyers, posters, billboards, and outdoor applications.</p>
+      <p>Hand-drawn doodles, playful typography, bright colours, and a chalk-inspired campaign logo created a visual language that felt childlike, inclusive, and community-driven.</p>
+    </div>
+
+    <div class="case-gallery case-gallery--grid" aria-label="Hamleys campaign mockups">
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-1.jpg" alt="'Let's Fill the Streets with Colours' poster mockup, flat paper version." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-2.jpg" alt="'Let's Fill the Streets with Colours' poster mockup, alternate angle." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-3.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-4.jpg" alt="Hamleys Smile stationery mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-5.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-6.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-7.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-8.jpg" alt="Street billboard mockup reading 'Let's Fill the Streets with Colours!' inviting families to a chalk-doodle playground." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-9.jpg" alt="Hamleys Smile shopping bag mockup with the hand-drawn logo and illustrations." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-10.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-11.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
+    </div>
+
+    <div class="case-beat case-beat--text case-beat--closing" id="learned">
+      <p class="case-beat__eyebrow">06</p>
+      <h2 class="case-beat__heading">What I Learned</h2>
+      <p>This project taught me that repositioning isn&rsquo;t always about changing what a brand sells &mdash; it can be about changing who gets to feel included in it.</p>
+    </div>
+
+  </section>
+
+  <div class="case-project-divider">
+    <span class="case-project-divider__label">Next Campaign</span>
+  </div>
+
+  <!--
+    Mattel — Barbie Campaign. Only a short description and the
+    campaign film have been provided so far — no Role/Brief/Idea/
+    Learned breakdown and no image assets, so this stays a simple
+    hero + video rather than a full numbered .case-story like Hamleys.
+    Add the fuller copy later to bring it up to the same depth.
+  -->
+  <section class="case-hero" id="case-hero-barbie">
+    <div class="case-hero__inner">
+      <div class="case-hero__tags">
+        <span class="case-tag">Campaign</span>
+      </div>
+      <h1 class="case-hero__title split-text">Mattel — Barbie Campaign</h1>
+      <p class="case-hero__intro">A campaign built around the idea that when girls play with Barbie, they can imagine themselves becoming anything. The hand-drawn animation style makes the message feel playful, personal, and closer to a child&rsquo;s imagination.</p>
+    </div>
+  </section>
+
+  <section class="case-story" aria-label="Barbie campaign film">
+    <div class="case-video">
+      <video src="assets/barbie/campaign-video.mp4" controls preload="metadata" playsinline></video>
+      <p class="case-video__caption">Mattel — Barbie campaign film</p>
+    </div>
+  </section>
+
+  <section class="case-close">
+    <p class="case-close__label">Next up</p>
+    <a class="btn-pill case-close__link" href="index.html#projects">Explore More Work</a>
+  </section>
+
+  <div class="footer">
+    <div class="footer__inner">
+      <div class="footer__info">
+        <p>email: hello@prachimittal.com</p>
+        <p>based in Mumbai, India</p>
+        <p>available for: freelance projects &amp; full time</p>
+      </div>
+      <div class="footer__links">
+        <div class="footer__col">
+          <p class="footer__col-title">Pages</p>
+          <a href="index.html#top">Home</a>
+          <a href="index.html#about">About</a>
+          <a href="index.html#projects">Work</a>
+        </div>
+        <div class="footer__col">
+          <p class="footer__col-title">Socials</p>
+          <a href="#">Instagram</a>
+          <a href="#">LinkedIn</a>
+          <a href="#">Behance</a>
+        </div>
+      </div>
+    </div>
+    <p class="footer__copyright">&copy; 2026 Prachi Mittal &mdash; All Rights Reserved</p>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

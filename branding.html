@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Branding — Prachi Mittal</title>
+<meta name="description" content="Common Ground and BGL — two brand identity projects by Prachi Mittal.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="index.html#top" class="logo">Prachi Mittal</a>
+
+    <nav class="primary-nav" aria-label="Primary">
+      <ul class="primary-nav__categories">
+        <li><a class="nav-link" href="index.html#projects">Project</a></li>
+        <li><a class="nav-link" href="index.html#about">About Me</a></li>
+        <li><a class="nav-link" href="index.html#resume">Resume</a></li>
+        <li><a class="nav-link" href="index.html#connect">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content">
+
+  <!--
+    Branding — two projects stacked on one page, same convention as
+    the campaigns page (Hamleys + Barbie): a full .case-hero/.case-nav/
+    .case-story for Common Ground (first), a quiet .case-project-
+    divider, then a second .case-hero + .case-story for BGL (see the
+    comment further down for why BGL doesn't get its own .case-nav).
+
+    Common Ground — real case study copy.
+    1. .case-hero — title/intro/tags, same quiet cream-on-cream
+       language as the rest of the site.
+    2. .case-nav — fixed section scroll-spy (initCaseNav, script.js):
+       highlights the current .case-beat[id] as it crosses the
+       viewport centre and smooth-scrolls to it on click. Per direct
+       request that the nav/layout feel "creative," not a plain
+       jump-link list — see .case-nav in styles.css for the sliding
+       indicator and hover treatment.
+    3. .case-story — text beats (.case-beat--text) alternating with
+       full image galleries (.case-gallery) pulled from every file in
+       /cg — one gallery per source folder (designs, process, mockup),
+       not just a single representative image each. Gallery items
+       reveal staggered on scroll and lift/sharpen on hover (see
+       .case-gallery__item in styles.css) — the same muted-to-colour
+       hover language as this site's older case-image template,
+       applied to real photos now instead of a flat tint.
+  -->
+  <section class="case-hero" id="case-hero">
+    <div class="case-hero__inner">
+      <a class="case-back" href="index.html#projects">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Work
+      </a>
+      <div class="case-hero__tags">
+        <span class="case-tag">Branding</span>
+        <span class="case-tag">Runner-Up &middot; Brief Me Baby #52</span>
+      </div>
+      <h1 class="case-hero__title split-text">Common Ground</h1>
+      <p class="case-hero__intro">Creating a retreat brand that balances solitude, connection, and intentional living.</p>
+    </div>
+    <figure class="case-hero__figure">
+      <img src="assets/common-ground/mockup-1.jpg" alt="The Common Ground logo painted onto a stone floor at the retreat, with a group gathered in a circle around it at sunset." loading="lazy">
+    </figure>
+  </section>
+
+  <nav class="case-nav" aria-label="Case study sections">
+    <span class="case-nav__indicator" aria-hidden="true"></span>
+    <a class="case-nav__link" href="#role" data-case-nav="role"><span class="case-nav__dot"></span><span class="case-nav__label">My Role</span></a>
+    <a class="case-nav__link" href="#brief" data-case-nav="brief"><span class="case-nav__dot"></span><span class="case-nav__label">The Brief</span></a>
+    <a class="case-nav__link" href="#identity" data-case-nav="identity"><span class="case-nav__dot"></span><span class="case-nav__label">Identity</span></a>
+    <a class="case-nav__link" href="#life" data-case-nav="life"><span class="case-nav__dot"></span><span class="case-nav__label">In Practice</span></a>
+    <a class="case-nav__link" href="#learned" data-case-nav="learned"><span class="case-nav__dot"></span><span class="case-nav__label">Learned</span></a>
+  </nav>
+
+  <section class="case-story" aria-label="Project story">
+
+    <div class="case-beat case-beat--text case-beat--role" id="role">
+      <p class="case-beat__eyebrow">01</p>
+      <h2 class="case-beat__heading">My Role</h2>
+      <ul class="case-role-list">
+        <li>Concept Development</li>
+        <li>Moodboarding</li>
+        <li>Logo Exploration &amp; Design</li>
+        <li>Typography Direction</li>
+        <li>Identity Development</li>
+        <li>Branding Mockups</li>
+        <li>Visual Refinement</li>
+      </ul>
+    </div>
+
+    <div class="case-beat case-beat--text" id="brief">
+      <p class="case-beat__eyebrow">02</p>
+      <h2 class="case-beat__heading">The Brief</h2>
+      <p>Common Ground is an eco-conscious retreat designed for people seeking a slower and more intentional way of living.</p>
+      <p>The challenge was to create a brand identity that felt calm, elevated, and deeply connected to nature — without relying on the visual clich&eacute;s commonly found in wellness and retreat branding.</p>
+    </div>
+
+    <div class="case-gallery case-gallery--masonry" aria-label="Design exploration">
+      <figure class="case-gallery__item"><img src="assets/common-ground/design-1.png" style="aspect-ratio: 1014/1035" alt="Common Ground logo badge — the C and G mark inside a circular seal with 'A Place To Pause' arched around it." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/design-2.png" style="aspect-ratio: 1436/1426" alt="Common Ground logo mark stacked above a hand-lettered wordmark." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/design-3.png" style="aspect-ratio: 1600/291" alt="Common Ground horizontal logo lockup — mark beside the hand-lettered wordmark." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/design-4.png" style="aspect-ratio: 1054/649" alt="Common Ground logo mark on a sage-green brand colour field." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/design-5.png" style="aspect-ratio: 1054/649" alt="Common Ground logo mark, alternate colour treatment." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/design-6.png" style="aspect-ratio: 1080/1350" alt="Aerial river-system reference image that inspired the logo's flowing letterforms." loading="lazy"></figure>
+    </div>
+
+    <div class="case-beat case-beat--text" id="identity">
+      <p class="case-beat__eyebrow">03</p>
+      <h2 class="case-beat__heading">Building The Identity</h2>
+      <p>We explored how connection exists within nature itself. The identity was inspired by a project that documented aerial views of the Amazon River system forming natural letterforms from A to Z. Using this as a starting point, we developed hand-drawn &ldquo;C&rdquo; and &ldquo;G&rdquo; letterforms and refined them into a logo that reflects connection, flow, and shared space.</p>
+    </div>
+
+    <div class="case-pullquote">
+      <span class="case-pullquote__mark" aria-hidden="true">&ldquo;</span>
+      <p>At its core, Common Ground is about finding shared space &mdash; between people and nature, stillness and community, rest and connection.</p>
+    </div>
+
+    <div class="case-gallery case-gallery--masonry" aria-label="Design process">
+      <figure class="case-gallery__item"><img src="assets/common-ground/process-1.png" style="aspect-ratio: 1527/827" alt="Moodboard collage of logo concept references, colour palette swatches, and visual inspiration." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/process-2.png" style="aspect-ratio: 1247/508" alt="Hand-drawn sketch iterations of the logo mark, exploring the C and G letterform on a tablet." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/process-3.png" style="aspect-ratio: 713/575" alt="Logo mark paired with early typography exploration." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/process-4.png" style="aspect-ratio: 1180/686" alt="Typeface iteration options considered for the identity." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/process-5.png" style="aspect-ratio: 1066/796" alt="Final brand colour palette." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/process-6.png" style="aspect-ratio: 1322/595" alt="Reference collage of textures and assets gathered during research." loading="lazy"></figure>
+    </div>
+
+    <div class="case-beat case-beat--text" id="life">
+      <p class="case-beat__eyebrow">04</p>
+      <h2 class="case-beat__heading">Bringing The Brand To Life</h2>
+      <p>The identity was extended across multiple touchpoints including menus, business cards, wayfinding, website concepts, and retreat experiences.</p>
+    </div>
+
+    <div class="case-gallery case-gallery--grid" aria-label="Brand mockups">
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-1.jpg" alt="The Common Ground logo painted onto a stone floor at the retreat, with a group gathered in a circle around it at sunset." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-2.jpg" alt="A place-setting mockup — the Common Ground menu on hand-made paper, styled on a table." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-3.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-4.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-5.jpg" alt="A retreat booklet mockup titled 'A Place To Pause' beside brand messaging, set against the retreat grounds." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-6.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-7.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-8.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-9.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-10.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-11.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-12.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-13.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-14.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/common-ground/mockup-15.jpg" alt="Common Ground brand mockup." loading="lazy"></figure>
+    </div>
+
+    <div class="case-beat case-beat--text case-beat--closing" id="learned">
+      <p class="case-beat__eyebrow">05</p>
+      <h2 class="case-beat__heading">What I Learned</h2>
+      <p>This project taught me that designing for nature does not always require obvious references to nature. Sometimes the strongest identities come from understanding a feeling and translating it into a visual system rather than directly illustrating it.</p>
+    </div>
+
+  </section>
+
+  <div class="case-project-divider">
+    <span class="case-project-divider__label">Next Project</span>
+  </div>
+
+  <!--
+    BGL — Not Your Basic Bagel. Second branding project on this page,
+    same convention as the campaigns page (Hamleys + Barbie): a full
+    second .case-hero + .case-story stacked below Common Ground's,
+    reusing every shared class so the layout stays identical. No
+    second .case-nav — initCaseNav (script.js) only tracks one nav per
+    page, so the sidebar keeps following Common Ground's five sections
+    the whole way down; BGL's own numbered beats (01–06 below) still
+    give it the same in-page structure without needing the sidebar.
+    Assets: /bgl-assets (source: /bgl/design, /bgl/mockups,
+    /bgl/process) — design/process images kept as PNG where the
+    source actually used transparency (the illustrated brand
+    character and logo lockups), JPG everywhere else.
+  -->
+  <section class="case-hero" id="case-hero-bgl">
+    <div class="case-hero__inner">
+      <div class="case-hero__tags">
+        <span class="case-tag">Branding</span>
+        <span class="case-tag">Brief 155 &middot; Designer Briefs</span>
+      </div>
+      <h1 class="case-hero__title split-text">BGL &mdash; Not Your Basic Bagel</h1>
+      <p class="case-hero__intro">Creating a modern bagel bar with a distinctly Indian personality.</p>
+    </div>
+    <figure class="case-hero__figure">
+      <img src="assets/bgl/mockup-6.jpg" alt="The BGL storefront counter and display case, stocked with bagels beneath hanging product signage." loading="lazy">
+    </figure>
+  </section>
+
+  <section class="case-story" aria-label="BGL project story">
+
+    <div class="case-beat case-beat--text case-beat--role" id="bgl-role">
+      <p class="case-beat__eyebrow">01</p>
+      <h2 class="case-beat__heading">My Role</h2>
+      <ul class="case-role-list">
+        <li>Concept &amp; Ideation</li>
+        <li>Brand Identity Development</li>
+        <li>Art Direction</li>
+        <li>Illustration</li>
+        <li>Mockups</li>
+        <li>Overall Visual Direction</li>
+      </ul>
+    </div>
+
+    <div class="case-beat case-beat--text" id="bgl-brief">
+      <p class="case-beat__eyebrow">02</p>
+      <h2 class="case-beat__heading">The Brief</h2>
+      <p>Create a modern bagel bar where customers can build their own combinations from a wide range of spreads, fillings, and toppings.</p>
+      <p>The challenge was to create a brand that feels contemporary and playful while standing apart from the typical Western visual language associated with bagel caf&eacute;s.</p>
+    </div>
+
+    <div class="case-gallery case-gallery--masonry" aria-label="BGL identity exploration">
+      <figure class="case-gallery__item"><img src="assets/bgl/design-1.png" alt="BGL wordmark logo — the Latin 'BG' paired with the Devanagari letterform for 'L', in a bold hand-drawn lettering style." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/design-2.png" alt="'Not Your Basic Bagel' tagline lockup in the brand's hand-drawn lettering style." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/design-3.png" alt="BGL brand character illustration — a woman in a saree and jeans riding a bicycle while holding a bagel." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/design-4.png" alt="BGL brand character illustration — the woman holding a giant bagel overhead while walking." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/design-5.png" alt="BGL brand character illustration — the woman hugging a stack of three bagels." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/design-6.png" alt="BGL brand character illustration — the woman taking a bite out of a giant bagel." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/design-7.png" alt="BGL brand character illustration — the woman holding a giant bagel at her waist." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/design-8.png" alt="BGL brand character illustration — the woman posing with a bagel, hand on hip." loading="lazy"></figure>
+    </div>
+
+    <div class="case-beat case-beat--text" id="bgl-idea">
+      <p class="case-beat__eyebrow">03</p>
+      <h2 class="case-beat__heading">The Idea</h2>
+      <p>BGEL began with one question: what would a modern bagel bar look like with an Indian point of view?</p>
+      <p>The identity brings together Western bagel culture and Indian visual language. The &ldquo;BG&rdquo; uses a bold Latin typeface, while the &ldquo;L&rdquo; is created in Devanagari, creating an unexpected mix of scripts within the same wordmark.</p>
+      <p>The brand extends this cultural crossover through its illustrated character &mdash; a woman styled in a contemporary way, combining a saree drape with jeans, creating a visual representation of both worlds coming together.</p>
+    </div>
+
+    <div class="case-pullquote">
+      <span class="case-pullquote__mark" aria-hidden="true">&ldquo;</span>
+      <p>What would a modern bagel bar look like with an Indian point of view?</p>
+    </div>
+
+    <div class="case-beat case-beat--text" id="bgl-identity">
+      <p class="case-beat__eyebrow">04</p>
+      <h2 class="case-beat__heading">Building The Identity</h2>
+      <p>The visual language was designed to feel bold, youthful, playful, and distinctly Indian without becoming overly traditional.</p>
+      <p>Bold typography, bright colours, graphic illustrations, and playful compositions create a contemporary caf&eacute; personality, while the use of Devanagari and Indian-inspired details gives the identity its local character.</p>
+    </div>
+
+    <div class="case-gallery case-gallery--masonry" aria-label="BGL design process">
+      <figure class="case-gallery__item"><img src="assets/bgl/process-1.jpg" alt="Moodboard collage of Indian visual references, illustrated women in contemporary Indian fashion, and packaging inspiration." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/process-2.jpg" alt="Hand-sketched wordmark iterations exploring different ways to blend Latin and Devanagari lettering." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/process-3.jpg" alt="Early logo colour and type explorations, including a rejected mandala-heavy direction." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/process-4.jpg" alt="Visual style reference collage of colourful caf&eacute; interiors and storefronts." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/process-5.jpg" alt="Hand-drawn illustration sticker set — chef's hat, mixing bowl, rolling pin, apron, and other bakery props." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/process-6.jpg" alt="Wordmark colour and contrast test grid across the brand's palette." loading="lazy"></figure>
+    </div>
+
+    <div class="case-beat case-beat--text" id="bgl-life">
+      <p class="case-beat__eyebrow">05</p>
+      <h2 class="case-beat__heading">Bringing The Brand To Life</h2>
+      <p>I extended the identity across packaging, menus, storefront applications, social media, and branded touchpoints, using the same graphic language to create a cohesive and energetic bagel-bar experience.</p>
+      <p>The illustrations became an important part of the identity, helping the brand feel more approachable, expressive, and memorable.</p>
+    </div>
+
+    <div class="case-gallery case-gallery--grid" aria-label="BGL brand mockups">
+      <figure class="case-gallery__item"><img src="assets/bgl/mockup-1.jpg" alt="The BGL logo mounted on an orange counter front, with 'Not Your Basic Bagel' underneath." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/mockup-2.jpg" alt="Hexagonal BGL takeaway boxes stacked beside a 'Hands Off My Bagel!' poster." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/mockup-3.jpg" alt="A BGL takeaway bag handed through a car window, sealed with a bagel-shaped logo sticker." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/mockup-4.jpg" alt="A pink 'Desi Fusion' BGL menu card listing items like Butter Chicken Bliss and Chole Chaat Bagel." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/mockup-5.jpg" alt="'Not Your Basic Bagel' campaign poster featuring a loaded lox bagel sandwich." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/mockup-6.jpg" alt="The BGL storefront counter and display case, stocked with bagels beneath hanging product signage." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/mockup-7.jpg" alt="Someone biting into a BGL bagel wrapped in branded paper, next to a 'Bite It' sticker." loading="lazy"></figure>
+      <figure class="case-gallery__item"><img src="assets/bgl/mockup-8.jpg" alt="A flat lay of assorted bagels with the BGL logo and brand character illustration." loading="lazy"></figure>
+    </div>
+
+    <div class="case-beat case-beat--text case-beat--closing" id="bgl-learned">
+      <p class="case-beat__eyebrow">06</p>
+      <h2 class="case-beat__heading">What I Learned</h2>
+      <p>This project taught me how cultural references can be integrated into a contemporary identity without making the brand feel stereotypically traditional. The strongest part of the concept came from finding a visual middle ground between two seemingly different worlds &mdash; and making that contrast feel intentional.</p>
+    </div>
+
+  </section>
+
+  <section class="case-close">
+    <p class="case-close__label">Next up</p>
+    <a class="btn-pill case-close__link" href="index.html#projects">Explore More Work</a>
+  </section>
+
+  <div class="footer">
+    <div class="footer__inner">
+      <div class="footer__info">
+        <p>email: hello@prachimittal.com</p>
+        <p>based in Mumbai, India</p>
+        <p>available for: freelance projects &amp; full time</p>
+      </div>
+      <div class="footer__links">
+        <div class="footer__col">
+          <p class="footer__col-title">Pages</p>
+          <a href="index.html#top">Home</a>
+          <a href="index.html#about">About</a>
+          <a href="index.html#projects">Work</a>
+        </div>
+        <div class="footer__col">
+          <p class="footer__col-title">Socials</p>
+          <a href="#">Instagram</a>
+          <a href="#">LinkedIn</a>
+          <a href="#">Behance</a>
+        </div>
+      </div>
+    </div>
+    <p class="footer__copyright">&copy; 2026 Prachi Mittal &mdash; All Rights Reserved</p>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

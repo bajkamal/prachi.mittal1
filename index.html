@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prachi Mittal — Communication Designer</title>
+<meta name="description" content="Prachi Mittal, a communication designer driven by curiosity.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+</head>
+<body>
+
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+<header class="site-header">
+  <div class="site-header__inner">
+    <a href="#top" class="logo"><img src="assets/logo.png?v=2" alt="Prachi Mittal — driven by curiosity" class="logo__mark"></a>
+
+    <nav class="primary-nav" aria-label="Primary">
+      <!--
+        Every project type now lives together on one page (#projects,
+        below), so the nav is just these 4 flat links — no more
+        separate category pages to list. Always visible at every
+        width now, no hamburger/dropdown fallback — four short words
+        plus the logo comfortably share one header pill even on a
+        phone-width screen, so the collapse mechanism this site used
+        to need for a longer link list isn't necessary any more.
+      -->
+      <ul class="primary-nav__categories">
+        <li><a class="nav-link" href="#projects">Project</a></li>
+        <li><a class="nav-link" href="#about">About Me</a></li>
+        <li><a class="nav-link" href="#resume">Resume</a></li>
+        <li><a class="nav-link" href="#connect">Contact</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main id="main-content">
+
+  <section class="hero" id="top" aria-label="Introduction">
+
+    <!--
+      The hero's only tile layer: 40 tiles on one continuous spiral
+      (computed in script.js), ported from the client-supplied
+      reference implementation, then upsized in count (and downsized
+      per-tile in styles.css) per direct request for a denser, smaller-
+      thumbnail field closer to a Pinterest/Cosmos-style scatter. Each
+      tile's progress u counts down
+      from its own fixed starting offset; t=sqrt(u) drives both radius
+      (r = maxR*t, so it reaches 0 at the centre) and angle
+      (theta = (1-t)*revolutions*2π, so angular sweep accelerates
+      near the centre) — the classic "water down a drain" curve. Tile
+      rotation tracks theta directly, so tiles visibly spin as they
+      travel (matching the reference exactly, unlike earlier passes
+      on this layer). Opacity fades in just after spawning at the
+      outer edge and fades out just before reaching the centre, sized
+      so the fade completes well clear of the headline. When real
+      photos replace the background fills, remove aria-hidden and
+      give each tile proper alt text — right now they carry no
+      content so hiding them from AT is correct, but that flips once
+      photos go in.
+    -->
+    <div class="spiral-field" aria-hidden="true">
+      <div class="spiral-tile" data-spiral="01" style="--tile-img: url(&quot;assets/hero-tiles/01.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="02" style="--tile-img: url(&quot;assets/hero-tiles/02.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="03" style="--tile-img: url(&quot;assets/hero-tiles/03.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="04" style="--tile-img: url(&quot;assets/hero-tiles/04.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="05" style="--tile-img: url(&quot;assets/hero-tiles/05.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="06" style="--tile-img: url(&quot;assets/hero-tiles/06.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="07" style="--tile-img: url(&quot;assets/hero-tiles/07.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="08" style="--tile-img: url(&quot;assets/hero-tiles/08.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="09" style="--tile-img: url(&quot;assets/hero-tiles/09.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="10" style="--tile-img: url(&quot;assets/hero-tiles/10.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="11" style="--tile-img: url(&quot;assets/hero-tiles/11.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="12" style="--tile-img: url(&quot;assets/hero-tiles/12.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="13" style="--tile-img: url(&quot;assets/hero-tiles/13.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="14" style="--tile-img: url(&quot;assets/hero-tiles/14.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="15" style="--tile-img: url(&quot;assets/hero-tiles/15.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="16" style="--tile-img: url(&quot;assets/hero-tiles/16.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="17" style="--tile-img: url(&quot;assets/hero-tiles/17.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="18" style="--tile-img: url(&quot;assets/hero-tiles/18.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="19" style="--tile-img: url(&quot;assets/hero-tiles/19.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="20" style="--tile-img: url(&quot;assets/hero-tiles/20.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="21" style="--tile-img: url(&quot;assets/hero-tiles/21.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="22" style="--tile-img: url(&quot;assets/hero-tiles/22.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="23" style="--tile-img: url(&quot;assets/hero-tiles/23.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="24" style="--tile-img: url(&quot;assets/hero-tiles/24.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="25" style="--tile-img: url(&quot;assets/hero-tiles/25.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="26" style="--tile-img: url(&quot;assets/hero-tiles/26.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="27" style="--tile-img: url(&quot;assets/hero-tiles/27.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="28" style="--tile-img: url(&quot;assets/hero-tiles/28.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="29" style="--tile-img: url(&quot;assets/hero-tiles/29.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="30" style="--tile-img: url(&quot;assets/hero-tiles/30.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="31" style="--tile-img: url(&quot;assets/hero-tiles/31.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="32" style="--tile-img: url(&quot;assets/hero-tiles/32.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="33" style="--tile-img: url(&quot;assets/hero-tiles/01.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="34" style="--tile-img: url(&quot;assets/hero-tiles/02.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="35" style="--tile-img: url(&quot;assets/hero-tiles/03.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="36" style="--tile-img: url(&quot;assets/hero-tiles/04.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="37" style="--tile-img: url(&quot;assets/hero-tiles/05.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="38" style="--tile-img: url(&quot;assets/hero-tiles/06.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="39" style="--tile-img: url(&quot;assets/hero-tiles/07.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="40" style="--tile-img: url(&quot;assets/hero-tiles/08.jpg&quot;)"></div>
+    </div>
+
+    <div class="hero__content">
+      <h1 class="hero__headline">Everything you&rsquo;re about to see started with <span class="hero__headline-accent">one question.</span></h1>
+    </div>
+
+  </section>
+
+  <section class="why-section" id="why" aria-labelledby="why-heading">
+
+    <!--
+      Plain flowing block — no pin/pause (deferred, see script.js).
+    -->
+    <div class="why-pause">
+      <svg class="curve" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,60 C180,5 540,5 720,60 C900,115 1260,115 1440,60 L1440,120 L0,120 Z"/>
+      </svg>
+
+      <svg class="accent-icon accent-icon--plus-1" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3 V21 M3 12 H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <svg class="accent-icon accent-icon--plus-2" aria-hidden="true" viewBox="0 0 24 24" fill="none">
+        <path d="M12 3 V21 M3 12 H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+
+      <div class="why-section__inner">
+        <div class="why-row">
+          <h2 class="why-heading" id="why-heading">WHY?</h2>
+        </div>
+
+        <div class="why-grid">
+          <svg class="why-statement__icon" aria-hidden="true" viewBox="0 0 40 40" fill="none">
+            <path d="M20 2 L23 17 L38 20 L23 23 L20 38 L17 23 L2 20 L17 17 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+          <p class="why-statement">Because I&rsquo;ve always believed the best ideas begin with curiosity.</p>
+          <svg class="why-statement__icon" aria-hidden="true" viewBox="0 0 40 40" fill="none">
+            <path d="M20 2 L23 17 L38 20 L23 23 L20 38 L17 23 L2 20 L17 17 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      Continuous horizontal marquee of project thumbnails — part of
+      this same section (not a separate one) so the WHY -> horizontal
+      setup reads as one continuous scroll story. Same pink as
+      .why-pause (no color transition needed, so no curve here — see
+      client reference "portfolio_full_website (6).html", where WHY
+      and this scroller are literally the same <section>). The strip
+      is clipped by an hourglass-shaped mask (see .projects-viewport
+      in styles.css) — full height at the edges, pinched narrow in
+      the middle — ported from that same reference's inline SVG mask.
+      The track holds the same 8 placeholder cards twice back-to-back;
+      script.js scrolls it left and resets exactly one group-width the
+      instant the first group has fully passed, which is invisible
+      because group two is an identical copy — that's the whole
+      seamless-loop trick, no randomness or teleporting involved.
+      Auto-scroll never stops; dragging only throttles how fast it's
+      already going (speeds up, slows down, or reverses with drag
+      velocity), it never takes over direct 1:1 positioning.
+      Placeholder colored cards stand in for real project
+      images/videos — swap the fills for real media and give each
+      card a real link + alt text once that content exists;
+      aria-hidden is correct for now since there's nothing real to
+      announce.
+    -->
+    <!--
+      Hidden, not deleted — this is an experiment (direct request):
+      swapping this marquee for the TV showcase below. Drop `hidden`
+      and delete the .tv-showcase block to revert if it doesn't work
+      out; nothing about this marquee or its script.js/styles.css
+      code has changed.
+    -->
+    <div class="projects-strip" hidden>
+      <div class="projects-viewport">
+        <div class="projects-track" aria-hidden="true">
+          <div class="projects-track__group">
+            <div class="project-card" data-card="1"></div>
+            <div class="project-card" data-card="2"></div>
+            <div class="project-card" data-card="3"></div>
+            <div class="project-card" data-card="4"></div>
+            <div class="project-card" data-card="5"></div>
+            <div class="project-card" data-card="6"></div>
+            <div class="project-card" data-card="7"></div>
+            <div class="project-card" data-card="8"></div>
+          </div>
+          <div class="projects-track__group">
+            <div class="project-card" data-card="1"></div>
+            <div class="project-card" data-card="2"></div>
+            <div class="project-card" data-card="3"></div>
+            <div class="project-card" data-card="4"></div>
+            <div class="project-card" data-card="5"></div>
+            <div class="project-card" data-card="6"></div>
+            <div class="project-card" data-card="7"></div>
+            <div class="project-card" data-card="8"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--
+      EXPERIMENTAL replacement for .projects-strip above (see the
+      comment there). tv-frame.png started as a green-screen
+      illustration — the actual screen area is now cut to transparent
+      (a one-time offline step, not runtime chroma-keying), so it sits
+      on TOP of the video and its own true curved screen shape does
+      all the masking; the video underneath is just a plain rectangle
+      matching that cutout's bounding box, object-fit:cover cropping
+      its 16:9 to fill it. See initTvShowcase in script.js for the
+      sound toggle (autoplay has to start muted — browsers block
+      autoplay-with-sound — the button is what actually gets it
+      playing "with the sound," per the ask).
+    -->
+    <!--
+      Purely decorative "room scene" dressing around the TV, per direct
+      request to push this section's aesthetics further — a warm glow
+      spilling from the screen, rabbit-ear antenna, a grounding shadow,
+      and two illustrations reused from the About section's original
+      set (removed from there earlier, not deleted from disk) recast
+      here as knick-knacks sitting either side of the set. All
+      aria-hidden (decorative only); see .tv-scene-* in styles.css for
+      the glow pulse / antenna sway / prop float keyframes.
+    -->
+    <div class="tv-showcase">
+      <div class="tv-scene-glow" aria-hidden="true"></div>
+      <div class="tv-scene-shadow" aria-hidden="true"></div>
+
+      <div class="tv-prop tv-prop--left" aria-hidden="true">
+        <img src="assets/illustrations/illsutrations-74.png" alt="">
+      </div>
+      <div class="tv-prop tv-prop--right" aria-hidden="true">
+        <img src="assets/illustrations/illsutrations-73.png" alt="">
+      </div>
+
+      <div class="tv-frame">
+        <svg class="tv-antenna" viewBox="0 0 200 140" aria-hidden="true">
+          <path class="tv-antenna__rod tv-antenna__rod--left" d="M96 110 L40 8" stroke="#211A14" stroke-width="4" stroke-linecap="round"/>
+          <path class="tv-antenna__rod tv-antenna__rod--right" d="M104 110 L160 8" stroke="#211A14" stroke-width="4" stroke-linecap="round"/>
+          <circle class="tv-antenna__tip tv-antenna__tip--left" cx="40" cy="8" r="7" fill="#DC346E" stroke="#211A14" stroke-width="3"/>
+          <circle class="tv-antenna__tip tv-antenna__tip--right" cx="160" cy="8" r="7" fill="#FF7140" stroke="#211A14" stroke-width="3"/>
+          <circle cx="100" cy="112" r="8" fill="#DC346E" stroke="#211A14" stroke-width="3"/>
+        </svg>
+        <video class="tv-frame__video" src="assets/tv/showcase-reel.mp4" autoplay muted loop playsinline></video>
+        <div class="tv-frame__noise" aria-hidden="true"></div>
+        <img class="tv-frame__shell" src="assets/tv/tv-frame.png" alt="" aria-hidden="true">
+        <button class="tv-frame__sound" type="button" aria-pressed="false" aria-label="Turn sound on">
+          <svg class="tv-frame__sound-icon tv-frame__sound-icon--off" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4Z" fill="currentColor"/><path d="M16 8l5 8M21 8l-5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <svg class="tv-frame__sound-icon tv-frame__sound-icon--on" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4Z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a9 9 0 0 1 0 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+
+  </section>
+
+  <!--
+    Ported from the client reference "portfolio_full_website (6).html"
+    (#about). The stat cards start hidden, scaled down, and stacked
+    behind the portrait; script.js's initAboutStats adds .show-stats
+    on scroll-into-view (that reference's own IntersectionObserver
+    pattern) to animate them out to their spread positions — "these
+    cards appear from behind as the scroll enters this page" per the
+    annotation. The doodles are decorative, ported
+    verbatim since they're just existing SVG markup, not a design
+    decision to make. Skipped the "me sitting on a boat" dev note near
+    the portrait — same as the other client brainstorm annotations
+    elsewhere (growing flower/mushroom, rabbit walking), it's a future
+    content idea, not something to build.
+  -->
+  <section id="about" class="about-section" aria-labelledby="about-heading">
+    <svg class="curve curve--about-top" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,70 C80,15 160,5 240,45 C320,85 400,95 480,55 C560,15 640,5 720,45 C800,85 880,95 960,55 C1040,15 1120,5 1200,45 L1200,0 L0,0 Z"/>
+    </svg>
+
+    <div class="about-section__inner">
+      <h2 class="about-heading" id="about-heading">Hi, I&rsquo;m <span class="about-heading__accent">PRACHI MITTAL</span></h2>
+
+      <div class="stats-cluster" id="stats-section">
+        <!--
+          Invisible — see #flying-card near the end of <body>. This
+          div only exists so script.js's initFlyingCard can measure
+          where the visible portrait should sit while we're here in
+          #about; the card itself is a separate fixed-position element
+          that's positioned to sit exactly over this slot at rest, so
+          it reads as a normal portrait until you scroll into the
+          storytelling section and it flies/flips to #end-placeholder.
+        -->
+        <div class="portrait-placeholder" id="start-placeholder" aria-hidden="true"></div>
+
+        <div class="stat-card stat-card--1">35+ Brands<br>&amp; Clients</div>
+        <div class="stat-card stat-card--2">6+<br>Internships</div>
+        <div class="stat-card stat-card--3">3+ Years</div>
+        <div class="stat-card stat-card--4">30+ Projects</div>
+      </div>
+    </div>
+
+    <svg class="curve curve--about-bottom" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,70 C80,15 160,5 240,45 C320,85 400,95 480,55 C560,15 640,5 720,45 C800,85 880,95 960,55 C1040,15 1120,5 1200,45 L1200,0 L0,0 Z"/>
+    </svg>
+  </section>
+
+  <!--
+    "The Way I See The World" — one continuous passage now, not four
+    discrete slides that fully exit before the next enters. The old
+    stage-1..4 (each sliding fully off-screen, opacity 0, before the
+    next slid in) read as four separate "new" screens arriving one
+    after another rather than one scroll-through story, so
+    .philosophy-text-track holds every beat stacked in normal flow
+    instead — the whole track scrolls vertically past a fixed focus
+    line as the pin progresses (see initPhilosophyScroll in script.js),
+    and each word's own opacity is driven continuously by how close it
+    currently sits to that focus line: dim well before it arrives, it
+    brightens into full emphasis passing through, then dims again on
+    the way out — already-read and not-yet-read text both fade, same
+    as a teleprompter, rather than anything popping in fresh. The
+    photo (.philosophy-visual-col) stays anchored in its own column
+    with just a slow continuous drift instead of jumping between
+    per-stage poses, to match that same "one continuous pass" feel.
+    #end-placeholder is still the landing spot for #flying-card (see
+    near the end of <body>). No top curve of its own — .curve--about-
+    bottom right before this section already closes the seam on its
+    own.
+  -->
+  <section class="philosophy-pin-wrapper" id="philosophy-section">
+    <div class="philosophy-scene">
+      <div class="philosophy-layout">
+        <div class="philosophy-visual-col">
+          <div class="philosophy-photo-container" id="ph-photo">
+            <div class="portrait-placeholder" id="end-placeholder" aria-hidden="true">
+              <img class="portrait-placeholder__photo" src="assets/portrait.jpg" alt="">
+            </div>
+          </div>
+        </div>
+
+        <div class="philosophy-text-col">
+          <div class="philosophy-text-track" id="philosophy-text-track">
+            <div class="philosophy-block">
+              <span class="stage-badge">01</span>
+              <h2 class="philosophy-copy__heading" data-story-heading>The Way I See The <span class="philosophy-copy__heading-accent">World</span></h2>
+              <p class="philosophy-copy__para" data-story-p1>I don&rsquo;t enjoy designing for the sake of making things look good. I enjoy understanding why something exists, what story it needs to tell, and how design can help people connect with it.</p>
+            </div>
+
+            <div class="philosophy-block">
+              <span class="stage-badge">02</span>
+              <h2 class="philosophy-copy__heading" data-story-heading>The Process</h2>
+              <p class="philosophy-copy__para" data-story-p2>The Nautilus shell became a metaphor for the way I learn. It grows one chamber at a time, and I believe design works the same way. Every project, experiment, and mistake adds another layer.</p>
+            </div>
+
+            <div class="philosophy-block">
+              <span class="stage-badge">03</span>
+              <h2 class="philosophy-copy__heading" data-story-heading>The Impact</h2>
+              <p class="philosophy-copy__para" data-story-p3>Today, I help brands and ideas find their voice through research, strategy, storytelling, and thoughtful design. From creating visual identities to advertising campaigns, I build work that is meaningful.</p>
+            </div>
+
+            <div class="philosophy-block">
+              <span class="stage-badge">04</span>
+              <p class="philosophy-copy__quote" data-story-quote>&ldquo;I don&rsquo;t think great designers have all the answers. I think they stay curious enough to keep asking better questions.&rdquo;</p>
+              <div class="philosophy-copy__tags" data-story-tags>
+                <p class="philosophy-copy__tags-label">What do I love the most!</p>
+                <div class="philosophy-copy__tag-list">
+                  <span class="philosophy-tag">Branding</span>
+                  <span class="philosophy-tag">Packaging</span>
+                  <span class="philosophy-tag">Editorial</span>
+                  <span class="philosophy-tag">Motion</span>
+                  <span class="philosophy-tag">Campaigns</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!--
+    Ported from the client-supplied reference
+    "creative_scroll_projects (3).html" (superseding the earlier, plainer
+    "interactive_scroll_projects_section.html" pass) — a pinned scroll
+    reel: the section stays stuck to the viewport for one long scroll
+    pass while a small floating image card cycles through the 4 project
+    categories (branding/editorial/motion/research) via a clip-path
+    reveal + blur/scale, and a lowercase word pair announcing the
+    current one slides past on either side — left words travel upward,
+    right words travel downward, so the two sides read as mirrored
+    rather than identical motion. The image card also tilts in 3D
+    toward the cursor (perspective + rotateX/rotateY on mousemove),
+    and a faint SVG-noise grain sits over the section for texture.
+    Re-themed onto this site's own tokens (ink/cream/pink, Poppins,
+    the same "Image Placeholder" convention .case-image__placeholder
+    uses on the category pages) rather than the reference's Tailwind/
+    Inter+Syne/stock-photo scaffolding, and each card is a real link
+    to that category's existing page instead of the reference's
+    purely decorative images. See initProjectsReel in script.js for
+    the scroll-scrubbed timeline and mouse-tilt handlers, and the
+    reduced-motion block in styles.css for how this collapses to a
+    plain stacked list of the 4 categories when animation is off.
+  -->
+  <section id="projects" class="projects-section" aria-labelledby="projects-heading">
+    <svg class="curve curve--projects-top" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,70 C80,15 160,5 240,45 C320,85 400,95 480,55 C560,15 640,5 720,45 C800,85 880,95 960,55 C1040,15 1120,5 1200,45 L1200,0 L0,0 Z"/>
+    </svg>
+    <h2 class="sr-only" id="projects-heading">Projects</h2>
+
+    <div class="projects-reel" id="projects-reel">
+      <div class="projects-reel__grain" aria-hidden="true"></div>
+
+      <div class="projects-reel__sticky">
+        <div class="projects-reel__text-track" aria-hidden="true">
+          <div class="projects-reel__word-col projects-reel__word-col--left">
+            <div class="projects-reel__word-wrapper">
+              <span class="projects-reel__word" data-reel-word>brand</span>
+              <span class="projects-reel__word" data-reel-word>brand</span>
+              <span class="projects-reel__word" data-reel-word>packaging</span>
+            </div>
+          </div>
+          <div class="projects-reel__word-col projects-reel__word-col--right">
+            <div class="projects-reel__word-wrapper">
+              <span class="projects-reel__word" data-reel-word>identity</span>
+              <span class="projects-reel__word" data-reel-word>campaigns</span>
+              <span class="projects-reel__word" data-reel-word>design</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="projects-reel__image-track" id="projects-reel-image-track">
+          <a class="projects-reel__card" data-reel-card href="branding.html" aria-label="Branding projects">
+            <span class="projects-reel__card-media"><img class="projects-reel__card-img" src="assets/common-ground/thumbnail.jpg" alt=""></span>
+          </a>
+          <a class="projects-reel__card" data-reel-card href="editorial.html" aria-label="Campaign work: Hamleys Share A Smile and Mattel Barbie Campaign">
+            <span class="projects-reel__card-media"><img class="projects-reel__card-img" src="assets/hamleys/thumbnail-1.jpg" alt=""></span>
+          </a>
+          <a class="projects-reel__card" data-reel-card href="motion.html" aria-label="Toblerone packaging redesign">
+            <span class="projects-reel__card-media"><img class="projects-reel__card-img" src="assets/toblerone/thumbnail.jpg" alt=""></span>
+          </a>
+        </div>
+
+        <div class="projects-reel__progress" aria-hidden="true">
+          <div class="projects-reel__progress-track">
+            <div class="projects-reel__progress-bar" id="projects-reel-progress"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!--
+    Not in the client's HTML reference file — built from the annotated
+    screenshot alone. Reading the mockup as an expand-on-click
+    accordion (one wide card showing a quote, the rest collapsed to a
+    narrow strip) since that's the only interaction that explains why
+    one card is shown full-width with content and the others are
+    narrow and empty. Real structural interaction, not a static rough
+    stand-in — click support is the actual spec here, not a detail to
+    defer. Seven cards total — .testimonial-row's own overflow-x:auto
+    (see styles.css) already handles however many narrow strips don't
+    fit in one viewport width, so this scales up from four without any
+    layout changes. Placeholder quote/name copy throughout.
+  -->
+  <section class="testimonials-section" aria-labelledby="testimonials-heading">
+    <svg class="curve curve--testimonials-top" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,70 C80,15 160,5 240,45 C320,85 400,95 480,55 C560,15 640,5 720,45 C800,85 880,95 960,55 C1040,15 1120,5 1200,45 L1200,0 L0,0 Z"/>
+    </svg>
+    <div class="testimonials-section__inner">
+      <h2 class="testimonials-heading" id="testimonials-heading">What <span class="testimonials-heading__accent">They</span> Had to Say</h2>
+
+      <div class="testimonial-row">
+        <button class="testimonial-card" type="button" aria-expanded="false">
+          <span class="testimonial-card__content">
+            <span class="testimonial-card__quote">&ldquo;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.&rdquo;</span>
+            <span class="testimonial-card__author">
+              <span class="testimonial-card__avatar"></span>
+              <span class="testimonial-card__meta">Name<br>Job title</span>
+            </span>
+          </span>
+        </button>
+        <button class="testimonial-card" type="button" aria-expanded="false">
+          <span class="testimonial-card__content">
+            <span class="testimonial-card__quote">&ldquo;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.&rdquo;</span>
+            <span class="testimonial-card__author">
+              <span class="testimonial-card__avatar"></span>
+              <span class="testimonial-card__meta">Name<br>Job title</span>
+            </span>
+          </span>
+        </button>
+        <button class="testimonial-card" type="button" aria-expanded="false">
+          <span class="testimonial-card__content">
+            <span class="testimonial-card__quote">&ldquo;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.&rdquo;</span>
+            <span class="testimonial-card__author">
+              <span class="testimonial-card__avatar"></span>
+              <span class="testimonial-card__meta">Name<br>Job title</span>
+            </span>
+          </span>
+        </button>
+        <button class="testimonial-card" type="button" aria-expanded="true">
+          <span class="testimonial-card__content">
+            <span class="testimonial-card__quote">&ldquo;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.&rdquo;</span>
+            <span class="testimonial-card__author">
+              <span class="testimonial-card__avatar"></span>
+              <span class="testimonial-card__meta">Name<br>Job title</span>
+            </span>
+          </span>
+        </button>
+        <button class="testimonial-card" type="button" aria-expanded="false">
+          <span class="testimonial-card__content">
+            <span class="testimonial-card__quote">&ldquo;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.&rdquo;</span>
+            <span class="testimonial-card__author">
+              <span class="testimonial-card__avatar"></span>
+              <span class="testimonial-card__meta">Name<br>Job title</span>
+            </span>
+          </span>
+        </button>
+        <button class="testimonial-card" type="button" aria-expanded="false">
+          <span class="testimonial-card__content">
+            <span class="testimonial-card__quote">&ldquo;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.&rdquo;</span>
+            <span class="testimonial-card__author">
+              <span class="testimonial-card__avatar"></span>
+              <span class="testimonial-card__meta">Name<br>Job title</span>
+            </span>
+          </span>
+        </button>
+        <button class="testimonial-card" type="button" aria-expanded="false">
+          <span class="testimonial-card__content">
+            <span class="testimonial-card__quote">&ldquo;Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.&rdquo;</span>
+            <span class="testimonial-card__author">
+              <span class="testimonial-card__avatar"></span>
+              <span class="testimonial-card__meta">Name<br>Job title</span>
+            </span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!--
+    Not in the client's HTML reference file — built from the annotated
+    screenshot alone. Form is structural only (no real submission
+    endpoint yet), and the email/location/availability lines are
+    placeholder copy — the reference screenshot's own email has an
+    obvious typo ("gamil.com"), not worth literally preserving since
+    it's clearly not intentional. id="connect" matches the existing
+    nav link's href="#connect".
+  -->
+  <section class="contact-section" id="connect" aria-labelledby="contact-heading">
+    <svg class="curve curve--contact-top" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0,70 C96,15 192,5 288,45 C384,85 480,95 576,55 C672,15 768,5 864,45 C960,85 1056,95 1152,55 C1248,15 1344,5 1440,45 L1440,0 L0,0 Z"/>
+    </svg>
+    <div class="contact-section__inner">
+      <h2 class="contact-heading" id="contact-heading">Your Turn</h2>
+      <p class="contact-subhead">You&rsquo;ve reached the end of my story. I&rsquo;d love to hear yours.</p>
+
+      <form class="contact-form">
+        <div class="contact-form__row">
+          <div class="contact-form__field">
+            <label class="sr-only" for="contact-email">Your email</label>
+            <input class="contact-form__input" type="email" id="contact-email" name="email" placeholder="Your Email" required>
+          </div>
+          <div class="contact-form__field">
+            <label class="sr-only" for="contact-message">Message</label>
+            <input class="contact-form__input" type="text" id="contact-message" name="message" placeholder="Start the Conversation" required>
+          </div>
+          <div class="contact-form__field">
+            <label class="sr-only" for="contact-country">Country</label>
+            <select class="contact-form__input contact-form__input--select" id="contact-country" name="country">
+              <option value="" selected disabled>Country</option>
+              <option>India</option>
+              <option>United States</option>
+              <option>United Kingdom</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn-pill btn-pill--accent contact-form__submit" type="submit">Let&rsquo;s Connect!</button>
+      </form>
+    </div>
+
+    <div class="footer">
+      <div class="footer__inner">
+        <div class="footer__info">
+          <p>email: hello@prachimittal.com</p>
+          <p>based in Mumbai, India</p>
+          <p>available for: freelance projects &amp; full time</p>
+        </div>
+        <div class="footer__links">
+          <div class="footer__col">
+            <p class="footer__col-title">Pages</p>
+            <a href="#top">Home</a>
+            <a href="#about">About</a>
+            <a href="#projects">Work</a>
+          </div>
+          <div class="footer__col">
+            <p class="footer__col-title">Socials</p>
+            <a href="#">Instagram</a>
+            <a href="#">LinkedIn</a>
+            <a href="#">Behance</a>
+          </div>
+        </div>
+      </div>
+      <p class="footer__copyright">&copy; 2026 Prachi Mittal &mdash; All Rights Reserved</p>
+      <div class="footer__wordmark" aria-hidden="true">
+        <div class="footer__wordmark-track">
+          <span class="footer__wordmark-group">PRACHI MITTAL&nbsp;&nbsp;&nbsp;</span>
+          <span class="footer__wordmark-group">PRACHI MITTAL&nbsp;&nbsp;&nbsp;</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!--
+  Fixed-position illustration field, not confined to #about's own box
+  — script.js's initAboutDoodles fades this in as #about approaches,
+  drives each illustration through the whole About -> Philosophy
+  scroll stretch (idle drift + a per-illustration parallax speed, so
+  they visibly flow past at different rates rather than scrolling
+  with the page like ordinary content), then fades it out before
+  #projects. Positioned relative to the viewport (not any one
+  section), which is what makes "flowing between sections" possible —
+  a section's own overflow:hidden would otherwise clip anything tied
+  to its box the moment it crossed that section's edge.
+-->
+<div class="about-doodle-field" id="about-doodle-field" aria-hidden="true">
+  <div class="about-doodle about-doodle--1">
+    <div class="about-doodle__inner"><img src="assets/illustrations/illsutrations-75.png" alt=""></div>
+  </div>
+  <div class="about-doodle about-doodle--2">
+    <div class="about-doodle__inner"><img src="assets/illustrations/illsutrations-71.png" alt=""></div>
+  </div>
+  <div class="about-doodle about-doodle--3">
+    <div class="about-doodle__inner"><img src="assets/illustrations/illsutrations-70.png" alt=""></div>
+  </div>
+  <div class="about-doodle about-doodle--6">
+    <div class="about-doodle__inner"><img src="assets/illustrations/illsutrations-74.png" alt=""></div>
+  </div>
+</div>
+
+<!--
+  The visible half of the #about -> #philosophy-section flip (see
+  the long comment on #philosophy-section). Fixed-position, JS-driven
+  transform only — never touched by normal document flow. Starts
+  opacity:0 until script.js's initFlyingCard has measured real rects
+  for both placeholders, so it can't flash at the wrong size/position
+  for a frame before the math is ready.
+-->
+<div id="flying-card" class="flying-card" aria-hidden="true">
+  <div id="flying-card-flipper" class="flying-card__flipper">
+    <div class="flying-card__face flying-card__face--front">
+      <img class="flying-card__photo" src="assets/portrait.jpg" alt="">
+    </div>
+    <div class="flying-card__face flying-card__face--back">
+      <img class="flying-card__photo" src="assets/portrait.jpg" alt="">
+    </div>
+  </div>
+</div>
+
+<!--
+  Custom page-scroll rail — fixed to the right edge for the whole
+  site, independent of any one section. aria-hidden since native
+  scrolling/keyboard navigation already covers everything this offers;
+  it's a mouse-only visual + click/drag shortcut, see initScrollRail
+  in script.js. mix-blend-mode (styles.css) is what lets one plain
+  white track/thumb stay visibly readable over every section's
+  background color without per-section theming logic.
+-->
+<div class="scroll-rail" aria-hidden="true">
+  <div class="scroll-rail__track">
+    <div class="scroll-rail__thumb"></div>
+  </div>
+</div>
+
+<!--
+  Trailing glow that rides alongside the recoloured native-shaped
+  cursor (styles.css) — see initCustomCursor in script.js. Fixed,
+  mouse-only, purely decorative.
+-->
+<div class="cursor-glow" aria-hidden="true"></div>
+<!--
+  Follows the cursor, only shown while hovering a .projects-reel__card
+  — a small "click to open" hint for the project reel's image cards,
+  same mouse-only gating and quickTo-follow mechanics as .cursor-glow
+  above. See initCustomCursor in script.js.
+-->
+<div class="cursor-tag" id="cursor-tag" aria-hidden="true"><span>Click to open</span></div>
+
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
