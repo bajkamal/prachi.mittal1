@@ -328,14 +328,14 @@ a { color: inherit; }
   gap: 1.5rem;
 }
 
-/* always visible now, at every width — just these 4 flat links
-   (Project/About Me/Resume/Contact, every project type living
-   together under #projects means there's no separate category list
-   anymore), so the hamburger/dropdown this site used to fall back to
-   below 640px isn't needed: four short words plus the logo comfortably
-   share one header pill even on a phone-width screen. flex-wrap is a
-   safety net, not the primary layout — it only engages on truly
-   cramped widths instead of the nav ever clipping. */
+/* just these 4 flat links (Project/About Me/Resume/Contact, every
+   project type living together under #projects means there's no
+   separate category list anymore). Visible inline at wider widths;
+   below .nav-toggle's own breakpoint this becomes a dropdown instead
+   (see that rule) since four words plus the logo genuinely don't fit
+   comfortably in one header pill at real phone widths — flex-wrap
+   alone used to squeeze them into an uneven "3 links, 1 stranded"
+   wrap rather than clipping cleanly. */
 .primary-nav__categories {
   display: flex;
   flex-wrap: wrap;
@@ -343,36 +343,104 @@ a { color: inherit; }
   justify-content: flex-end;
   gap: 0.75rem 1.5rem;
 }
-/* below ~480px even the nowrap logo + 4 links can't share one row
-   without the link group getting squeezed into a lopsided wrap (e.g.
-   3 links on row one, 1 stranded alone on row two — flex-wrap just
-   greedily fills each row until the next item doesn't fit, which
-   reads as random rather than deliberate) — wrapping the *pill
-   itself* instead puts the logo on its own row and hands the link
-   group the full row underneath, then a fixed 2-column grid (instead
-   of flex-wrap) guarantees an even 2-and-2 every time regardless of
-   each link's own text width. This has to come *after* the base rule
-   above, not just be wrapped in @media — same specificity means
-   plain source order decides, and a media-scoped rule earlier in the
-   file still loses to an unconditional one declared later. */
-@media (max-width: 480px) {
-  .site-header__inner {
-    flex-wrap: wrap;
-    justify-content: center;
-    row-gap: 0.6rem;
+
+/* Hamburger toggle — hidden by default (wide viewports show the link
+   list inline, same as always); .nav-toggle-breakpoint below flips
+   which of the two is actually visible. A plain <button>, not a
+   custom element, so it's focusable/keyboard-activatable for free;
+   aria-expanded (toggled by initNavToggle, script.js) is both the
+   real accessibility state *and* what the dropdown-visibility rule
+   below keys off of, so there's one source of truth instead of an
+   ARIA attribute and a separate CSS class drifting out of sync. */
+.nav-toggle {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.nav-toggle__bar {
+  display: block;
+  width: 22px;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--color-ink);
+  transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1), opacity 200ms ease;
+}
+/* morphs into an X once open — same 3 bars, no separate icon swap */
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(2) {
+  opacity: 0;
+}
+.nav-toggle[aria-expanded="true"] .nav-toggle__bar:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+@media (max-width: 640px) {
+  .nav-toggle {
+    display: flex;
   }
+  /* The list becomes a dropdown card instead of sharing the header
+     pill. It's anchored to .site-header__inner (already
+     position:relative, styles.css above), not .primary-nav — .primary-
+     nav's *only* child is this same list, and once that child goes
+     position:absolute it stops contributing to .primary-nav's own
+     size at all (out-of-flow content never does), collapsing .primary-
+     nav to a 0×0 box. left:0/right:0 against a 0-width containing
+     block gives the dropdown ~0 width too, so its text just overflows
+     past that invisible point rather than actually filling the pill's
+     width. Explicit position:static here keeps .primary-nav out of the
+     containing-block chain entirely, so the dropdown skips past it
+     straight to .site-header__inner, which has the pill's real,
+     stable width to stretch against. Hidden by default; only
+     .nav-toggle's own aria-expanded state (set on click, initNavToggle
+     in script.js) reveals it, kept in the layout (not display:none)
+     while closed so the opacity/transform transition below can
+     actually animate instead of snapping. */
   .primary-nav {
-    width: 100%;
-    justify-content: center;
+    position: static;
   }
   .primary-nav__categories {
-    display: grid;
-    grid-template-columns: repeat(2, auto);
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    right: 0;
+    left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: rgba(250, 245, 236, 0.96);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 45px rgba(33, 26, 20, 0.16);
+    padding: 0.5rem;
+    opacity: 0;
+    transform: translateY(-8px);
+    pointer-events: none;
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  .nav-toggle[aria-expanded="true"] ~ .primary-nav .primary-nav__categories {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .primary-nav__categories .nav-link {
+    display: flex;
+    padding: 0.85rem 1rem;
+    border-radius: 0.85rem;
     justify-content: center;
-    align-items: center;
-    column-gap: 2rem;
-    row-gap: 0.5rem;
-    width: 100%;
+  }
+  .primary-nav__categories .nav-link:hover,
+  .primary-nav__categories .nav-link:focus-visible {
+    background: var(--color-blush);
   }
 }
 
@@ -471,7 +539,6 @@ a { color: inherit; }
   align-items: center;
   gap: clamp(0.85rem, 2vw, 1.5rem);
 }
-
 .hero__headline {
   font-family: var(--font-display);
   /* client's Adobe spec: Medium weight, 56pt/65pt leading (ratio
@@ -572,6 +639,17 @@ a { color: inherit; }
 @media (max-width: 640px) {
   .spiral-tile {
     width: clamp(26px, 7vw, 45px);
+  }
+  /* per direct request to match a reference (cosmos.so) where the
+     mobile hero reads as a handful of sparse, well-separated tiles
+     rather than a dense field — halving the count is a much bigger
+     lever on that than shrinking them further would be. Tiles stay in
+     the DOM (still targeted by initSpiralField's tile array/JS
+     indexing) and are just not painted; the ones that remain still
+     carry the same fixed per-tile color/initialU assignment they
+     always had, just a sparser subset of them. */
+  .spiral-tile:nth-of-type(even) {
+    display: none;
   }
 }
 
@@ -731,6 +809,26 @@ a { color: inherit; }
 @media (max-width: 480px) {
   .why-statement {
     line-height: 1.45;
+    /* 20ch (above) only ever gives this ~67-character sentence room
+       for 4-5 words per line, so it wraps to 3 uneven lines no matter
+       what text-wrap:balance does with them — there just isn't a good
+       3-line split of this particular sentence. Enough width for
+       text-wrap:balance to settle on 2 lines instead. */
+    max-width: 27ch;
+  }
+  /* .tv-antenna's rod tips are positioned by a fixed upward reach off
+     .tv-frame (translate:-50% -52%, styles.css), tuned for however
+     tall .why-statement's block was at the width this scene was
+     designed against. At this width the statement still wraps to 3
+     lines (see above — genuinely unavoidable without shrinking the
+     font below its floor), and that extra line's real content pushes
+     the antenna's fixed reach-up zone into text that used to be clear
+     space above it. Rather than touch the antenna's own geometry
+     (risking its sway animation's pivot math), give the scene below
+     the statement more headroom instead, so the antenna's reach lands
+     in air again regardless of exactly how tall the text block is. */
+  .tv-showcase {
+    margin-top: clamp(2.5rem, 8vw, 4rem);
   }
 }
 
@@ -1117,6 +1215,22 @@ a { color: inherit; }
 @media (max-width: 699px) {
   .why-section {
     min-height: 0;
+  }
+  /* GSAP's pin (script.js — the TV reveal) auto-inserts a wrapper div
+     (class "pin-spacer") around .why-section to reserve the scroll
+     distance the pin holds for, completely separately from this
+     section's own min-height above. That reserved distance doesn't
+     shrink just because min-height:0 lets the section itself go
+     content-sized — so once the section (now shorter than the
+     viewport) is done, the *spacer* still has leftover height with
+     nothing pink in it, and being a plain unstyled div, it's fully
+     transparent — the page's cream shows straight through for
+     whatever's left of the pin's reserved distance. Same blush as the
+     section itself closes that gap. Scoped to only the spacer
+     directly wrapping .why-section (:has), not any other pinned
+     section's spacer elsewhere on the site. */
+  .pin-spacer:has(> .why-section) {
+    background: var(--color-blush);
   }
 }
 
@@ -1722,7 +1836,12 @@ a { color: inherit; }
      dimension is ever explicitly set, so aspect-ratio derives the
      other correctly no matter which cap is tighter — same trick used
      for the base (<768px) 400x500 cap below. */
-  width: min(100%, 400px);
+  /* was min(100%, 400px) — per direct request, smaller on mobile
+     specifically so the photo doesn't eat most of the first screen's
+     height before any of "The Way I See The World" text is visible.
+     Untouched at >=768px below, where the two-column layout already
+     gives text its own dedicated width regardless of the photo's. */
+  width: min(62%, 280px);
   height: auto;
   aspect-ratio: 4 / 5;
   border-radius: 1.4rem;

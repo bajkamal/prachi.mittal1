@@ -74,6 +74,60 @@
     });
   }
 
+  /* ---------------- Mobile nav dropdown (hamburger toggle) ----------------
+     Guarded on .nav-toggle so this is a no-op if it's ever missing.
+     aria-expanded on the button is still the real accessibility state,
+     but the dropdown's actual visibility is driven by inline styles
+     set directly here rather than the [aria-expanded="true"] ~ CSS
+     rule in styles.css alone — same reasoning already established on
+     this site's .site-header--on-dark (see that comment): a state
+     change expressed purely through a CSS attribute-selector cascade
+     doesn't reliably take effect in the WebKit build used for this
+     site's own screenshot QA despite correct specificity, where a
+     direct inline style always does. The CSS rule stays in place as
+     the semantic baseline for any environment without that quirk;
+     this is belt-and-suspenders on top of it, not a replacement.
+     Closes on: clicking a link (so an in-page #anchor click doesn't
+     leave the dropdown sitting open over the section it just jumped
+     to), clicking outside the header, and Escape — all standard
+     dropdown-menu expectations, not just "click the button again". */
+  function initNavToggle() {
+    const toggle = document.querySelector('.nav-toggle');
+    const header = document.querySelector('.site-header');
+    const list = document.getElementById('primary-nav-list');
+    if (!toggle || !header) return;
+
+    const setOpen = (open) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      if (list) {
+        list.style.opacity = open ? '1' : '0';
+        list.style.transform = open ? 'translateY(0)' : 'translateY(-8px)';
+        list.style.pointerEvents = open ? 'auto' : 'none';
+      }
+    };
+
+    toggle.addEventListener('click', () => {
+      setOpen(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    header.querySelectorAll('.nav-link').forEach((link) => {
+      link.addEventListener('click', () => setOpen(false));
+    });
+
+    document.addEventListener('click', (event) => {
+      if (toggle.getAttribute('aria-expanded') === 'true' && !header.contains(event.target)) {
+        setOpen(false);
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+  }
+
   /* ---------------- Magnetic nav links (desktop hover only) ---------------- */
   function initMagneticNav() {
     const links = gsap.utils.toArray('.nav-link');
@@ -280,11 +334,26 @@
     // deliberate spawn/despawn moment, per direct request to fix that
     const FADE_IN_END = 0.05; // u threshold
     const FADE_OUT_START = 0.95; // u threshold
+    // Below this width, tiles fade to fully transparent much earlier in
+    // their inward journey — per direct request, after a first attempt
+    // that instead raised a hard minimum radius read as wrong: that
+    // compressed the *whole* 0..maxR range the spiral operates over,
+    // which squashed all four revolutions' rings together into one
+    // dense blob instead of the loose, separated "rabbit hole" loops
+    // this is supposed to read as. This way the geometry (radius,
+    // revolutions, ring spacing) is untouched at every width — tiles
+    // still travel the full path to r=0 like always — only *how much
+    // of that final stretch is invisible* changes, so the mobile hero
+    // still reads as the same spiral, just with its innermost tiles
+    // faded out early enough to clear the centered text.
+    const MOBILE_BREAKPOINT = 640;
+    const MOBILE_FADE_IN_END = 0.45;
     const REFERENCE_VIEWPORT = 1440; // width at which maxR hits the reference's own scale
     const REFERENCE_MAX_R = 900; // was 1000 (reference's exact value), pulled in to 820 then eased back out a bit — 820/4.5 packed noticeably denser than intended, this is the middle ground
 
     let half = 0;
     let maxR = 0;
+    let fadeInEnd = FADE_IN_END;
 
     function measure() {
       const rect = field.getBoundingClientRect();
@@ -292,6 +361,7 @@
       // literal proportional scaling of the reference's fixed 1000 —
       // this IS exactly 1000 at a 1440px hero, same as the file
       maxR = REFERENCE_MAX_R * (rect.width / REFERENCE_VIEWPORT);
+      fadeInEnd = rect.width <= MOBILE_BREAKPOINT ? MOBILE_FADE_IN_END : FADE_IN_END;
     }
     measure();
 
@@ -316,7 +386,7 @@
       const rotationDeg = theta * (180 / Math.PI) + 90;
 
       let opacity = 1;
-      if (u < FADE_IN_END) opacity = u / FADE_IN_END;
+      if (u < fadeInEnd) opacity = u / fadeInEnd;
       else if (u > FADE_OUT_START) opacity = (1 - u) / (1 - FADE_OUT_START);
 
       gsap.set(entry.tile, {
@@ -623,7 +693,18 @@
 
     gsap.set([leftWords[0], rightWords[0]], { yPercent: 0, rotationX: 0, opacity: 1, filter: 'blur(0px)', scale: 1 });
     gsap.set(cards[0], { clipPath: VISIBLE_CLIP, scale: 1, rotation: 0, filter: 'brightness(1) blur(0px)' });
-    cards.slice(1).forEach((card) => { card.style.pointerEvents = 'none'; });
+    cards.slice(1).forEach((card) => {
+      card.style.pointerEvents = 'none';
+      // Every non-active card sits clipped to a thin diagonal sliver
+      // (HIDDEN_CLIP above) rather than being hidden outright, but its
+      // CSS box-shadow isn't clipped along with it — an 80px-blur
+      // shadow projecting off a rotated sliver reads as a stray
+      // diagonal smear on screen. Invisible on wide viewports where
+      // that smear falls off the edge of the card's own footprint;
+      // visible on narrow ones. Suppressed here to match the initial
+      // pin-ready state, then kept in sync every scroll tick below.
+      card.style.boxShadow = 'none';
+    });
 
     // One-time entrance for the very first category, layered on top of
     // the pin-ready state set above (leftWords[0]/rightWords[0] stay at
@@ -672,7 +753,11 @@
             Math.round(self.progress * (leftWords.length - 1))
           );
           cards.forEach((card, idx) => {
-            card.style.pointerEvents = idx === activeIndex ? 'auto' : 'none';
+            const isActive = idx === activeIndex;
+            card.style.pointerEvents = isActive ? 'auto' : 'none';
+            // see the comment on the initial-state version of this,
+            // above — same reasoning, kept live as activeIndex changes.
+            card.style.boxShadow = isActive ? '' : 'none';
           });
         },
       },
@@ -1092,9 +1177,22 @@
     // however far the user has actually scrolled, including mid-
     // scroll direction reversals.
     let scrollProgress = 0;
+    // 'top bottom' (About's top touching the viewport's own bottom
+    // edge) is a fixed point in the *page's* scroll distance, but how
+    // early that lands relative to whatever's still on screen above
+    // it (the WHY/TV section, right before About) depends on viewport
+    // *height* — a short phone viewport reaches that condition while
+    // WHY/TV is still fully visible, so the doodles' entrance (first
+    // 14% of this range, ENTER_END above) was fading tiles in on top
+    // of the still-on-screen TV scene instead of after it. A tall
+    // desktop viewport doesn't hit this — WHY/TV has already scrolled
+    // well clear by the time this condition is met there. Mobile-only:
+    // start later, once About's top has actually scrolled some real
+    // distance into view, by which point WHY/TV is behind it.
+    const doodleStart = window.matchMedia('(max-width: 768px)').matches ? 'top 40%' : 'top bottom';
     ScrollTrigger.create({
       trigger: '.about-section',
-      start: 'top bottom',
+      start: doodleStart,
       endTrigger: '.projects-section',
       end: 'top top',
       scrub: true,
@@ -2040,6 +2138,7 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     initHeaderTheme();
+    initNavToggle();
     initLenis();
     initEntrance();
     initSpiralField();

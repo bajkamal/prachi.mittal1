@@ -18,18 +18,23 @@
 <header class="site-header">
   <div class="site-header__inner">
     <a href="#top" class="logo"><img src="assets/logo.png?v=2" alt="Prachi Mittal — driven by curiosity" class="logo__mark"></a>
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="primary-nav-list" aria-label="Menu">
+      <span class="nav-toggle__bar"></span>
+      <span class="nav-toggle__bar"></span>
+      <span class="nav-toggle__bar"></span>
+    </button>
 
     <nav class="primary-nav" aria-label="Primary">
       <!--
         Every project type now lives together on one page (#projects,
-        below), so the nav is just these 4 flat links — no more
-        separate category pages to list. Always visible at every
-        width now, no hamburger/dropdown fallback — four short words
-        plus the logo comfortably share one header pill even on a
-        phone-width screen, so the collapse mechanism this site used
-        to need for a longer link list isn't necessary any more.
+        below), so the nav is just these 4 flat links. Below the
+        .nav-toggle breakpoint (styles.css), .nav-toggle shows and
+        this list becomes a dropdown toggled by it (initNavToggle,
+        script.js) instead of the links sharing the header pill —
+        four words plus the logo turned out not to fit comfortably at
+        real phone widths after all, unlike an earlier assumption here.
       -->
-      <ul class="primary-nav__categories">
+      <ul class="primary-nav__categories" id="primary-nav-list">
         <li><a class="nav-link" href="#projects">Project</a></li>
         <li><a class="nav-link" href="#about">About Me</a></li>
         <li><a class="nav-link" href="#resume">Resume</a></li>
@@ -136,13 +141,7 @@
         </div>
 
         <div class="why-grid">
-          <svg class="why-statement__icon" aria-hidden="true" viewBox="0 0 40 40" fill="none">
-            <path d="M20 2 L23 17 L38 20 L23 23 L20 38 L17 23 L2 20 L17 17 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          </svg>
           <p class="why-statement">Because I&rsquo;ve always believed the best ideas begin with curiosity.</p>
-          <svg class="why-statement__icon" aria-hidden="true" viewBox="0 0 40 40" fill="none">
-            <path d="M20 2 L23 17 L38 20 L23 23 L20 38 L17 23 L2 20 L17 17 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-          </svg>
         </div>
       </div>
     </div>
