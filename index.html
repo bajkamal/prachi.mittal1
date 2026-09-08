@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css?v=2">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
@@ -102,14 +102,14 @@
       <div class="spiral-tile" data-spiral="30" style="--tile-img: url(&quot;assets/hero-tiles/30.jpg&quot;)"></div>
       <div class="spiral-tile" data-spiral="31" style="--tile-img: url(&quot;assets/hero-tiles/31.jpg&quot;)"></div>
       <div class="spiral-tile" data-spiral="32" style="--tile-img: url(&quot;assets/hero-tiles/32.jpg&quot;)"></div>
-      <div class="spiral-tile" data-spiral="33" style="--tile-img: url(&quot;assets/hero-tiles/01.jpg&quot;)"></div>
-      <div class="spiral-tile" data-spiral="34" style="--tile-img: url(&quot;assets/hero-tiles/02.jpg&quot;)"></div>
-      <div class="spiral-tile" data-spiral="35" style="--tile-img: url(&quot;assets/hero-tiles/03.jpg&quot;)"></div>
-      <div class="spiral-tile" data-spiral="36" style="--tile-img: url(&quot;assets/hero-tiles/04.jpg&quot;)"></div>
-      <div class="spiral-tile" data-spiral="37" style="--tile-img: url(&quot;assets/hero-tiles/05.jpg&quot;)"></div>
-      <div class="spiral-tile" data-spiral="38" style="--tile-img: url(&quot;assets/hero-tiles/06.jpg&quot;)"></div>
-      <div class="spiral-tile" data-spiral="39" style="--tile-img: url(&quot;assets/hero-tiles/07.jpg&quot;)"></div>
-      <div class="spiral-tile" data-spiral="40" style="--tile-img: url(&quot;assets/hero-tiles/08.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="33" style="--tile-img: url(&quot;assets/hero-tiles/13.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="34" style="--tile-img: url(&quot;assets/hero-tiles/14.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="35" style="--tile-img: url(&quot;assets/hero-tiles/15.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="36" style="--tile-img: url(&quot;assets/hero-tiles/16.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="37" style="--tile-img: url(&quot;assets/hero-tiles/17.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="38" style="--tile-img: url(&quot;assets/hero-tiles/18.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="39" style="--tile-img: url(&quot;assets/hero-tiles/19.jpg&quot;)"></div>
+      <div class="spiral-tile" data-spiral="40" style="--tile-img: url(&quot;assets/hero-tiles/20.jpg&quot;)"></div>
     </div>
 
     <div class="hero__content">
@@ -126,13 +126,6 @@
     <div class="why-pause">
       <svg class="curve" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0,60 C180,5 540,5 720,60 C900,115 1260,115 1440,60 L1440,120 L0,120 Z"/>
-      </svg>
-
-      <svg class="accent-icon accent-icon--plus-1" aria-hidden="true" viewBox="0 0 24 24" fill="none">
-        <path d="M12 3 V21 M3 12 H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-      </svg>
-      <svg class="accent-icon accent-icon--plus-2" aria-hidden="true" viewBox="0 0 24 24" fill="none">
-        <path d="M12 3 V21 M3 12 H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
 
       <div class="why-section__inner">
@@ -229,7 +222,6 @@
     -->
     <div class="tv-showcase">
       <div class="tv-scene-glow" aria-hidden="true"></div>
-      <div class="tv-scene-shadow" aria-hidden="true"></div>
 
       <div class="tv-prop tv-prop--left" aria-hidden="true">
         <img src="assets/illustrations/illsutrations-74.png" alt="">
@@ -239,6 +231,7 @@
       </div>
 
       <div class="tv-frame">
+        <div class="tv-scene-shadow" aria-hidden="true"></div>
         <svg class="tv-antenna" viewBox="0 0 200 140" aria-hidden="true">
           <path class="tv-antenna__rod tv-antenna__rod--left" d="M96 110 L40 8" stroke="#211A14" stroke-width="4" stroke-linecap="round"/>
           <path class="tv-antenna__rod tv-antenna__rod--right" d="M104 110 L160 8" stroke="#211A14" stroke-width="4" stroke-linecap="round"/>
@@ -378,27 +371,18 @@
   </section>
 
   <!--
-    Ported from the client-supplied reference
-    "creative_scroll_projects (3).html" (superseding the earlier, plainer
-    "interactive_scroll_projects_section.html" pass) — a pinned scroll
-    reel: the section stays stuck to the viewport for one long scroll
-    pass while a small floating image card cycles through the 4 project
-    categories (branding/editorial/motion/research) via a clip-path
-    reveal + blur/scale, and a lowercase word pair announcing the
-    current one slides past on either side — left words travel upward,
-    right words travel downward, so the two sides read as mirrored
-    rather than identical motion. The image card also tilts in 3D
-    toward the cursor (perspective + rotateX/rotateY on mousemove),
-    and a faint SVG-noise grain sits over the section for texture.
-    Re-themed onto this site's own tokens (ink/cream/pink, Poppins,
-    the same "Image Placeholder" convention .case-image__placeholder
-    uses on the category pages) rather than the reference's Tailwind/
-    Inter+Syne/stock-photo scaffolding, and each card is a real link
-    to that category's existing page instead of the reference's
-    purely decorative images. See initProjectsReel in script.js for
-    the scroll-scrubbed timeline and mouse-tilt handlers, and the
-    reduced-motion block in styles.css for how this collapses to a
-    plain stacked list of the 4 categories when animation is off.
+    Per direct request: ONE layout, not one per category — exactly 5
+    thumbnails total, each a different PROJECT (Common Ground, BGL,
+    Hamleys, Toblerone, + a 5th TBD), not 5 images of the same
+    project repeated per category. The label row's chip cycles through
+    all 5 projects in lockstep with the two .project-category__label
+    spans (each chip frame carries its own data-label, read and
+    applied to both labels together on every cycle tick — see
+    initProjectChips in script.js) — e.g. the chip shows Common
+    Ground's thumbnail while the labels read "Branding", then both
+    the chip image and the labels change together the moment it
+    advances to BGL, then to Hamleys ("Campaign"), then Toblerone
+    ("Packaging"), then the 5th slot.
   -->
   <section id="projects" class="projects-section" aria-labelledby="projects-heading">
     <svg class="curve curve--projects-top" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
@@ -406,43 +390,38 @@
     </svg>
     <h2 class="sr-only" id="projects-heading">Projects</h2>
 
-    <div class="projects-reel" id="projects-reel">
-      <div class="projects-reel__grain" aria-hidden="true"></div>
-
-      <div class="projects-reel__sticky">
-        <div class="projects-reel__text-track" aria-hidden="true">
-          <div class="projects-reel__word-col projects-reel__word-col--left">
-            <div class="projects-reel__word-wrapper">
-              <span class="projects-reel__word" data-reel-word>brand</span>
-              <span class="projects-reel__word" data-reel-word>brand</span>
-              <span class="projects-reel__word" data-reel-word>packaging</span>
-            </div>
+    <div class="project-categories">
+      <div class="project-category">
+        <div class="project-category__label-row">
+          <span class="project-category__label-mask"><span class="project-category__label" data-cycle-label>Branding</span></span>
+          <div class="project-category__chip" data-category-chip>
+            <img class="project-category__chip-img is-active" data-label="Branding" src="assets/common-ground/mockup-2.jpg" alt="">
+            <img class="project-category__chip-img" data-label="Branding" src="assets/bgl/mockup-2.jpg" alt="">
+            <img class="project-category__chip-img" data-label="Campaign" src="assets/hamleys/mockup-2.jpg" alt="">
+            <img class="project-category__chip-img" data-label="Packaging" src="assets/toblerone/mockup-2.jpg" alt="">
+            <div class="project-category__chip-img project-category__chip-img--placeholder" data-label="Coming Soon"></div>
           </div>
-          <div class="projects-reel__word-col projects-reel__word-col--right">
-            <div class="projects-reel__word-wrapper">
-              <span class="projects-reel__word" data-reel-word>identity</span>
-              <span class="projects-reel__word" data-reel-word>campaigns</span>
-              <span class="projects-reel__word" data-reel-word>design</span>
-            </div>
-          </div>
+          <span class="project-category__label-mask"><span class="project-category__label" data-cycle-label>Branding</span></span>
         </div>
-
-        <div class="projects-reel__image-track" id="projects-reel-image-track">
-          <a class="projects-reel__card" data-reel-card href="branding.html" aria-label="Branding projects">
-            <span class="projects-reel__card-media"><img class="projects-reel__card-img" src="assets/common-ground/thumbnail.jpg" alt=""></span>
-          </a>
-          <a class="projects-reel__card" data-reel-card href="editorial.html" aria-label="Campaign work: Hamleys Share A Smile and Mattel Barbie Campaign">
-            <span class="projects-reel__card-media"><img class="projects-reel__card-img" src="assets/hamleys/thumbnail-1.jpg" alt=""></span>
-          </a>
-          <a class="projects-reel__card" data-reel-card href="motion.html" aria-label="Toblerone packaging redesign">
-            <span class="projects-reel__card-media"><img class="projects-reel__card-img" src="assets/toblerone/thumbnail.jpg" alt=""></span>
-          </a>
-        </div>
-
-        <div class="projects-reel__progress" aria-hidden="true">
-          <div class="projects-reel__progress-track">
-            <div class="projects-reel__progress-bar" id="projects-reel-progress"></div>
+        <div class="project-category__grid">
+          <div class="project-category__col">
+            <a class="project-thumb project-thumb--short" href="branding.html" aria-label="Common Ground branding">
+              <img src="assets/common-ground/mockup-1.jpg" alt="">
+            </a>
+            <a class="project-thumb project-thumb--tall" href="branding.html" aria-label="BGL branding">
+              <img src="assets/bgl/mockup-1.jpg" alt="">
+            </a>
           </div>
+          <div class="project-category__col project-category__col--offset">
+            <a class="project-thumb project-thumb--tall" href="editorial.html" aria-label="Hamleys Share A Smile campaign">
+              <img src="assets/hamleys/mockup-1.jpg" alt="">
+            </a>
+            <a class="project-thumb project-thumb--short" href="motion.html" aria-label="Toblerone packaging redesign">
+              <img src="assets/toblerone/mockup-1.jpg" alt="">
+            </a>
+          </div>
+          <!-- 5th project — swap this placeholder for a real thumbnail + href once that project is ready -->
+          <a class="project-thumb project-thumb--wide project-thumb--placeholder" href="#" aria-label="Project coming soon"></a>
         </div>
       </div>
     </div>
@@ -596,9 +575,9 @@
           </div>
           <div class="footer__col">
             <p class="footer__col-title">Socials</p>
-            <a href="#">Instagram</a>
-            <a href="#">LinkedIn</a>
-            <a href="#">Behance</a>
+              <a href="https://www.instagram.com/prachiimittal_/" target="_blank" rel="noopener noreferrer">Instagram</a>
+              <a href="https://www.linkedin.com/in/prachimittal-/" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+              <a href="https://www.behance.net/ankitabudhia" target="_blank" rel="noopener noreferrer">Behance</a>
           </div>
         </div>
       </div>
@@ -661,29 +640,14 @@
 </div>
 
 <!--
-  Custom page-scroll rail — fixed to the right edge for the whole
-  site, independent of any one section. aria-hidden since native
-  scrolling/keyboard navigation already covers everything this offers;
-  it's a mouse-only visual + click/drag shortcut, see initScrollRail
-  in script.js. mix-blend-mode (styles.css) is what lets one plain
-  white track/thumb stay visibly readable over every section's
-  background color without per-section theming logic.
--->
-<div class="scroll-rail" aria-hidden="true">
-  <div class="scroll-rail__track">
-    <div class="scroll-rail__thumb"></div>
-  </div>
-</div>
-
-<!--
   Trailing glow that rides alongside the recoloured native-shaped
   cursor (styles.css) — see initCustomCursor in script.js. Fixed,
   mouse-only, purely decorative.
 -->
 <div class="cursor-glow" aria-hidden="true"></div>
 <!--
-  Follows the cursor, only shown while hovering a .projects-reel__card
-  — a small "click to open" hint for the project reel's image cards,
+  Follows the cursor, only shown while hovering a .project-thumb — a
+  small "click to open" hint for the Projects section's thumbnails,
   same mouse-only gating and quickTo-follow mechanics as .cursor-glow
   above. See initCustomCursor in script.js.
 -->
@@ -693,6 +657,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
-<script src="script.js"></script>
+<script src="script.js?v=2"></script>
 </body>
 </html>
