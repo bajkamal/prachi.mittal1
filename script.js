@@ -9,10 +9,10 @@
   const prefersReducedMotion = () => reduceMotionQuery.matches;
 
   // Set inside initLenis when a Lenis instance actually exists (desktop,
-  // fine pointer, motion not reduced) — initScrollRail's click/drag-to-
-  // jump uses this instead of window.scrollTo so it drives the same
-  // smoothed scroll everything else on the page already goes through,
-  // instead of the two fighting over the scroll position each frame.
+  // fine pointer, motion not reduced) — nav-link smooth-scroll-to-anchor
+  // uses this instead of window.scrollTo so it drives the same smoothed
+  // scroll everything else on the page already goes through, instead of
+  // the two fighting over the scroll position each frame.
   let lenisInstance = null;
 
   gsap.registerPlugin(...[window.ScrollTrigger, window.SplitText].filter(Boolean));
@@ -110,8 +110,20 @@
       setOpen(toggle.getAttribute('aria-expanded') !== 'true');
     });
 
+    // Guarded the same way as the click-outside/Escape handlers below —
+    // setOpen(false) writes inline opacity/transform/pointer-events onto
+    // #primary-nav-list, which isn't scoped to the mobile media query,
+    // so calling it unconditionally on every nav-link click (including
+    // on desktop, where aria-expanded never becomes "true" since the
+    // hamburger button is display:none and unclickable there) baked in
+    // permanent inline opacity:0/pointer-events:none the first time
+    // anyone clicked Project/About Me/Resume/Contact — hiding the whole
+    // desktop nav list for the rest of the session with no way for CSS
+    // to override it back.
     header.querySelectorAll('.nav-link').forEach((link) => {
-      link.addEventListener('click', () => setOpen(false));
+      link.addEventListener('click', () => {
+        if (toggle.getAttribute('aria-expanded') === 'true') setOpen(false);
+      });
     });
 
     document.addEventListener('click', (event) => {
@@ -126,6 +138,34 @@
         toggle.focus();
       }
     });
+
+    // setOpen's inline styles only mean anything at the mobile
+    // breakpoint where .nav-toggle is even visible — but they're
+    // written directly onto #primary-nav-list with no media-query
+    // scoping of their own, so closing the menu on mobile (a real tap,
+    // or the click-outside/Escape handlers above) leaves an inline
+    // opacity:0/pointer-events:none sitting on it. That's invisible
+    // until the viewport crosses back above 640px WITHOUT a full page
+    // reload — a phone rotated to landscape, a foldable, a desktop
+    // window resized wider — at which point .nav-toggle itself becomes
+    // display:none (no hamburger left to reopen it with), while the
+    // leftover inline styles keep silently hiding the now-desktop nav
+    // list forever: "I clicked somewhere and the four options
+    // disappeared." Clearing the inline overrides the instant the
+    // breakpoint is crossed hands rendering back to the desktop CSS,
+    // which never had an opacity rule to override in the first place.
+    const mobileMq = window.matchMedia('(max-width: 640px)');
+    const clearInlineStateIfDesktop = (isMobile) => {
+      if (isMobile) return;
+      toggle.setAttribute('aria-expanded', 'false');
+      if (list) {
+        list.style.opacity = '';
+        list.style.transform = '';
+        list.style.pointerEvents = '';
+      }
+    };
+    clearInlineStateIfDesktop(mobileMq.matches);
+    mobileMq.addEventListener('change', (e) => clearInlineStateIfDesktop(e.matches));
   }
 
   /* ---------------- Magnetic nav links (desktop hover only) ---------------- */
@@ -219,49 +259,31 @@
       gsap.to(header, { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, ease: 'power3.out' });
     }
 
-    // headline is visible through page load, just softly out of focus —
-    // scrolling is what sharpens it, and now (per direct request) that's
-    // scrubbed 1:1 with scroll distance rather than a fixed-duration
-    // trigger-once play: a small scroll clears proportionally little
-    // blur, not the whole line at once. .hero reserves an extra
-    // --hero-reveal-buffer of scroll distance for exactly this (see
-    // .hero in styles.css) — .why-section can't start sliding up to
-    // cover the headline until that same distance has been scrolled,
-    // so the reveal always finishes before anything starts covering it.
-    // Plain-number start/end (not a trigger element) for the same
-    // sticky reason as before: .hero's own top stays pinned at the
-    // viewport edge for its whole scroll range, so a trigger-relative
-    // position would never cross it; an absolute scroll-position number
-    // sits outside that and tracks real scroll input directly.
-    const revealBuffer = parseFloat(
-      getComputedStyle(document.documentElement).getPropertyValue('--hero-reveal-buffer')
-    ) || 600;
-
+    // headline blurs in on load, same "focus pull" as the navbar above —
+    // plays once automatically, not tied to scroll. .hero already has
+    // its own CSS position:sticky (see styles.css) for staying in place
+    // while .why-section slides over it — no separate GSAP pin needed
+    // or wanted here; a second, ScrollTrigger-driven pin on the same
+    // element fights that CSS sticky behavior and is what was causing
+    // this and other scroll-driven elements elsewhere on the page to
+    // read their positions against a shifting, inconsistent layout.
     if (typeof SplitText !== 'undefined' && headline) {
       const split = new SplitText(headline, { type: 'words', wordsClass: 'word' });
       gsap.set(split.words, { filter: 'blur(10px)' });
 
       gsap.to(split.words, {
         filter: 'blur(0px)',
+        duration: 1,
         stagger: 0.05,
-        ease: 'none',
-        scrollTrigger: {
-          start: 0,
-          end: revealBuffer,
-          scrub: true,
-        },
+        ease: 'power3.out',
       });
     } else if (headline) {
       gsap.set(headline, { filter: 'blur(10px)' });
 
       gsap.to(headline, {
         filter: 'blur(0px)',
-        ease: 'none',
-        scrollTrigger: {
-          start: 0,
-          end: revealBuffer,
-          scrub: true,
-        },
+        duration: 1,
+        ease: 'power3.out',
       });
     }
   }
@@ -409,49 +431,20 @@
     let elapsed = 0;
     let lastTime = performance.now();
     let baseSpeed = 1;
-    const speedState = { hover: 1 };
 
-    // Scroll velocity spins the field faster while you're actively
-    // scrolling (through the hero — the field is only ever visible
-    // during that window anyway, since .why-section covers it via
-    // z-index once you've scrolled past) and eases back down to the
-    // normal baseSpeed the instant scrolling slows or stops — no
-    // separate "scroll ended" event needed, just a per-frame decay
-    // toward 1 that only gets pushed back up while real scroll delta
-    // keeps arriving. Read directly off window.scrollY (not a scroll
-    // event) so it stays correct regardless of Lenis smoothing.
-    let lastScrollY = window.scrollY;
-    let scrollBoost = 1;
-    const SCROLL_SENSITIVITY = 0.05; // multiplier added per px of scroll delta in one frame
-    const MAX_SCROLL_BOOST = 3; // caps the added multiplier (so total speed tops out at 4x)
-    const BOOST_SMOOTHING = 0.15; // per-frame lerp toward the current target — the actual "ease back down"
-
+    // Constant rotation, always — deliberately not tied to scroll or
+    // cursor/hover: the loop spins at the same baseSpeed regardless of
+    // user input, so it never speeds up, slows down, or pauses.
     function tick() {
       const now = performance.now();
       const delta = (now - lastTime) / 1000;
       lastTime = now;
 
-      const currentScrollY = window.scrollY;
-      const scrollDelta = Math.abs(currentScrollY - lastScrollY);
-      lastScrollY = currentScrollY;
-      const targetBoost = 1 + Math.min(scrollDelta * SCROLL_SENSITIVITY, MAX_SCROLL_BOOST);
-      scrollBoost += (targetBoost - scrollBoost) * BOOST_SMOOTHING;
-
-      elapsed += delta * baseSpeed * speedState.hover * scrollBoost;
+      elapsed += delta * baseSpeed;
       const globalProgress = elapsed * CYCLE_SPEED;
       entries.forEach((entry) => apply(entry, globalProgress));
     }
     gsap.ticker.add(tick);
-
-    const hoverMq = window.matchMedia('(hover: hover) and (pointer: fine)');
-    if (hoverMq.matches) {
-      field.addEventListener('pointerenter', () => {
-        gsap.to(speedState, { hover: 0.22, duration: 0.6, ease: 'power2.out' });
-      });
-      field.addEventListener('pointerleave', () => {
-        gsap.to(speedState, { hover: 1, duration: 0.6, ease: 'power2.out' });
-      });
-    }
 
     function applyMobileAdjust() {
       baseSpeed = window.innerWidth < STACK_BP ? 0.6 : 1;
@@ -642,208 +635,65 @@
     });
   }
 
-  /* ---------------- Projects reel (pinned scroll reel) ----------------
-     Adapted from the client-supplied reference
-     "creative_scroll_projects (7).html" (superseding the earlier (3)
-     pass's opposite-direction word slide) — a scroll-scrubbed GSAP
-     timeline drives 3 independent stacks (left words, image cards,
-     right words), each internally laid out as 4 items absolutely
-     layered on top of themselves. Both word columns now swing
-     identically: rotationX + yPercent + scale + blur combine into a
-     3D "plank on a hinge" motion (the hinge sits behind the screen —
-     see .projects-reel__word's transform-origin in styles.css) rather
-     than a flat slide. Cards transition via an angled clip-path sweep
-     (the polygon's corners overshoot past 0%/100% instead of sitting
-     flush, giving the reveal a diagonal edge instead of a straight
-     line) combined with scale/rotation/brightness/blur. A one-time
-     fade+rise still reveals the first category as the section scrolls
-     into view (before the pin engages), and .projects-reel__card-media
-     gets a plain CSS hover/focus scale (deliberately on that inner
-     wrapper, not the card itself, so it never fights GSAP's own
-     inline transform on the outer element). pin:true (not the
-     reference's native position:sticky) for the same reason as
-     .philosophy-pin-wrapper elsewhere on this page: this section
-     relies on overflow:hidden for the shared post-hero z-index fix,
-     and sticky positioning inside an overflow:hidden ancestor is a
-     known fragile combination. Reduced motion skips this whole
-     function (pin/timeline and the mouse-tilt handlers alike); see
-     the .projects-reel__* rules inside the reduced-motion media query
-     in styles.css for how the layout unwinds into a plain 4-row list
-     instead. */
-  function initProjectsReel() {
-    const wrapper = document.getElementById('projects-reel');
-    const imageTrack = document.getElementById('projects-reel-image-track');
-    if (!wrapper || !imageTrack || prefersReducedMotion()) return;
+  /* ---------------- Project category chips ----------------
+     .project-category__chip (in the Projects section's label row)
+     cycles through one thumbnail per project on a plain timer — a
+     crossfade via opacity, not scroll-driven like the pinned reel
+     this replaced. Each frame carries the project's category as a
+     data-label attribute; the two .project-category__label spans
+     either side of the chip update to match on every tick, so the
+     chip image and the labels always change together as one unit
+     (Common Ground's thumbnail + "Branding", then BGL's + "Branding"
+     again, then Hamleys' + "Campaign", etc.) rather than the chip
+     cycling independently of static label text. The label swap
+     itself reuses the pinned reel's own "plank on a hinge" swing —
+     outgoing text tips up and away, incoming tips up from below into
+     focus (rotationX + opacity + blur + scale, .project-category__
+     label's transform-origin:center bottom is the hinge) — rather
+     than an instant textContent replace, per direct request to match
+     that same motion. Skipped under reduced motion — the chip just
+     shows its first (already .is-active) frame and label, statically,
+     no animation. */
+  function initProjectChips() {
+    const chips = gsap.utils.toArray('.project-category__chip');
+    if (!chips.length || prefersReducedMotion()) return;
 
-    const leftWords = gsap.utils.toArray('.projects-reel__word-col--left .projects-reel__word');
-    const rightWords = gsap.utils.toArray('.projects-reel__word-col--right .projects-reel__word');
-    const cards = gsap.utils.toArray('.projects-reel__card');
-    if (leftWords.length < 2 || rightWords.length !== leftWords.length || cards.length !== leftWords.length) return;
+    const CYCLE_MS = 2600;
+    const SWING_OUT = { yPercent: -100, rotationX: 80, opacity: 0, scale: 0.7, filter: 'blur(20px)', duration: 0.45, ease: 'power2.in' };
+    const SWING_IN_FROM = { yPercent: 100, rotationX: -80, opacity: 0, scale: 0.7, filter: 'blur(20px)' };
+    const SWING_IN_TO = { yPercent: 0, rotationX: 0, opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.45, ease: 'power2.out' };
 
-    // corners overshoot past the 0%/100% edges (115%, -20%) rather than
-    // sitting flush, so the sweep reads as a sheared diagonal cut
-    // instead of a flat horizontal line
-    const HIDDEN_CLIP = 'polygon(0% 100%, 100% 115%, 100% 115%, 0% 100%)';
-    const VISIBLE_CLIP = 'polygon(0% -20%, 100% -20%, 100% 100%, 0% 100%)';
+    chips.forEach((chip) => {
+      const frames = gsap.utils.toArray('.project-category__chip-img', chip);
+      if (frames.length < 2) return;
 
-    const words = [...leftWords, ...rightWords];
-    gsap.set(words, { yPercent: 100, rotationX: -80, opacity: 0, filter: 'blur(20px)', scale: 0.7 });
-    gsap.set(cards, { clipPath: HIDDEN_CLIP, scale: 1.4, rotation: 8, filter: 'brightness(0) blur(15px)' });
-    cards.forEach((card, i) => { gsap.set(card, { zIndex: i }); });
+      const category = chip.closest('.project-category');
+      const labels = category ? gsap.utils.toArray('[data-cycle-label]', category) : [];
 
-    gsap.set([leftWords[0], rightWords[0]], { yPercent: 0, rotationX: 0, opacity: 1, filter: 'blur(0px)', scale: 1 });
-    gsap.set(cards[0], { clipPath: VISIBLE_CLIP, scale: 1, rotation: 0, filter: 'brightness(1) blur(0px)' });
-    cards.slice(1).forEach((card) => {
-      card.style.pointerEvents = 'none';
-      // Every non-active card sits clipped to a thin diagonal sliver
-      // (HIDDEN_CLIP above) rather than being hidden outright, but its
-      // CSS box-shadow isn't clipped along with it — an 80px-blur
-      // shadow projecting off a rotated sliver reads as a stray
-      // diagonal smear on screen. Invisible on wide viewports where
-      // that smear falls off the edge of the card's own footprint;
-      // visible on narrow ones. Suppressed here to match the initial
-      // pin-ready state, then kept in sync every scroll tick below.
-      card.style.boxShadow = 'none';
-    });
+      let activeIndex = frames.findIndex((el) => el.classList.contains('is-active'));
+      if (activeIndex < 0) activeIndex = 0;
 
-    // One-time entrance for the very first category, layered on top of
-    // the pin-ready state set above (leftWords[0]/rightWords[0] stay at
-    // their correct rest transform; cards[0] stays at its correct
-    // clip-path/scale/filter) — this only adds an extra fade + rise
-    // that resolves before the section reaches the top of the
-    // viewport, so there's something to see arriving as you scroll
-    // down to it instead of it just sitting there fully formed already.
-    gsap.set([cards[0], leftWords[0], rightWords[0]], { opacity: 0, y: 32 });
-    ScrollTrigger.create({
-      trigger: wrapper,
-      start: 'top 85%',
-      once: true,
-      onEnter: () => {
-        gsap.to([cards[0], leftWords[0], rightWords[0]], {
-          opacity: 1,
-          y: 0,
-          duration: 1,
-          stagger: 0.08,
-          ease: 'power3.out',
+      const setLabelText = () => {
+        const text = frames[activeIndex].dataset.label;
+        if (text) labels.forEach((el) => { el.textContent = text; });
+      };
+      setLabelText();
+
+      setInterval(() => {
+        frames[activeIndex].classList.remove('is-active');
+        activeIndex = (activeIndex + 1) % frames.length;
+        frames[activeIndex].classList.add('is-active');
+
+        if (!labels.length) return;
+        gsap.to(labels, {
+          ...SWING_OUT,
+          onComplete: () => {
+            setLabelText();
+            gsap.fromTo(labels, SWING_IN_FROM, SWING_IN_TO);
+          },
         });
-      },
+      }, CYCLE_MS);
     });
-
-    const progressBar = document.getElementById('projects-reel-progress');
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: wrapper,
-        start: 'top top',
-        // 100% of a viewport per category, matching the reference's own
-        // ~100vh-per-item pacing (600vh wrapper minus the 100vh sticky
-        // viewport = 500vh of scroll-through for its 5 items)
-        end: `+=${(leftWords.length - 1) * 100}%`,
-        scrub: 1.5, // matches the reference's own scrub value exactly
-        pin: true,
-        anticipatePin: 1,
-        onUpdate: (self) => {
-          if (progressBar) gsap.set(progressBar, { scaleX: self.progress });
-          // pointer-events driven directly off scroll progress every
-          // update, not off the per-transition onStart callbacks below
-          // (see the comment on those) — this is what stays correct no
-          // matter how the user scrolls back and forth through the reel.
-          const activeIndex = Math.min(
-            cards.length - 1,
-            Math.round(self.progress * (leftWords.length - 1))
-          );
-          cards.forEach((card, idx) => {
-            const isActive = idx === activeIndex;
-            card.style.pointerEvents = isActive ? 'auto' : 'none';
-            // see the comment on the initial-state version of this,
-            // above — same reasoning, kept live as activeIndex changes.
-            card.style.boxShadow = isActive ? '' : 'none';
-          });
-        },
-      },
-    });
-
-    for (let i = 1; i < leftWords.length; i += 1) {
-      const label = `slide${i}`;
-
-      // outgoing word pair swings up and away, into the distance
-      tl.to([leftWords[i - 1], rightWords[i - 1]], {
-        yPercent: -100,
-        rotationX: 80,
-        opacity: 0,
-        scale: 0.7,
-        filter: 'blur(20px)',
-        duration: 1,
-        ease: 'power2.inOut',
-      }, label);
-
-      // incoming word pair swings up from below into clear focus
-      tl.to([leftWords[i], rightWords[i]], {
-        yPercent: 0,
-        rotationX: 0,
-        opacity: 1,
-        scale: 1,
-        filter: 'blur(0px)',
-        duration: 1,
-        ease: 'power2.inOut',
-      }, label);
-
-      // outgoing card recedes — shrinks, darkens, blurs behind the
-      // incoming one rather than sliding away. (pointer-events for
-      // every card are handled by the scrollTrigger's onUpdate above,
-      // not here — an onStart-only toggle never undoes itself when the
-      // user scrolls back *up* through the reel, since scrub timelines
-      // don't replay onStart in reverse, so cards were getting stuck
-      // un-clickable/click-through-to-the-wrong-card after any back-
-      // and-forth scrolling, which is normal scroll behavior, not an
-      // edge case.)
-      tl.to(cards[i - 1], {
-        scale: 0.85,
-        filter: 'brightness(0.2) blur(8px)',
-        duration: 1,
-        ease: 'power2.inOut',
-      }, label);
-
-      // incoming card's angled mask opens fully as it settles to rest
-      tl.to(cards[i], {
-        clipPath: VISIBLE_CLIP,
-        scale: 1,
-        rotation: 0,
-        filter: 'brightness(1) blur(0px)',
-        duration: 1.2,
-        ease: 'power3.inOut',
-      }, label);
-
-      if (i !== leftWords.length - 1) tl.to({}, { duration: 0.3 });
-    }
-
-    // 3D cursor tilt on the image stack — desktop/mouse only. Matches
-    // the reference's own tilt intensity (divide-by-35) and axis
-    // pairing (rotationY from X movement, rotationX from Y movement).
-    // One deliberate change: the reference measures from e.pageX/pageY
-    // (document-relative), which includes however far the page has
-    // scrolled — fine at the top of the page, but this section is
-    // scrolled hundreds of vh deep while pinned, so pageY there is a
-    // huge number and the reference's own formula would swing the
-    // tilt to wildly wrong angles. clientX/clientY (viewport-relative)
-    // give the intended "tilts toward the cursor" effect at any scroll
-    // depth. The reference also parallaxes the <img> inside each card
-    // against the track's own tilt for a two-layer depth effect; these
-    // cards are still placeholder spans (no <img> yet), so the cards
-    // themselves take that inverse offset instead — swap this to
-    // target an <img> once real photos replace the placeholders.
-    if (window.matchMedia('(pointer: fine)').matches) {
-      wrapper.addEventListener('mousemove', (event) => {
-        const xAxis = (window.innerWidth / 2 - event.clientX) / 35;
-        const yAxis = (window.innerHeight / 2 - event.clientY) / 35;
-        gsap.to(imageTrack, { rotationY: xAxis, rotationX: yAxis, ease: 'power2.out', duration: 0.8 });
-        gsap.to(cards, { x: -xAxis * 6, y: -yAxis * 6, ease: 'power2.out', duration: 0.8 });
-      });
-      wrapper.addEventListener('mouseleave', () => {
-        gsap.to(imageTrack, { rotationY: 0, rotationX: 0, duration: 1, ease: 'power2.out' });
-        gsap.to(cards, { x: 0, y: 0, duration: 1, ease: 'power2.out' });
-      });
-    }
   }
 
   /* ---------------- Footer wordmark marquee ----------------
@@ -958,21 +808,22 @@
      track's translateY is driven directly off scroll progress so it
      scrolls vertically past a fixed focus line inside the
      .philosophy-text-col window — a teleprompter, not a slideshow.
-     Every word (plus each stage badge and tag pill) gets its opacity
-     set every frame purely from its own current distance to that
-     focus line: far below (not reached yet) or far above (already
-     passed) both read as faded, at the same low opacity — nothing
-     "arrives fresh," it's all one strip moving through one point of
-     emphasis. Word positions are measured once up front (relative to
-     the track, before any transform is applied) rather than re-read
-     every frame, so the per-frame work is just arithmetic on cached
-     numbers — cheap enough to run on every scroll tick even with 100+
-     words. #ph-photo gets a slow continuous drift (not per-stage
-     jumps) tied to the same progress value, so it matches the same
-     "one continuous pass" feel instead of visibly stepping between
-     poses. Skipped entirely under reduced motion — a pinned, scroll-
-     jacked, continuously-transformed track is exactly the kind of
-     motion that preference exists to avoid; the CSS reduced-motion
+     Fade is per BLOCK (heading + paragraph + badge/tags together),
+     not per word — each .philosophy-block's opacity is set every
+     frame from its own single center point's distance to the focus
+     line, so a whole passage arrives and reads at full opacity
+     together instead of only the line or two nearest the focus point
+     being legible while the rest of that same passage is still
+     fading in/out (a word-level version of this was tried first and
+     read as hard to read for exactly that reason, per direct
+     feedback). Block positions are measured once up front (relative
+     to the track, before any transform is applied) rather than
+     re-read every frame. #ph-photo gets a slow continuous drift (not
+     per-stage jumps) tied to the same progress value, so it matches
+     the same "one continuous pass" feel instead of visibly stepping
+     between poses. Skipped entirely under reduced motion — a pinned,
+     scroll-jacked, continuously-transformed track is exactly the kind
+     of motion that preference exists to avoid; the CSS reduced-motion
      block unwinds everything to plain stacked, always-visible content
      instead (see styles.css). */
   function initPhilosophyScroll() {
@@ -982,36 +833,28 @@
     const track = document.getElementById('philosophy-text-track');
     if (!wrapper || !photo || !col || !track) return;
     if (prefersReducedMotion()) return;
-    if (typeof SplitText === 'undefined') return;
 
-    const headings = gsap.utils.toArray('[data-story-heading]');
-    const paras = gsap.utils.toArray('[data-story-p1], [data-story-p2], [data-story-p3]');
-    const quote = document.querySelector('[data-story-quote]');
-    if (!headings.length || !paras.length || !quote) return;
+    const blocks = gsap.utils.toArray('.philosophy-block');
+    if (!blocks.length) return;
 
-    [...headings, ...paras, quote].forEach((el) => {
-      new SplitText(el, { type: 'words', wordsClass: 'word' });
-    });
-
-    // Every element the focus line sweeps past — words, badges, and
-    // tag pills alike, all driven by the same distance-to-focus math.
-    const focusEls = Array.from(track.querySelectorAll('.word, .stage-badge, .philosophy-tag'));
-    if (!focusEls.length) return;
-
-    const FOCUS_RANGE = 36; // px — full opacity/scale within this distance of the focus line
+    // Wide plateau — a block stays at full opacity for a generous
+    // stretch of scroll on either side of dead-center, since the goal
+    // is "fully readable while it's the one in focus," not a knife-
+    // edge peak.
+    const FOCUS_RANGE = 130; // px — full opacity while a block's center is within this of the focus line
     const MIN_OPACITY = 0.18;
     const EASE = gsap.parseEase('power1.out');
 
     let fadeRange = 220;
     let focusY = 0;
     let trackHeight = 0;
-    let cache = []; // { el, center } — center is this word's vertical midpoint, track-relative, measured once
+    let cache = []; // { el, center } — center is this block's vertical midpoint, track-relative, measured once
 
     function measure() {
       const colRect = col.getBoundingClientRect();
       const windowHeight = colRect.height;
       focusY = windowHeight * 0.42;
-      fadeRange = Math.max(160, windowHeight * 0.32);
+      fadeRange = Math.max(280, windowHeight * 0.42);
 
       // measured with the track at its natural (untransformed) flow
       // position, so every offset below is relative to the track's
@@ -1020,7 +863,7 @@
       track.style.transform = 'none';
       const trackRect = track.getBoundingClientRect();
       trackHeight = trackRect.height;
-      cache = focusEls.map((el) => {
+      cache = blocks.map((el) => {
         const r = el.getBoundingClientRect();
         return { el, center: r.top - trackRect.top + r.height / 2 };
       });
@@ -1030,8 +873,8 @@
 
     function render(progress) {
       // track's top starts FADE_RANGE below the focus line (so even
-      // the very first word begins dim, not already lit) and ends
-      // FADE_RANGE above it once the last word has cleared — see the
+      // the very first block begins dim, not already lit) and ends
+      // FADE_RANGE above it once the last block has cleared — see the
       // long comment above for the lead-in/lead-out derivation.
       const trackY = focusY + fadeRange - progress * (trackHeight + fadeRange * 2);
       track.style.transform = `translateY(${trackY}px)`;
@@ -1042,8 +885,10 @@
         const dist = Math.abs(screenY - focusY);
         let t = (dist - FOCUS_RANGE) / (fadeRange - FOCUS_RANGE);
         t = t < 0 ? 0 : t > 1 ? 1 : EASE(t);
+        // Set once on the block itself — opacity on a parent visually
+        // fades every descendant (heading, paragraph, badge, tags)
+        // together as a single unit, which is the whole point here.
         el.style.opacity = String(1 - t * (1 - MIN_OPACITY));
-        el.style.transform = `scale(${1 - t * 0.06})`;
       }
 
       // slow continuous drift, tied straight to progress rather than
@@ -1073,7 +918,7 @@
   /* ---------------- Illustration field (About -> Philosophy) ----------------
      A fixed-position layer (.about-doodle-field, not scoped to any one
      section — see the long comment on it in Index.html/styles.css)
-     carrying 6 illustrations, each with three independent motions
+     carrying 4 illustrations, each with three independent motions
      split across two nested elements so none of them fight over
      `transform`:
        .about-doodle        — a continuous per-doodle idle drift (a
@@ -1081,15 +926,15 @@
                                sine/cosine, so it reads as organic
                                "flowing" rather than a robotic back-
                                and-forth) PLUS a scroll-linked
-                               horizontal parallax at its own per-
-                               doodle speed — this second part is what
-                               actually makes them flow *between*
-                               sections: as the page scrolls from
-                               #about to #projects, each illustration
-                               drifts in from one side of the fixed
-                               viewport and out the other at a
-                               different rate, instead of moving with
-                               the page like ordinary content.
+                               horizontal sweep at its own per-doodle
+                               speed — this second part is what flies
+                               each one in from off-screen as #about
+                               arrives and back out, the same way it
+                               came, by the time #philosophy-section
+                               begins (see driftX below — per direct
+                               request, exit is enter played in
+                               reverse, not a continued pass-through to
+                               the opposite edge).
        .about-doodle__inner — cursor-proximity repel + scale-up, same
                                "flinch away" language as the WHY
                                heading's magnetic letters. */
@@ -1122,12 +967,10 @@
       tiltFreq2: gsap.utils.random(0.15, 0.24),
       // +/- so some drift leftward and some rightward relative to the
       // page's own scroll, at visibly different speeds — this
-      // spread, not any single value, is what sells "flowing".
-      // Sign also decides entrance/exit direction below: a doodle
-      // that drifts net-rightward across the scroll enters from the
-      // left edge and exits off the right (and the reverse for one
-      // that drifts net-leftward), so the enter/exit motion always
-      // continues the same direction as its own mid-scroll drift.
+      // spread, not any single value, is what sells "flowing". Sign
+      // also decides which edge a doodle enters from below (driftX) —
+      // it exits back off that exact same edge, reversed, not the
+      // opposite one.
       parallaxRange: gsap.utils.random(160, 420) * (gsap.utils.random(0, 1) < 0.5 ? -1 : 1),
     }));
 
@@ -1165,17 +1008,23 @@
       }
       if (progress >= EXIT_START) {
         const t = exitEase((Math.min(1, progress) - EXIT_START) / (1 - EXIT_START));
-        return gsap.utils.interpolate(midDrift(EXIT_START, e.parallaxRange), sign * off, t);
+        // Same edge as the entrance (-sign*off, not +sign*off) — per
+        // direct request, each doodle leaves back the way it arrived
+        // rather than continuing through to the opposite edge.
+        return gsap.utils.interpolate(midDrift(EXIT_START, e.parallaxRange), -sign * off, t);
       }
       return midDrift(progress, e.parallaxRange);
     }
 
-    // 0 before #about arrives, 1 once #projects arrives — drives both
-    // the field's own (now very brief — position carries the real
-    // enter/exit) opacity safety-fade and every doodle's drift/tilt,
-    // recomputed continuously (scrub, not once) so it always matches
-    // however far the user has actually scrolled, including mid-
-    // scroll direction reversals.
+    // 0 before #about arrives, 1 once #philosophy-section's own pin
+    // engages ("The Way I See The World") — per direct request, the
+    // doodles belong to #about specifically and should be gone by the
+    // moment that next section takes over, not linger all the way
+    // through it to #projects. Drives both the field's own (now very
+    // brief — position carries the real enter/exit) opacity safety-
+    // fade and every doodle's drift/tilt, recomputed continuously
+    // (scrub, not once) so it always matches however far the user has
+    // actually scrolled, including mid-scroll direction reversals.
     let scrollProgress = 0;
     // 'top bottom' (About's top touching the viewport's own bottom
     // edge) is a fixed point in the *page's* scroll distance, but how
@@ -1190,11 +1039,22 @@
     // start later, once About's top has actually scrolled some real
     // distance into view, by which point WHY/TV is behind it.
     const doodleStart = window.matchMedia('(max-width: 768px)').matches ? 'top 40%' : 'top bottom';
+    // Not endTrigger:'.philosophy-pin-wrapper', end:'top top' — that
+    // element is itself pinned (initPhilosophyScroll), and referencing
+    // an already-pinned element as another trigger's endTrigger this
+    // way measures garbage (a large negative start), not the sane
+    // number philosophy's own pin trigger reports for the exact same
+    // position. Reading that existing trigger's own .start instead
+    // sidesteps the conflict entirely; a function (not a plain number)
+    // so it re-reads the current value on every ScrollTrigger refresh
+    // rather than freezing whatever it was at creation time.
+    const philTrigger = ScrollTrigger.getAll().find(
+      (t) => t.vars.pin && t.trigger && t.trigger.classList && t.trigger.classList.contains('philosophy-pin-wrapper')
+    );
     ScrollTrigger.create({
       trigger: '.about-section',
       start: doodleStart,
-      endTrigger: '.projects-section',
-      end: 'top top',
+      end: () => (philTrigger ? philTrigger.start : '+=2000'),
       scrub: true,
       onUpdate: (self) => { scrollProgress = self.progress; },
     });
@@ -1292,9 +1152,6 @@
       return;
     }
 
-    let startRect, endRect, startScroll, endScroll;
-    let isSetup = false;
-
     // updateCard below only ever *computes* a target — it never writes
     // to the DOM directly. A fast scroll (a big Lenis-smoothed jump in
     // scrollY between one onUpdate call and the next) used to snap the
@@ -1330,7 +1187,20 @@
       applyCard();
     });
 
-    function calculateBounds() {
+    function updateCard(progress) {
+      // Measured fresh every call rather than cached — a cached
+      // document-space snapshot (the previous approach) goes stale the
+      // moment anything above #start-placeholder or #end-placeholder
+      // reflows after the snapshot was taken (a pinned section's
+      // spacer settling late, a web font swapping in), and unlike the
+      // flight's timing (now driven by a real ScrollTrigger — see
+      // flightTrigger below), there was no equivalent fix for *where*
+      // the card actually renders: it would keep drawing at whatever
+      // position the stale snapshot implied, floating over whatever
+      // section happens to be there instead of tracking the real
+      // placeholders. getBoundingClientRect() is cheap enough to call
+      // twice per scroll-driven frame — the same cost ScrollTrigger
+      // itself already pays for plenty of other elements on this page.
       const sRect = startEl.getBoundingClientRect();
       const eRect = endEl.getBoundingClientRect();
 
@@ -1342,55 +1212,28 @@
         return;
       }
 
-      flyingCard.style.opacity = '1';
-
-      const scrollY = window.scrollY;
-
-      startRect = { left: sRect.left, top: sRect.top + scrollY, width: sRect.width, height: sRect.height };
-      endRect = { left: eRect.left, top: eRect.top + scrollY, width: eRect.width, height: eRect.height };
-
-      startScroll = startRect.top - window.innerHeight / 2 + startRect.height / 2;
-      endScroll = endRect.top - window.innerHeight / 2 + endRect.height / 2;
-
-      flyingCard.style.width = `${startRect.width}px`;
-      flyingCard.style.height = `${startRect.height}px`;
-
-      isSetup = true;
-      updateCard();
-    }
-
-    function updateCard() {
-      if (!isSetup) return;
-
-      const scrollY = window.scrollY;
-      let progress = 0;
-      if (endScroll > startScroll) {
-        progress = (scrollY - startScroll) / (endScroll - startScroll);
-        progress = Math.max(0, Math.min(1, progress));
-      }
+      flyingCard.style.width = `${sRect.width}px`;
+      flyingCard.style.height = `${sRect.height}px`;
 
       // Sine-mapped ease in/out, not linear, for a premium feel.
       const easeProgress = -(Math.cos(Math.PI * progress) - 1) / 2;
 
-      const currentStartTop = startRect.top - scrollY;
-      const currentEndTop = endRect.top - scrollY;
-
-      const startCenterX = startRect.left + startRect.width / 2;
-      const startCenterY = currentStartTop + startRect.height / 2;
-      const endCenterX = endRect.left + endRect.width / 2;
-      const endCenterY = currentEndTop + endRect.height / 2;
+      const startCenterX = sRect.left + sRect.width / 2;
+      const startCenterY = sRect.top + sRect.height / 2;
+      const endCenterX = eRect.left + eRect.width / 2;
+      const endCenterY = eRect.top + eRect.height / 2;
 
       const currentCenterX = startCenterX + (endCenterX - startCenterX) * easeProgress;
       const currentCenterY = startCenterY + (endCenterY - startCenterY) * easeProgress;
 
-      const currentWidth = startRect.width + (endRect.width - startRect.width) * easeProgress;
-      const currentHeight = startRect.height + (endRect.height - startRect.height) * easeProgress;
+      const currentWidth = sRect.width + (eRect.width - sRect.width) * easeProgress;
+      const currentHeight = sRect.height + (eRect.height - sRect.height) * easeProgress;
 
-      const scaleX = currentWidth / startRect.width;
-      const scaleY = currentHeight / startRect.height;
+      const scaleX = currentWidth / sRect.width;
+      const scaleY = currentHeight / sRect.height;
 
-      const x = currentCenterX - startRect.width / 2;
-      const y = currentCenterY - startRect.height / 2;
+      const x = currentCenterX - sRect.width / 2;
+      const y = currentCenterY - sRect.height / 2;
 
       // split across the two elements — see the long comment on
       // .flying-card in styles.css for why the rotateY specifically
@@ -1421,11 +1264,22 @@
       // the timeline starts moving it somewhere else.
       target.opacity = progress > 0.95 ? 1 - (progress - 0.95) * 20 : 1;
 
-      if (!hasTarget) {
-        // First call ever (right after calculateBounds sets isSetup) —
-        // snap current straight to target and paint immediately rather
-        // than lerping in from the zeroed defaults, which would look
-        // like the card flying in from the top-left corner on load.
+      // The lerp smoothing in the ticker above exists solely to keep a
+      // FAST scroll *through* the actual 0..1 flight from visibly
+      // glitching between frames — it was never meant to add drag
+      // while the card is simply at rest, glued to a placeholder that
+      // itself is just scrolling normally with the page. ScrollTrigger
+      // clamps progress to exactly 0 before the flight starts and
+      // exactly 1 after it ends, so outside that open interval nothing
+      // is "in flight": snap current straight to target on every such
+      // frame (not just the very first ever) instead of leaving it to
+      // the ticker to slowly catch up. Without this, scrolling back up
+      // past #about (or fast-forwarding through the flight) let the
+      // card visibly lag behind the placeholder's real, continuously-
+      // changing position — reading as the photo floating/trailing
+      // through the TV and hero sections instead of staying glued to
+      // where it actually belongs.
+      if (!hasTarget || progress <= 0 || progress >= 1) {
         hasTarget = true;
         current.x = target.x;
         current.y = target.y;
@@ -1444,35 +1298,76 @@
       endEl.classList.toggle('is-visible', progress > 0.95);
     }
 
+    // Progress (0 at #start-placeholder's center crossing viewport
+    // center, 1 at #end-placeholder's) used to be computed by hand from
+    // a one-time window.scrollY + getBoundingClientRect snapshot of
+    // each placeholder. That snapshot goes stale the moment anything
+    // between them changes height AFTER it was taken — and
+    // #end-placeholder sits *inside* .philosophy-pin-wrapper, whose own
+    // +=400% pin-spacer (initPhilosophyScroll) can finish sizing itself
+    // later than this snapshot did (e.g. a slow web-font/layout pass on
+    // mobile) with no resize event to catch it, since nothing about the
+    // *viewport* changed. The result: this card's "progress" and the
+    // paragraph timeline's ScrollTrigger progress quietly drift apart —
+    // sometimes landing right on time, sometimes only finishing well
+    // after all four paragraphs have already played through. A real
+    // ScrollTrigger here (same trigger/endTrigger pattern used
+    // elsewhere) fixes that at the root: it's refreshed on exactly the
+    // same cycle as every other ScrollTrigger on the page — including
+    // .philosophy-pin-wrapper's own — so both timelines are always
+    // measured against the current, settled layout together instead of
+    // two independently-snapshotted ones that can disagree.
+    const flightTrigger = ScrollTrigger.create({
+      trigger: startEl,
+      start: 'center center',
+      endTrigger: endEl,
+      end: 'center center',
+    });
+    updateCard(flightTrigger.progress);
+
+    // flightTrigger's own onUpdate (not used above) only fires when
+    // ITS progress numerically changes — which it doesn't for any
+    // scroll that stays entirely before the flight starts or entirely
+    // after it ends, since GSAP clamps and reports the same 0 or 1
+    // both times. That's most of the page (everything from the very
+    // top through #about, and everything from #philosophy-section
+    // onward), so updateCard would simply stop being called while
+    // scrolling around in either of those zones — freezing the card
+    // at whatever position it last computed, which is stale the
+    // moment startEl (or endEl) has since moved for any other reason
+    // (this section's own idle float, a layout shift elsewhere). A
+    // second, no-op ScrollTrigger spanning the ENTIRE page always has
+    // continuously-changing progress, so its onUpdate reliably fires
+    // on every real scroll tick everywhere — used here purely to force
+    // a fresh repaint each time, reading flightTrigger's current
+    // progress rather than trusting a stale cached value.
+    ScrollTrigger.create({ start: 0, end: 'max', onUpdate: () => updateCard(flightTrigger.progress) });
+
+    // updateCard measures startEl/endEl fresh every call now, so there's
+    // no separate rect cache left to warm — these just repaint with the
+    // current progress in case the very first call above landed before
+    // layout had real dimensions yet (0-width placeholders would have
+    // bailed to opacity:0 and stayed there with nothing else to retry).
+    window.addEventListener('load', () => updateCard(flightTrigger.progress));
+    setTimeout(() => updateCard(flightTrigger.progress), 100);
+    setTimeout(() => updateCard(flightTrigger.progress), 1000);
+
+    // Resize doesn't necessarily produce a new scroll event for
+    // flightTrigger's own onUpdate to fire from, so repaint explicitly —
+    // same reasoning as the Lenis resize hook elsewhere on the page.
+    // flightTrigger's own start/end are already kept current by
+    // ScrollTrigger's normal resize handling, and updateCard's fresh
+    // getBoundingClientRect() calls mean this repaint always reflects
+    // the post-resize layout, not a stale one.
     window.addEventListener('resize', () => {
-      requestAnimationFrame(calculateBounds);
+      requestAnimationFrame(() => updateCard(flightTrigger.progress));
     });
 
-    // Every other scroll-driven effect on this page is ScrollTrigger-
-    // based, which is what makes it track Lenis's smoothed scroll
-    // position correctly (initLenis calls ScrollTrigger.update() on
-    // every Lenis tick). A raw window 'scroll' listener here doesn't
-    // reliably get that same treatment, and Lenis's own tick doesn't
-    // dispatch a native scroll event every frame — so this card could
-    // stop tracking scroll position part-way through, freezing fully
-    // opaque and mid-flight, permanently overlapping whatever content
-    // scrolls up underneath it (position:fixed, so it just sits there).
-    // A no-op ScrollTrigger spanning the whole page keeps updateCard
-    // driven by the same Lenis-synced update loop as everything else.
-    ScrollTrigger.create({ start: 0, end: 'max', onUpdate: updateCard });
-
-    window.addEventListener('load', calculateBounds);
-    setTimeout(calculateBounds, 100);
-    setTimeout(calculateBounds, 1000);
-
-    // startRect/endRect are captured in *document* coordinates, so
-    // they go stale the moment anything below #about (the pinned
-    // philosophy scene's 400%-scroll spacer, the projects reel's own
-    // pin spacer) finishes inserting or resizing — which can happen
-    // well after the setTimeouts above, e.g. on the document.fonts.ready
-    // refresh. Recalculating on every ScrollTrigger refresh keeps this
-    // in sync the same way the Lenis resize hook above does.
-    ScrollTrigger.addEventListener('refresh', calculateBounds);
+    // Same idea on every ScrollTrigger refresh (fonts.ready, other
+    // sections' pin-spacers finishing sizing, etc.) — repaint with
+    // whatever the now-current layout implies instead of waiting for
+    // the next scroll event.
+    ScrollTrigger.addEventListener('refresh', () => updateCard(flightTrigger.progress));
   }
 
   /* ---------------- Curve parallax + float (pink section transition) ----------------
@@ -1679,33 +1574,10 @@
 
     // Idle float — the set gently bobs and sways, like it's just
     // sitting there running, rather than a perfectly static image.
-    // Separate property tweens (y / rotation) so this composes cleanly
-    // with the cursor-tilt quickTo's below (rotationX/rotationY),
-    // instead of every effect fighting over one shorthand `transform`.
+    // No cursor-driven tilt — the set's orientation stays static
+    // regardless of mouse movement, only this ambient bob/sway moves it.
     gsap.to(frame, { y: -10, duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1 });
     gsap.to(frame, { rotation: -0.6, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: -1 });
-
-    // Cursor parallax tilt — desktop/mouse only, same gating as the
-    // WHY heading's magnetic letters and the custom cursor. The set
-    // leans toward the cursor in 3D as it moves across the section,
-    // like it's watching you back.
-    if (window.matchMedia('(pointer: fine)').matches) {
-      const showcase = document.querySelector('.tv-showcase');
-      const quickRotX = gsap.quickTo(frame, 'rotationX', { duration: 0.6, ease: 'power3.out' });
-      const quickRotY = gsap.quickTo(frame, 'rotationY', { duration: 0.6, ease: 'power3.out' });
-      const TILT_MAX = 10; // deg
-      (showcase || document).addEventListener('mousemove', (e) => {
-        const rect = frame.getBoundingClientRect();
-        const px = (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
-        const py = (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2);
-        quickRotX(gsap.utils.clamp(-TILT_MAX, TILT_MAX, -py * TILT_MAX));
-        quickRotY(gsap.utils.clamp(-TILT_MAX, TILT_MAX, px * TILT_MAX));
-      });
-      (showcase || document).addEventListener('mouseleave', () => {
-        quickRotX(0);
-        quickRotY(0);
-      });
-    }
   }
 
   function initProjectsMarquee() {
@@ -1986,64 +1858,6 @@
     });
   }
 
-  /* ---------------- Resize handling ---------------- */
-  /* ---------------- Custom scroll rail (fixed, right edge) ----------------
-     Thumb position is driven by a no-op ScrollTrigger's onUpdate, same
-     fix as initFlyingCard above — a raw `scroll` listener isn't
-     reliably kept in sync with Lenis's smoothed scroll. Click/drag on
-     the track jumps the real page scroll via lenis.scrollTo when Lenis
-     is active, falling back to window.scrollTo on touch/reduced-motion
-     builds where initLenis never created an instance. */
-  function initScrollRail() {
-    const rail = document.querySelector('.scroll-rail');
-    const track = document.querySelector('.scroll-rail__track');
-    const thumb = document.querySelector('.scroll-rail__thumb');
-    if (!rail || !track || !thumb || !window.matchMedia('(pointer: fine)').matches) return;
-
-    const THUMB_PERCENT = 16; // matches .scroll-rail__thumb's height in styles.css
-    ScrollTrigger.create({
-      start: 0,
-      end: 'max',
-      onUpdate: (self) => {
-        thumb.style.top = `${self.progress * (100 - THUMB_PERCENT)}%`;
-      },
-    });
-
-    function maxScroll() {
-      if (lenisInstance) return lenisInstance.limit;
-      return document.documentElement.scrollHeight - window.innerHeight;
-    }
-
-    function scrollToProgress(progress) {
-      const target = Math.min(1, Math.max(0, progress)) * maxScroll();
-      if (lenisInstance) {
-        lenisInstance.scrollTo(target, { immediate: prefersReducedMotion() });
-      } else {
-        window.scrollTo({ top: target, behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
-      }
-    }
-
-    function progressFromClientY(clientY) {
-      const rect = track.getBoundingClientRect();
-      return (clientY - rect.top) / rect.height;
-    }
-
-    track.addEventListener('pointerdown', (event) => {
-      track.setPointerCapture(event.pointerId);
-      rail.classList.add('is-dragging');
-      scrollToProgress(progressFromClientY(event.clientY));
-
-      const onMove = (moveEvent) => scrollToProgress(progressFromClientY(moveEvent.clientY));
-      const onUp = () => {
-        rail.classList.remove('is-dragging');
-        track.removeEventListener('pointermove', onMove);
-      };
-      track.addEventListener('pointermove', onMove);
-      track.addEventListener('pointerup', onUp, { once: true });
-      track.addEventListener('pointercancel', onUp, { once: true });
-    });
-  }
-
   /* ---------------- Custom cursor glow ----------------
      Rides alongside the recoloured native-shaped cursor (styles.css)
      — that one keeps the OS arrow's silhouette and just reflects the
@@ -2092,7 +1906,7 @@
       if (event.target.closest(INTERACTIVE)) {
         gsap.to(glow, { scale: 2.2, duration: 0.4, ease: 'power3.out' });
       }
-      if (tag && event.target.closest('.projects-reel__card')) {
+      if (tag && event.target.closest('.project-thumb')) {
         gsap.to(tag, { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' });
       }
     });
@@ -2103,8 +1917,8 @@
         gsap.to(glow, { scale: 1, duration: 0.4, ease: 'power3.out' });
       }
       if (tag) {
-        const leavingCard = event.target.closest('.projects-reel__card');
-        const enteringCard = event.relatedTarget && event.relatedTarget.closest && event.relatedTarget.closest('.projects-reel__card');
+        const leavingCard = event.target.closest('.project-thumb');
+        const enteringCard = event.relatedTarget && event.relatedTarget.closest && event.relatedTarget.closest('.project-thumb');
         if (leavingCard && !enteringCard) {
           gsap.to(tag, { opacity: 0, scale: 0.75, duration: 0.25, ease: 'power3.out' });
         }
@@ -2152,31 +1966,12 @@
     initFooterMarquee();
     initAboutStats();
     initTestimonials();
-    // DOM order matters here: .philosophy-pin-wrapper (400%-scroll
-    // pin) sits before .projects-reel (its own 400%-scroll pin) in
-    // the page, and GSAP computes each pinned trigger's start position
-    // from the page's current layout at creation time — if the reel's
-    // pin were set up before philosophy's pin-spacer exists, its "top
-    // top" start gets calculated short by roughly one philosophy-pin's
-    // worth of scroll distance and never fully self-corrects on later
-    // refreshes, so the reel starts pinning while philosophy is still
-    // pinned (two pins fighting over the same scroll range — the
-    // "clash" with a dead white gap after). Creating them in the same
-    // order they appear on the page avoids that.
     initPhilosophyScroll();
     initFlyingCard();
-    initProjectsReel();
-    // Same reasoning again: initAboutDoodles' own ScrollTrigger spans
-    // from #about all the way to #projects (endTrigger: '.projects-
-    // section'), which only measures correctly once philosophy's pin-
-    // spacer already exists in the document — called any earlier, that
-    // endpoint gets measured against the pre-pin (much shorter) layout
-    // and the whole tracked range collapses to roughly #about's own
-    // height, cutting the "flow" off while still deep inside philosophy.
+    initProjectChips();
     initAboutDoodles();
     initCaseStudyReveals();
     initCaseNav();
-    initScrollRail();
     initCustomCursor();
     initResizeRefresh();
   });
