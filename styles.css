@@ -150,19 +150,19 @@ a { color: inherit; }
   position: fixed;
   top: 0;
   left: 0;
-  width: 28px;
-  height: 28px;
-  margin: -14px 0 0 -14px;
+  width: 16px;
+  height: 16px;
+  margin: -8px 0 0 -8px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 70%);
-  /* mix-blend-mode:difference inverts against whatever's underneath,
-     so one glow reads correctly over cream, blush, pink and ink alike
-     with no per-section theming */
-  mix-blend-mode: difference;
+  /* solid fill, normal composite (no mix-blend-mode) — the color
+     itself is set inline by initCustomCursor in script.js, sampled
+     from whatever's actually under the cursor, so it stays readable
+     over cream, blush, pink and ink alike without a blend trick */
+  background: var(--color-ink);
   opacity: 0;
   pointer-events: none;
   z-index: 9999;
-  will-change: transform, opacity;
+  will-change: transform, opacity, background-color;
 }
 @media (pointer: coarse) {
   .cursor-glow {
@@ -270,8 +270,12 @@ a { color: inherit; }
   padding-inline: clamp(1rem, 5vw, 2rem);
   border-radius: 1rem;
 
-  background: rgba(250, 245, 236, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  /* was 0.4 — over a flat-color section (no texture for the blur to
+     actually soften), that alpha mixed down to a muddy half-tint
+     instead of reading as glass. Higher alpha commits to a clean
+     light pill there while still showing some blur/see-through over
+     the busier sections (hero's card field, project thumbnails). */
+  background: rgba(250, 245, 236, 0.55);
   /* was blur(12px) — strong enough that a tile passing directly
      behind the pill looked cut off from the same tile just outside
      it, reading as a hard rectangle rather than a soft glass effect */
@@ -284,6 +288,42 @@ a { color: inherit; }
   .site-header__inner {
     background: rgba(250, 245, 236, 0.96);
   }
+}
+
+/* Case-study pages (branding/bgl/motion/editorial/bigbang.html) are
+   dark/black throughout, unlike the homepage where this same header
+   only goes dark-on-dark via script.js's initHeaderTheme (scroll-
+   triggered, and gated on a homepage-only .projects-strip element it
+   never finds here, so it silently no-ops on every case2 page) —
+   leaving the header stuck in its default light styling against a
+   black background. Applying that exact same "dark" state permanently
+   here instead, per direct request, reusing the identical color
+   (var(--color-on-ink), the site's cream/beige-on-dark text tone) so
+   the navbar itself is otherwise unchanged from the homepage. */
+body:has(.case2) .site-header__inner {
+  background: rgba(33, 26, 20, 0.55);
+}
+body:has(.case2) .logo,
+body:has(.case2) .nav-link {
+  color: var(--color-on-ink);
+}
+
+/* .case2's own dark background only covers the <article> itself —
+   the .footer directly after it sits back on body's plain cream,
+   which read as a washed-out near-white strip (the footer's own text
+   is a light on-ink color, meant to sit on something dark) instead of
+   a continuation of the same black template. Coloring the whole body
+   removes that seam; .case2's own background still paints over it
+   for the article itself. */
+body:has(.case2) {
+  background: var(--color-case2-bg);
+}
+/* Tightened from the shared clamp(4rem, 10vw, 7rem) — on top of
+   .case2's own bottom padding-block, that left a noticeably large
+   dead gap between the Previous/Next buttons and the footer, per
+   direct request to reduce it. */
+body:has(.case2) .footer {
+  margin-top: clamp(2.5rem, 6vw, 4.5rem);
 }
 
 /* Dark-over-marquee state is applied as inline styles directly by
@@ -1602,12 +1642,34 @@ a { color: inherit; }
 /* single-line cards can carry a bigger size than the two-line ones
    without outgrowing the shared card height */
 .stat-card--4 {
-  font-size: clamp(1.25rem, 5vw, 2.75rem);
+  /* was clamp(0.9rem, 3.5vw, 1.95rem) — safe, but well under the
+     shared .stat-card cap (2.25rem), so "30+ Projects" read visibly
+     smaller than "35+ Brands & Clients"/"6+ Internships" right next
+     to it. Tightening this card's own horizontal padding below
+     (instead of just shrinking the font further) frees up enough
+     content width to run the exact same font-size clamp as every
+     other card — measured with canvas ctx.measureText against the
+     real rendered font, ~5px of margin at every breakpoint, none
+     overflowing. Floor stays lower than the shared 1.1rem: at that
+     floor this text still needed ~7px more than was available at the
+     narrowest widths, even with the tighter padding. */
+  font-size: clamp(0.9rem, 4.4vw, 2.25rem);
+  /* shared .stat-card padding's horizontal component (cap 1.3rem)
+     left only ~216px of content width at full size against the
+     ~240px "30+ Projects" needs at a matching 2.25rem — this frees
+     the extra room without changing the card's own outer width. */
+  padding-inline: clamp(0.45rem, 1.9vw, 0.85rem);
 }
 /* "3+ Years" only, per direct request — box size/position untouched,
    just a bigger font-size than "30+ Projects" (--4) now. */
 .stat-card--3 {
-  font-size: clamp(1.4rem, 5.6vw, 3.1rem);
+  /* was clamp(1.4rem, 5.6vw, 3.1rem) — measured with canvas
+     ctx.measureText against the real rendered font: at the 3.1rem
+     cap "3+ Years" needed ~218px but only had ~216px of available
+     content width, overflowing by ~2px (small, but real — cause of
+     the visible spill). Reduced to leave a real margin instead of
+     landing right on the edge. */
+  font-size: clamp(1.3rem, 5vw, 2.8rem);
 }
 .stat-card--3, .stat-card--4 {
   justify-content: flex-end;
@@ -1737,6 +1799,32 @@ a { color: inherit; }
 @media (min-width: 768px) {
   .philosophy-layout {
     flex-direction: row;
+    /* was stretching full-bleed to 100vw, which is why the photo and
+       text sat pinned to the far left/right edges with a huge empty
+       gap between them on a wide screen. Capping the row at the
+       site's own shared content width and centering it (same
+       convention as every other section) helped, but each column was
+       still forced to a rigid 50/50 split (flex:1 on both) — since
+       the photo's own real width is well under half that column, the
+       "gap" was actually mostly *dead space inside the photo's own
+       column*, not a real gap. Both columns are now sized to their
+       own content instead (see flex below) with a real, fixed gap
+       between them; centering that tighter pair inside this same
+       padded/capped row still keeps the two OUTER gaps (viewport edge
+       to photo, viewport edge to text) equal to each other, since
+       centering a narrower unit inside a wider one always splits the
+       leftover space evenly either side. */
+    max-width: var(--content-max);
+    margin-inline: auto;
+    padding-inline: var(--container-pad);
+    justify-content: center;
+    gap: clamp(4rem, 9vw, 7.5rem);
+    /* shared by the photo/text translateX shifts below — was a flat
+       3.5rem, which overflowed the page horizontally at narrower
+       widths (871px content pushed past an 870px viewport) once both
+       columns are shifted apart by it with no room to spare. Scales
+       down at narrow widths instead of staying fixed. */
+    --philosophy-shift: clamp(0.5rem, 3vw, 3.5rem);
   }
 }
 
@@ -1754,11 +1842,37 @@ a { color: inherit; }
 }
 @media (min-width: 768px) {
   .philosophy-visual-col {
-    flex: 1;
+    /* was flex:1 (forced half the row) — sized to the photo's own
+       width instead, per direct request to close the dead space that
+       left inside the column. */
+    flex: 0 0 auto;
     padding: 0;
+    /* Direct leftward nudge per direct request. Two earlier attempts
+       both got auto-corrected back to symmetric by the parent's own
+       justify-content:center: shrinking the row's right-side padding
+       grew the centered content area (centering within a wider area
+       moves the start point right, not left); a margin-left on this
+       element reduces its own contribution to the row's total content
+       width, which the parent's centering math then "fixes" by
+       re-centering the now-narrower total, cancelling the shift.
+       transform doesn't participate in flex layout or its centering
+       math at all — it's a pure post-layout visual offset — so it's
+       the one way to actually move this element without the parent
+       fighting back. */
+    transform: translateX(calc(-1 * var(--philosophy-shift)));
   }
   .philosophy-text-col {
-    flex: 1;
+    /* was flex:1 (forced the other half) — a fixed readable measure
+       instead, so the row's total width is just "photo + gap + text"
+       rather than always filling the full capped row width. */
+    flex: 0 1 32rem;
+    /* Same transform reasoning as .philosophy-visual-col above — a
+       margin-right here also got auto-corrected back to centered by
+       the parent's justify-content:center. Shifts text right by the
+       same amount, reducing its own gap to the viewport's right edge
+       (the practical equivalent of "reduce the text's right
+       padding"), independent of the parent's centering math. */
+    transform: translateX(var(--philosophy-shift));
   }
 }
 
@@ -1865,7 +1979,12 @@ a { color: inherit; }
 }
 @media (min-width: 768px) {
   .philosophy-text-col {
-    padding-inline: 0 15%;
+    /* was 0 15%, then 0 var(--container-pad) — both redundant now
+       that .philosophy-layout itself carries that same padding-inline
+       on its own two edges (see above); repeating it here would
+       double the right-side gap. No horizontal padding needed on this
+       column at all above 768px. */
+    padding-inline: 0;
   }
 }
 
@@ -2226,7 +2345,7 @@ a { color: inherit; }
 }
 .contact-heading {
   font-family: var(--font-display);
-  font-weight: 800;
+  font-weight: 700;
   font-size: clamp(2.75rem, 6vw + 1rem, 5.5rem);
   letter-spacing: -0.02em;
   line-height: 1;
@@ -3108,16 +3227,22 @@ a { color: inherit; }
   /* was 800 (extra bold) — per direct request, dialed back to semibold */
   font-weight: 600;
   text-transform: uppercase;
-  /* previous bumps (3.25/6.5 -> 3.75/7.5 -> 4.25/8.5rem) were each
-     only ~13% bigger — too small a jump to actually read as
-     "different" at a glance, per direct feedback. This one is a much
-     bigger step on purpose. */
-  font-size: clamp(5.5rem, 8vw + 3rem, 11rem);
+  /* previous bumps (3.25/6.5 -> 3.75/7.5 -> 4.25/8.5 -> 5.5/11rem)
+     kept growing per direct request each time — this pulls back down
+     a step per a follow-up request to reduce it again. */
+  font-size: clamp(4.5rem, 6.5vw + 2.5rem, 9rem);
   letter-spacing: -0.02em;
   line-height: 1.02;
   /* per direct request — the title centers within the same column the
      rest of the hero (back link, meta, pills) stays left-aligned in */
   text-align: center;
+}
+/* BGL's title only, per direct request — just the "BGL" part in the
+   site's existing orange accent (var(--color-why), already reused for
+   the role pills/next-project buttons elsewhere), the rest of the
+   title stays the default cream. */
+.case2-title__accent {
+  color: var(--color-why);
 }
 /* BGL only — a one-line tagline under the title, above the existing
    brief-number meta line, per direct request for the page's updated
@@ -3132,15 +3257,22 @@ a { color: inherit; }
 .case2-meta {
   margin-top: clamp(0.85rem, 2vw, 1.25rem);
   color: var(--color-case2-text);
+  /* was clamp(1.1rem, 0.5vw + 1rem, 1.25rem) — matched to
+     .case2-role__label's own text properties (font-weight already
+     the same 600) per direct request. */
   font-weight: 600;
-  font-size: clamp(1.1rem, 0.5vw + 1rem, 1.25rem);
+  font-size: clamp(1.2rem, 0.55vw + 1.1rem, 1.45rem);
 }
 .case2-role {
   margin-top: clamp(1.5rem, 4vw, 2.5rem);
 }
 .case2-role__label {
+  /* matched to .case2-pill's own font-size (and weight, already the
+     same 600) per direct request, so "My Role:" reads at the same
+     text size as the tags next to it — kept in sync when the pill
+     text size was nudged up again on a follow-up request. */
   font-weight: 600;
-  font-size: clamp(1.05rem, 0.3vw + 1rem, 1.15rem);
+  font-size: clamp(1.2rem, 0.55vw + 1.1rem, 1.45rem);
   margin-bottom: 0.75rem;
 }
 .case2-role__pills {
@@ -3182,15 +3314,15 @@ a { color: inherit; }
      box width without overflowing. Now that .case2-role__pills is
      back to content-sized (not fixed-width) pills, the box just grows
      with the text, so this can grow freely too. */
-  font-size: clamp(1.45rem, 0.65vw + 1.3rem, 1.75rem);
-  /* vertical height unchanged. Horizontal padding was 0.1rem — too
-     tight, text sat almost flush with the pill's edge — bumped up per
-     direct request (and two follow-up "more"s) for real breathing
-     room on each side, still symmetric left/right. Set to an exact
-     30px per direct request; kept as-is when text size grew again
-     since the box's shape (padding/height) is not the thing changing
-     — it just grows around the bigger text as always. */
-  padding: 0.85rem 30px;
+  /* was clamp(1.45rem, 0.65vw + 1.3rem, 1.75rem), then clamp(1.1rem,
+     0.5vw + 1rem, 1.35rem) — nudged back up a bit per direct request.
+     Padding/border-radius (the box's own shape) are untouched, so the
+     box just grows a little around the bigger text as always, rather
+     than being forced to a frozen size the text would then overflow. */
+  font-size: clamp(1.2rem, 0.55vw + 1.1rem, 1.45rem);
+  /* was 0.85rem 30px — reduced both dimensions per direct request to
+     shrink the box; still symmetric left/right. */
+  padding: 0.6rem 18px;
   border-radius: 0.4rem;
   white-space: nowrap;
 }
@@ -3213,19 +3345,30 @@ a { color: inherit; }
    down to a second line instead of forcing an overflow, per direct
    request. "Concept Development" (the longest label) still gets a
    bigger growth share (1.2 vs 1) so it reads noticeably wider. */
+/* was flex:1 1 0 (grow to fill the row, so pill width came from
+   dividing up leftover space rather than the text itself) — per
+   direct request, shrunk back to content size so the gap below reads
+   as real space instead of being squeezed out by the stretch. Text-
+   align:center dropped too — with content-sized pills there's no
+   extra width inside the box left to center within anyway. */
 #case-hero .case2-pill {
   width: auto;
-  flex: 1 1 0;
-  min-width: fit-content;
-  text-align: center;
-}
-#case-hero .case2-pill:first-child {
-  flex: 1.2 1 0;
+  flex: 0 0 auto;
 }
 #case-hero .case2-role__pills {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.6rem;
+  /* the shared base rule's justify-content:space-between was still
+     winning here, spreading pills across the full row width and
+     making the actual on-screen gap much bigger than (and unrelated
+     to) the gap value below — per direct follow-up ("we don't have
+     to necessarily centre align these"), dropped in favour of a
+     plain left-packed row so the gap value is the real, only source
+     of spacing. */
+  justify-content: flex-start;
+  /* was 0.6rem — bigger per direct request, now that the pills above
+     are content-sized instead of stretched. */
+  gap: 1.5rem;
 }
 /* BGL's pills were still using the shared default's space-between,
    which spreads leftover row width unevenly between content-sized
@@ -3233,15 +3376,30 @@ a { color: inherit; }
    0.6rem, per direct request to match. */
 #case-hero-bgl .case2-role__pills {
   justify-content: flex-start;
-  gap: 0.6rem;
+  /* was 0.6rem — bigger per direct request, now that the pills below
+     are content-sized instead of stretched, so this gap is real
+     empty space rather than getting squeezed to nothing by flex-grow
+     filling the row first. */
+  gap: 1.5rem;
 }
-/* Matches Common Ground's #case-hero .case2-pill above — flex-grow
-   fills the row's full width so the last pill's right edge lines up
-   with the text below it, per direct request, instead of leaving
-   empty space after the last content-sized pill. */
+/* was flex:1 1 0 (grow to fill the row, so the last pill's right edge
+   lined up with the text below) — per direct request the pills
+   should shrink back to their own content size and let the gap above
+   grow instead, even though that right-edge alignment no longer
+   holds. */
 #case-hero-bgl .case2-pill {
-  flex: 1 1 0;
-  min-width: fit-content;
+  flex: 0 0 auto;
+  text-align: center;
+}
+/* Toblerone's pills were still on the shared default's space-between
+   too — same fix as Common Ground/BGL above, per direct request to
+   match. */
+#case-hero-toblerone .case2-role__pills {
+  justify-content: flex-start;
+  gap: 1.5rem;
+}
+#case-hero-toblerone .case2-pill {
+  flex: 0 0 auto;
   text-align: center;
 }
 .case2-section {
@@ -3368,6 +3526,10 @@ a { color: inherit; }
      "more"). */
   transform: scale(1.24);
 }
+.case2-shots--wide .case2-shot img[src*="tousepackaging/6.jpg"] {
+  /* a touch more than the shared 1.1 scale, per direct request. */
+  transform: scale(1.18);
+}
 /* Hamleys placeholder image slots — a plain coloured box (reuses
    .case2-shot's own background) instead of an <img>, so it needs its
    own aspect-ratio directly on the figure since there's no image to
@@ -3422,33 +3584,79 @@ a { color: inherit; }
   margin-top: clamp(3rem, 7vw, 5rem);
   text-align: center;
   /* was just text-align:center for a single "Explore More Work" link —
-     BGL now carries two buttons (Previous/Next Project) side by side,
-     per direct request; flex+gap keeps them centered as a pair and
-     wraps cleanly on narrow viewports instead of overflowing. */
+     BGL now carries two buttons (Previous/Next Project) side by side.
+     was justify-content:center (+ a 1rem, then 2rem gap) to keep them
+     as a centered pair — per direct request, space-between instead
+     pins Previous to the left edge and Next to the right edge of this
+     same content column, no gap needed since they're pushed apart by
+     the available width itself. flex-wrap still lets them stack on
+     narrow viewports instead of overflowing. */
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 1rem;
+}
+/* space-between with only one child (Common Ground's row — just a
+   single "Next" link, no "Previous") puts that lone item at the
+   start (left), not the end — per direct request it should sit at
+   the right edge like every other section's "Next"/"Explore More
+   Work" link does. */
+.case2-next:has(.case2-next__link:only-child) {
+  justify-content: flex-end;
+}
+/* "Previous"/"Next" render at different natural widths (165px vs
+   127px, measured) since the label text differs — fixed to a shared
+   width per direct request instead of leaving them mismatched. A
+   first pass scoped this by "does the row have 2 links" via :has(),
+   but motion.html/bigbang.html's Previous+"Explore More Work" rows
+   also have 2 links, and forcing that much longer label into the
+   same width wrapped it to two lines. This modifier class instead
+   only lands on the actual Previous+Next pairs' own markup
+   (bgl.html/editorial.html), leaving every other .case2-next__link
+   (single links, and the Previous+"Explore More Work" rows) at their
+   own natural content width. */
+.case2-next__link--paired {
+  width: 11rem;
 }
 .case2-next__link {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
   background: var(--color-why);
   /* was var(--color-ink) — per direct request, not black */
   color: var(--color-on-ink);
-  font-weight: 700;
-  font-size: 1.15rem;
-  padding: 0.85rem 1.75rem;
-  /* was 999px (full pill/capsule) — per direct request, a plain
-     rounded-rect corner matching .case2-pill's own radius */
-  border-radius: 0.6rem;
+  /* was font-weight:700, font-size:1.15rem (fixed) — matched to
+     .case2-pill's own text properties per direct request. */
+  font-weight: 600;
+  font-size: clamp(1.2rem, 0.55vw + 1.1rem, 1.45rem);
+  /* was 0.85rem 1.75rem — matched to .case2-pill's own padding per
+     direct request, so the button box is the same size as the role
+     tags, not just the same text. */
+  padding: 0.6rem 18px;
+  /* was 999px (full pill/capsule), then 0.6rem — the comment claimed
+     this matched .case2-pill's own radius but it never actually did
+     (that one is 0.4rem); corrected to the real value per direct
+     request. */
+  border-radius: 0.4rem;
   text-decoration: none;
   transition: transform 200ms ease;
 }
 .case2-next__link:hover,
 .case2-next__link:focus-visible {
   transform: translateY(-2px);
+}
+/* was a plain &larr;/&rarr; text character — most fonts don't have a
+   distinct bold glyph for arrows, so it stayed visually thin next to
+   the bold "Previous"/"Next" label regardless of font-weight, per
+   direct feedback. An SVG stroke (same pattern as .case2-back's own
+   arrow icon, just a touch thicker at 2.5 to match this button's
+   bolder 700 label weight) scales its own visual weight independent
+   of the font. */
+.case2-next__arrow {
+  width: 1.1em;
+  height: 1.1em;
+  flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

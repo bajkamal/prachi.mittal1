@@ -1034,13 +1034,11 @@
         el.style.opacity = String(1 - t * (1 - MIN_OPACITY));
       }
 
-      // slow continuous drift, tied straight to progress rather than
-      // stepping at per-stage checkpoints — a small sine wobble reads
-      // as "alive" without ever looking like a discrete pose change
-      gsap.set(photo, {
-        rotation: Math.sin(progress * Math.PI * 2.5) * 2.5,
-        scale: 1 + Math.sin(progress * Math.PI * 5) * 0.02,
-      });
+      // was a small rotation wobble (sin * 2.5deg) plus a scale pulse
+      // (sin * 0.02), both tied to scroll progress — removed per
+      // direct request (rotation first, then the remaining scale
+      // "breathing" on a follow-up), the photo should stay completely
+      // static while the paragraphs beside it fade in and out.
     }
     render(0);
 
@@ -1737,17 +1735,80 @@
     const video = document.querySelector('.tv-frame__video');
     const button = document.querySelector('.tv-frame__sound');
     const frame = document.querySelector('.tv-frame');
+    const showcase = document.querySelector('.tv-showcase');
     if (!video || !button) return;
 
+    // Two independent inputs decide whether the video is actually
+    // audible: has the visitor unlocked sound at all (soundUnlocked —
+    // browsers require a real gesture before audio can play), and is
+    // the TV currently in view (inView — per direct request, audio
+    // should stop once the section scrolls off-screen). The video is
+    // only ever unmuted when both are true; either one going false
+    // mutes it again. The button's own on/off label reflects the
+    // *unlocked* intent, not the live muted state, so scrolling the
+    // TV out of view doesn't flip the button to "off" on its own.
+    let soundUnlocked = !video.muted;
+
+    const applySoundState = () => {
+      const inView = !showcase || showcase.dataset.inView !== 'false';
+      video.muted = !(soundUnlocked && inView);
+      button.setAttribute('aria-pressed', String(soundUnlocked));
+      button.setAttribute('aria-label', soundUnlocked ? 'Turn sound off' : 'Turn sound on');
+      // Actually stop (not just mute) once the TV scrolls out of view,
+      // per direct request — pause() leaves currentTime untouched, so
+      // play() here on the way back in resumes from exactly where it
+      // left off instead of restarting or continuing to play unheard
+      // in the background.
+      if (inView) {
+        if (video.paused) video.play().catch(() => {});
+      } else if (!video.paused) {
+        video.pause();
+      }
+    };
+
     button.addEventListener('click', () => {
-      video.muted = !video.muted;
-      button.setAttribute('aria-pressed', String(!video.muted));
-      button.setAttribute('aria-label', video.muted ? 'Turn sound on' : 'Turn sound off');
-      // autoplay's own gesture requirement can leave the element
-      // paused on some browsers even once unmuted — this is a no-op
-      // if it's already playing
-      if (video.paused) video.play().catch(() => {});
+      soundUnlocked = !soundUnlocked;
+      applySoundState();
     });
+
+    // Per direct request, the video should read as unmuted "by
+    // default" — but every major browser blocks autoplay-with-sound
+    // until a real user gesture happens, so it still has to start
+    // muted (HTML attribute) to guarantee it autoplays at all. This
+    // unmutes it automatically on the very first interaction anywhere
+    // on the page (not just the sound button itself), so sound turns
+    // on as soon as the visitor does anything rather than requiring
+    // them to find and click the TV's own button.
+    if (!soundUnlocked) {
+      const interactionTypes = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
+      const unmuteOnFirstInteraction = () => {
+        soundUnlocked = true;
+        applySoundState();
+        interactionTypes.forEach((type) => document.removeEventListener(type, unmuteOnFirstInteraction));
+      };
+      interactionTypes.forEach((type) => {
+        document.addEventListener(type, unmuteOnFirstInteraction, { passive: true });
+      });
+    }
+
+    // Mutes the audio the moment the TV scrolls out of the viewport,
+    // and restores it (if sound was already unlocked) once it scrolls
+    // back in — per direct request. dataset.inView (read by
+    // applySoundState above) starts "true" since the observer's first
+    // callback only fires once the section is actually observed.
+    if (showcase && 'IntersectionObserver' in window) {
+      showcase.dataset.inView = 'true';
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          showcase.dataset.inView = String(entry.isIntersecting);
+          applySoundState();
+        },
+        { threshold: 0.15 }
+      );
+      observer.observe(showcase);
+    }
+
+    applySoundState();
 
     if (!frame || prefersReducedMotion()) return;
 
@@ -2072,6 +2133,35 @@
     const setX = gsap.quickTo(glow, 'x', { duration: 0.5, ease: 'power3.out' });
     const setY = gsap.quickTo(glow, 'y', { duration: 0.5, ease: 'power3.out' });
 
+    // Picks the actual rendered background color under the cursor
+    // (walking up past transparent ancestors) and switches the dot
+    // between the site's ink and cream tokens, whichever contrasts,
+    // instead of relying on mix-blend-mode to fake that per-section.
+    const inkToken = getComputedStyle(document.documentElement).getPropertyValue('--color-ink').trim();
+    const creamToken = getComputedStyle(document.documentElement).getPropertyValue('--color-cream').trim();
+    let currentIsLight = null;
+    const setGlowColor = (x, y) => {
+      const el = document.elementFromPoint(x, y);
+      let node = el;
+      let bg = null;
+      while (node) {
+        const color = getComputedStyle(node).backgroundColor;
+        const match = color.match(/rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)/);
+        if (match && (match[4] === undefined || parseFloat(match[4]) > 0)) {
+          bg = match;
+          break;
+        }
+        node = node.parentElement;
+      }
+      const [, r, g, b] = bg || [null, 251, 243, 234];
+      const brightness = (Number(r) * 299 + Number(g) * 587 + Number(b) * 114) / 1000;
+      const isLight = brightness > 150;
+      if (isLight !== currentIsLight) {
+        currentIsLight = isLight;
+        glow.style.backgroundColor = isLight ? inkToken : creamToken;
+      }
+    };
+
     // "Click to open" tag (Index.html only — .cursor-tag doesn't exist
     // on the case-study pages) follows the same cursor position as the
     // glow, just offset down-right so it doesn't sit directly under
@@ -2089,6 +2179,7 @@
       }
       setX(event.clientX);
       setY(event.clientY);
+      setGlowColor(event.clientX, event.clientY);
       if (setTagX && setTagY) {
         setTagX(event.clientX + TAG_OFFSET);
         setTagY(event.clientY + TAG_OFFSET);
@@ -2099,21 +2190,12 @@
       visible = false;
     });
 
-    const INTERACTIVE = 'a, button, [role="button"], input, textarea, select, label, .testimonial-card';
     document.addEventListener('mouseover', (event) => {
-      if (event.target.closest(INTERACTIVE)) {
-        gsap.to(glow, { scale: 2.2, duration: 0.4, ease: 'power3.out' });
-      }
       if (tag && event.target.closest('.project-thumb')) {
         gsap.to(tag, { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' });
       }
     });
     document.addEventListener('mouseout', (event) => {
-      const leavingInteractive = event.target.closest(INTERACTIVE);
-      const enteringInteractive = event.relatedTarget && event.relatedTarget.closest && event.relatedTarget.closest(INTERACTIVE);
-      if (leavingInteractive && !enteringInteractive) {
-        gsap.to(glow, { scale: 1, duration: 0.4, ease: 'power3.out' });
-      }
       if (tag) {
         const leavingCard = event.target.closest('.project-thumb');
         const enteringCard = event.relatedTarget && event.relatedTarget.closest && event.relatedTarget.closest('.project-thumb');
