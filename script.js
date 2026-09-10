@@ -679,21 +679,25 @@
      textContent replace. Skipped under reduced motion — the chip just
      shows its first (already .is-active) frame and label, statically,
      no animation. Removed once, restored per a direct follow-up
-     request to bring the heading back above the new plain grid. */
+     request to bring the heading back above the new plain grid. The
+     label swap was a "plank on a hinge" swing (rotationX + blur +
+     scale, left/right mirrored) — replaced with a plain opacity
+     fade-out/fade-in per direct request for something simpler. */
   function initProjectChips() {
     const chips = gsap.utils.toArray('.project-category__chip');
     if (!chips.length || prefersReducedMotion()) return;
 
     const CYCLE_MS = 2600;
-    // Left label swings up and away, then back up from below — the
-    // right label mirrors it (down and away, then back down from
-    // above), per direct request, instead of both labels moving the
-    // same direction in lockstep.
-    const SWING_OUT_UP = { yPercent: -100, rotationX: 80, opacity: 0, scale: 0.7, filter: 'blur(20px)', duration: 0.45, ease: 'power2.in' };
-    const SWING_OUT_DOWN = { yPercent: 100, rotationX: -80, opacity: 0, scale: 0.7, filter: 'blur(20px)', duration: 0.45, ease: 'power2.in' };
-    const SWING_IN_FROM_BELOW = { yPercent: 100, rotationX: -80, opacity: 0, scale: 0.7, filter: 'blur(20px)' };
-    const SWING_IN_FROM_ABOVE = { yPercent: -100, rotationX: 80, opacity: 0, scale: 0.7, filter: 'blur(20px)' };
-    const SWING_IN_TO = { yPercent: 0, rotationX: 0, opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.45, ease: 'power2.out' };
+    // Was 0.35s each (0.7s round trip) — the chip's own image crossfade
+    // is a single 0.7s opacity transition (see .project-category__chip-img
+    // in styles.css), so at the 0.35s mark the chip is only half-blended
+    // while the label had already gone fully invisible: the label was
+    // fading twice as fast as the chip. Matching each phase to the
+    // chip's 0.7s duration makes both change at the same rate, per
+    // direct request — the label's full round trip is now 1.4s, still
+    // well inside the 2.6s cycle.
+    const FADE_OUT = { opacity: 0, duration: 0.7, ease: 'power1.in' };
+    const FADE_IN = { opacity: 1, duration: 0.7, ease: 'power1.out' };
 
     chips.forEach((chip) => {
       const frames = gsap.utils.toArray('.project-category__chip-img', chip);
@@ -717,16 +721,13 @@
         frames[activeIndex].classList.add('is-active');
 
         if (!labels.length) return;
-        const [leftLabel, rightLabel] = labels;
-        gsap.to(leftLabel, {
-          ...SWING_OUT_UP,
+        gsap.to(labels, {
+          ...FADE_OUT,
           onComplete: () => {
             setLabelText();
-            gsap.fromTo(leftLabel, SWING_IN_FROM_BELOW, SWING_IN_TO);
-            if (rightLabel) gsap.fromTo(rightLabel, SWING_IN_FROM_ABOVE, SWING_IN_TO);
+            gsap.fromTo(labels, { opacity: 0 }, FADE_IN);
           },
         });
-        if (rightLabel) gsap.to(rightLabel, SWING_OUT_DOWN);
       }, CYCLE_MS);
     });
   }

@@ -1504,15 +1504,20 @@ a { color: inherit; }
    real proportions closely enough for object-fit:contain to barely
    letterbox); the key (--3) is the one tall outlier */
 .about-doodle { aspect-ratio: 1; }
-.about-doodle--3 { aspect-ratio: 298 / 852; width: clamp(80px, 8vw, 132px); }
+.about-doodle--3 { aspect-ratio: 298 / 852; }
 
-.about-doodle--1 { width: clamp(180px, 18vw, 300px); top: 8%; left: 4vw; }
-.about-doodle--2 { top: 14%; right: 6vw; }
-/* was top:78% — per direct request, too low in the viewport to read
-   clearly; moved up to sit just right-and-below the flower (--1)
-   instead */
-.about-doodle--3 { top: 26%; left: 19vw; }
-.about-doodle--6 { width: clamp(100px, 10vw, 160px); top: 50%; right: 8vw; }
+/* Visual hierarchy per direct request — reversed from an earlier pass:
+   key (--3) and shell (--6) are now the "main", larger illustration on
+   each side; flower (--1) and star (--2) are the smaller accent. */
+.about-doodle--1 { width: 170px; top: 8%; left: 1vw; }
+.about-doodle--2 { width: 140px; top: 22%; right: 6vw; }
+/* Bigger (per hierarchy) means taller too, given its fixed 298/852
+   aspect ratio — moved back up and further left than the last pass so
+   its now-larger box clears the "35+ Brands & Clients" ribbon below
+   it instead of sitting on top of the ribbon's own text, per direct
+   request. */
+.about-doodle--3 { width: 140px; top: 20%; left: 6vw; }
+.about-doodle--6 { width: clamp(140px, 14vw, 210px); top: 36%; right: 2vw; }
 
 @media (min-width: 720px) {
   .about-doodle { display: block; }
@@ -1590,8 +1595,13 @@ a { color: inherit; }
 }
 /* single-line cards can carry a bigger size than the two-line ones
    without outgrowing the shared card height */
-.stat-card--3, .stat-card--4 {
+.stat-card--4 {
   font-size: clamp(1.25rem, 5vw, 2.75rem);
+}
+/* "3+ Years" only, per direct request — box size/position untouched,
+   just a bigger font-size than "30+ Projects" (--4) now. */
+.stat-card--3 {
+  font-size: clamp(1.4rem, 5.6vw, 3.1rem);
 }
 .stat-card--3, .stat-card--4 {
   justify-content: flex-end;
@@ -3083,9 +3093,11 @@ a { color: inherit; }
   /* was 800 (extra bold) — per direct request, dialed back to semibold */
   font-weight: 600;
   text-transform: uppercase;
-  /* was clamp(3.25rem, 5vw + 1.9rem, 6.5rem) — per a second direct
-     follow-up request */
-  font-size: clamp(3.75rem, 5.5vw + 2.2rem, 7.5rem);
+  /* previous bumps (3.25/6.5 -> 3.75/7.5 -> 4.25/8.5rem) were each
+     only ~13% bigger — too small a jump to actually read as
+     "different" at a glance, per direct feedback. This one is a much
+     bigger step on purpose. */
+  font-size: clamp(5.5rem, 8vw + 3rem, 11rem);
   letter-spacing: -0.02em;
   line-height: 1.02;
   /* per direct request — the title centers within the same column the
@@ -3107,28 +3119,18 @@ a { color: inherit; }
   margin-bottom: 0.75rem;
 }
 .case2-role__pills {
-  /* was display:flex + justify-content:space-between — each pill
-     sized to its own text, so "Concept Development" was much wider
-     than "Moodboard". A grid of equal 1fr columns makes every pill
-     the same width (per direct request) and auto-fit reflows the
-     column count as the container narrows (4 across when there's
-     room, then 2x2, etc.) instead of one fixed row wrapping unevenly
-     or a pill's own text wrapping to a second line once it's
-     squeezed.
-     310px is sized to fit BGL's longest label, "Brand Identity
-     Development", on one line at .case2-pill's largest font-size and
-     current (narrower) padding — measured directly against the real
-     rendered text, not guessed. Re-measure this floor any time
-     .case2-pill's font-size or horizontal padding changes again;
-     it's been 540px, 280px, 335px, 325px, 318px, then 314px across
-     earlier follow-up requests as those two values moved. min(310px,
-     100%) keeps this floor from overflowing a phone-width screen. */
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr));
-  /* was 1rem — per a direct follow-up request, all 4 of Common
-     Ground's pills were wrapping to 3+1 at some in-between laptop
-     widths (the row's available width was a few px short of 4
-     columns + 3 gaps). Tightened back down. */
+  /* was display:flex + justify-content:space-between (content-sized
+     pills), then a grid forcing every pill to the same width (first
+     1fr-stretched, then a fixed px) — per a direct follow-up request,
+     back to content-sized pills: each pill's own width is just its
+     text plus .case2-pill's own consistent left/right padding, not
+     forced to match the others. flex (not grid) since there's no
+     shared width to compute anymore; space-between still keeps the
+     first/last pill's outer edges flush with the text below, same as
+     every earlier version of this row. */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 0.5rem;
 }
 .case2-pill {
@@ -3150,19 +3152,55 @@ a { color: inherit; }
      shorter width, taller height) — padding follows the same
      direction: more vertical, less horizontal. */
   /* was clamp(0.95rem, 0.25vw + 0.85rem, 1.05rem), then clamp(1.05rem,
-     0.35vw + 0.9rem, 1.2rem) — per a second direct follow-up request */
-  font-size: clamp(1.15rem, 0.45vw + 1rem, 1.35rem);
-  /* was 0.7rem horizontal, then 0.45rem, 0.3rem, then 0.18rem — per a
-     fourth direct follow-up request, text size unchanged, just less
-     padding. Getting close to the floor of what padding alone can
-     give here — BGL's longest label is most of this width now. */
-  padding: 0.85rem 0.1rem;
+     0.35vw + 0.9rem, 1.2rem), then clamp(1.15rem, 0.45vw + 1rem,
+     1.35rem) — each of those was capped by needing to fit a *fixed*
+     box width without overflowing. Now that .case2-role__pills is
+     back to content-sized (not fixed-width) pills, the box just grows
+     with the text, so this can grow freely too. */
+  font-size: clamp(1.45rem, 0.65vw + 1.3rem, 1.75rem);
+  /* vertical height unchanged. Horizontal padding was 0.1rem — too
+     tight, text sat almost flush with the pill's edge — bumped up per
+     direct request (and two follow-up "more"s) for real breathing
+     room on each side, still symmetric left/right. Set to an exact
+     30px per direct request; kept as-is when text size grew again
+     since the box's shape (padding/height) is not the thing changing
+     — it just grows around the bigger text as always. */
+  padding: 0.85rem 30px;
   border-radius: 0.4rem;
-  /* equal-width grid columns above mean a short label like
-     "Moodboard" now sits in a wider box than its own text — center it
-     instead of leaving it flush left with empty space on the right */
-  text-align: center;
   white-space: nowrap;
+}
+/* Common Ground only, per direct request — its 4 pills go back to a
+   uniform width instead of content-sized, while BGL's 6 pills stay
+   content-sized. Text size/padding untouched; shorter labels just
+   center within their column.
+   This was fixed px widths (360/300/300/300) tuned against one
+   specific container width — broke (wrapped to 2 rows) the moment the
+   real column rendered narrower than that. A 4-column CSS Grid fixed
+   that at desktop widths (each pill is a fraction of the row's actual
+   width, so they can't overflow it) but a grid's column count is
+   fixed — it never wraps, so at tablet widths, once the text's own
+   min-content needs outgrew the container, the whole row (and page)
+   overflowed horizontally sideways instead of dropping to 2 lines.
+   Flexbox with flex-wrap fixes that: same proportional-width split at
+   desktop width (flex-grow standing in for fr), but min-width:
+   fit-content stops a pill shrinking past what its own text needs —
+   once that's no longer possible on one line, flex-wrap moves a pill
+   down to a second line instead of forcing an overflow, per direct
+   request. "Concept Development" (the longest label) still gets a
+   bigger growth share (1.2 vs 1) so it reads noticeably wider. */
+#case-hero .case2-pill {
+  width: auto;
+  flex: 1 1 0;
+  min-width: fit-content;
+  text-align: center;
+}
+#case-hero .case2-pill:first-child {
+  flex: 1.2 1 0;
+}
+#case-hero .case2-role__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
 }
 .case2-section {
   max-width: var(--case2-col-width);
@@ -3216,23 +3254,47 @@ a { color: inherit; }
      resetting it, the image sat 40px inset from its own grid cell on
      each side, throwing off the edge alignment with the text above */
   margin: 0;
+  /* needed once .case2-shot img below is scaled up past 100% — without
+     this the zoomed image would spill past the figure's own edges
+     instead of being clipped by them */
+  overflow: hidden;
 }
 .case2-shot img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  /* several of the real source files are exports with their own
+     built-in canvas margin around the actual product/subject (a
+     solid-colour background wider than the subject itself) — cover
+     alone can't crop that out since it's baked into the image, not a
+     box-ratio mismatch. Scaling every image up a bit crops in past
+     that margin so it reads as a full-bleed photo instead of a photo
+     sitting inside a visible colour border, per direct request. Was
+     1.2 — pulled back to 1.1 per a follow-up request, still enough to
+     clear most of that margin without cropping as tight. */
+  transform: scale(1.1);
 }
 .case2-shots--pair .case2-shot img {
-  /* client-specified crop, 566x495 — expressed as a ratio (not a
-     fixed px size) so it still scales to whatever width the aligned
-     .case2-shots column above gives it at any viewport */
-  aspect-ratio: 566 / 495;
+  /* was a client-specified 566/495 crop — replaced with the real
+     source photos' own average ratio (measured directly across all
+     the "pair" slot images: 1gif frames, 2/3/7/8.png, ~1.13:1) per
+     direct request to stop guessing a box ratio and instead match
+     what's actually in the drive, so object-fit:cover has to crop
+     only a little instead of zooming in aggressively. */
+  aspect-ratio: 17 / 15;
 }
 .case2-shots--wide .case2-shot img {
-  /* was 16/9 — the reference's full-width shots are a noticeably
-     shorter banner crop than that */
-  aspect-ratio: 21 / 9;
+  /* was 21/9 (guessed) — replaced with the real average ratio of the
+     wide-slot source images (5.png/6.png, ~2.19:1), same reasoning as
+     the pair ratio above. */
+  aspect-ratio: 24 / 11;
+}
+.case2-shots--wide .case2-shot img[src*="6.png"] {
+  /* a touch more than the shared 1.1 scale, per direct request just
+     for this slot — its logo lockups still sat slightly inside the
+     frame at the shared scale. */
+  transform: scale(1.14);
 }
 .case2-shot__caption {
   margin-top: 0.6rem;
@@ -3254,7 +3316,7 @@ a { color: inherit; }
   position: relative;
 }
 .case2-shots--pair .case2-shot--cycle {
-  aspect-ratio: 566 / 495;
+  aspect-ratio: 17 / 15;
 }
 .case2-cycle__frame {
   position: absolute;
@@ -3265,6 +3327,9 @@ a { color: inherit; }
   display: block;
   opacity: 0;
   transition: opacity 1s ease;
+  /* same reasoning as .case2-shot img's scale() above — crops out each
+     frame's own baked-in canvas margin */
+  transform: scale(1.1);
 }
 .case2-cycle__frame.is-active {
   opacity: 1;
