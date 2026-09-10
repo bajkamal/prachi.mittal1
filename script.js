@@ -484,11 +484,64 @@
      sense while the statement actually fits on one line — checked via
      each char's pre-transform offsetTop (transform doesn't affect
      layout, so this reads the real, untransformed line the browser
-     wrapped it to) before committing to the curve. On narrower
-     viewports where it wraps (below the ~700px container-query
-     breakpoint that removes .why-statement's max-width), the arc is
-     skipped entirely and the text just reveals on a flat baseline. */
+     wrapped it to) before committing to the curve. fitWhyStatement,
+     called first below, is what guarantees that condition at every
+     viewport width now (see its own comment) — per direct request,
+     the arc should never degrade to a flat baseline, not even on the
+     narrowest phones. */
+  function fitWhyStatement() {
+    const statement = document.querySelector('.why-statement');
+    // .why-pause (not statement.parentElement, .why-grid) is the
+    // measurement reference — .why-pause has this section's real,
+    // padding-defined width (padding-inline: var(--container-pad)),
+    // while .why-grid is a plain display:flex block with no explicit
+    // width of its own, so it just shrink-wraps to fit its content
+    // (the statement plus the two flanking icons) — measuring *that*
+    // to decide the statement's own size is circular: shrink the
+    // text, .why-grid shrinks too, so the "available width" the next
+    // measurement sees keeps moving, and it can settle short of
+    // actually fitting. .why-pause's width is real, layout-level
+    // padding, not shrink-wrapped around anything below it.
+    const pause = statement && statement.closest('.why-pause');
+    if (!statement || !pause) return;
+
+    // Reset to the CSS-authored size first so repeat calls (resize,
+    // orientation change) measure fresh rather than compounding
+    // shrinkage from a previous, narrower measurement.
+    statement.style.fontSize = '';
+
+    // clientWidth (not getBoundingClientRect().width) so .why-pause's
+    // own padding-inline is already excluded — what's left is the
+    // real space available for its centered content row.
+    let availableWidth = pause.clientWidth;
+    // The two .why-statement__icon flank the text as flex siblings
+    // inside .why-grid (gap between each) — leaving those out of
+    // "available width" would let the icons push the whole row wider
+    // than .why-pause even once the text itself technically fits.
+    const icons = pause.querySelectorAll('.why-statement__icon');
+    const gap = parseFloat(getComputedStyle(statement.parentElement).columnGap) || 0;
+    icons.forEach((icon) => {
+      availableWidth -= icon.getBoundingClientRect().width + gap;
+    });
+
+    const naturalWidth = statement.scrollWidth; // CSS already sets white-space:nowrap
+    if (naturalWidth <= availableWidth || naturalWidth === 0) return;
+
+    // Measured against the real rendered width rather than a hand-
+    // tuned CSS clamp() — this sentence's exact character widths at
+    // this exact font/weight aren't something a linear vw-based guess
+    // reproduces precisely at every width, and a guess that's ever
+    // even slightly too generous would let it wrap again right when
+    // it's least visible (deep in testing on one specific device). A
+    // small (0.97) margin so it doesn't sit pixel-perfect against the
+    // container edge.
+    const cssSize = parseFloat(getComputedStyle(statement).fontSize);
+    const fitSize = cssSize * (availableWidth / naturalWidth) * 0.97;
+    statement.style.fontSize = `${fitSize}px`;
+  }
+
   function initScrollReveals() {
+    fitWhyStatement();
     const whyHeading = document.querySelector('.why-heading');
     const statement = document.querySelector('.why-statement');
     if (!whyHeading && !statement) return;
@@ -608,67 +661,46 @@
     });
   }
 
-  /* ---------------- WHY pause ----------------
-     Pins the *whole* .why-section — heading, statement, and the
-     marquee below it together, the full "screen" the user actually
-     sees — for a stretch of extra scroll once it reaches the top of
-     the viewport, holding that moment before releasing into whatever
-     section follows. An earlier pass here pinned only .why-pause
-     (just the heading+statement, not the marquee, which is a sibling
-     further down the DOM) — the marquee sat below the fold for the
-     whole pin, reading as a dead gap rather than an emphasis beat.
-     Pinning the section itself avoids that: everything the user sees
-     right now holds together as one unit. .why-section is
-     position:relative (not sticky, unlike .hero — see the long
-     comment on .hero in styles.css), so a plain pin here has nothing
-     of its own to fight. */
-  function initWhyPause() {
-    const whySection = document.querySelector('.why-section');
-    if (!whySection || prefersReducedMotion()) return;
-
-    ScrollTrigger.create({
-      trigger: whySection,
-      start: 'top top',
-      end: () => `+=${window.innerHeight * 0.6}`,
-      pin: true,
-      anticipatePin: 1,
-    });
-  }
-
-  /* ---------------- Project category chips ----------------
-     .project-category__chip (in the Projects section's label row)
-     cycles through one thumbnail per project on a plain timer — a
-     crossfade via opacity, not scroll-driven like the pinned reel
-     this replaced. Each frame carries the project's category as a
-     data-label attribute; the two .project-category__label spans
-     either side of the chip update to match on every tick, so the
-     chip image and the labels always change together as one unit
-     (Common Ground's thumbnail + "Branding", then BGL's + "Branding"
-     again, then Hamleys' + "Campaign", etc.) rather than the chip
-     cycling independently of static label text. The label swap
-     itself reuses the pinned reel's own "plank on a hinge" swing —
-     outgoing text tips up and away, incoming tips up from below into
-     focus (rotationX + opacity + blur + scale, .project-category__
-     label's transform-origin:center bottom is the hinge) — rather
-     than an instant textContent replace, per direct request to match
-     that same motion. Skipped under reduced motion — the chip just
+  /* ---------------- Project category chip ----------------
+     .project-category__chip (in the Projects section's label-row
+     heading above the masonry grid) cycles through one thumbnail per
+     project on a plain timer — a crossfade via opacity, not scroll-
+     driven. Each frame carries the project's category as a data-label
+     attribute; the two .project-category__label spans either side of
+     the chip update to match on every tick, so the chip image and the
+     labels always change together as one unit (Common Ground's
+     thumbnail + "Branding", then BGL's + "Branding" again, then
+     Hamleys' + "Campaign", then Toblerone's + "Packaging") rather than
+     the chip cycling independently of static label text. The label
+     swap itself is a "plank on a hinge" swing — outgoing text tips up
+     and away, incoming tips up from below into focus (rotationX +
+     opacity + blur + scale, .project-category__label's transform-
+     origin:center bottom is the hinge) — rather than an instant
+     textContent replace. Skipped under reduced motion — the chip just
      shows its first (already .is-active) frame and label, statically,
-     no animation. */
+     no animation. Removed once, restored per a direct follow-up
+     request to bring the heading back above the new plain grid. */
   function initProjectChips() {
     const chips = gsap.utils.toArray('.project-category__chip');
     if (!chips.length || prefersReducedMotion()) return;
 
     const CYCLE_MS = 2600;
-    const SWING_OUT = { yPercent: -100, rotationX: 80, opacity: 0, scale: 0.7, filter: 'blur(20px)', duration: 0.45, ease: 'power2.in' };
-    const SWING_IN_FROM = { yPercent: 100, rotationX: -80, opacity: 0, scale: 0.7, filter: 'blur(20px)' };
+    // Left label swings up and away, then back up from below — the
+    // right label mirrors it (down and away, then back down from
+    // above), per direct request, instead of both labels moving the
+    // same direction in lockstep.
+    const SWING_OUT_UP = { yPercent: -100, rotationX: 80, opacity: 0, scale: 0.7, filter: 'blur(20px)', duration: 0.45, ease: 'power2.in' };
+    const SWING_OUT_DOWN = { yPercent: 100, rotationX: -80, opacity: 0, scale: 0.7, filter: 'blur(20px)', duration: 0.45, ease: 'power2.in' };
+    const SWING_IN_FROM_BELOW = { yPercent: 100, rotationX: -80, opacity: 0, scale: 0.7, filter: 'blur(20px)' };
+    const SWING_IN_FROM_ABOVE = { yPercent: -100, rotationX: 80, opacity: 0, scale: 0.7, filter: 'blur(20px)' };
     const SWING_IN_TO = { yPercent: 0, rotationX: 0, opacity: 1, scale: 1, filter: 'blur(0px)', duration: 0.45, ease: 'power2.out' };
 
     chips.forEach((chip) => {
       const frames = gsap.utils.toArray('.project-category__chip-img', chip);
       if (frames.length < 2) return;
 
-      const category = chip.closest('.project-category');
-      const labels = category ? gsap.utils.toArray('[data-cycle-label]', category) : [];
+      const labelRow = chip.closest('.project-category__label-row');
+      const labels = labelRow ? gsap.utils.toArray('[data-cycle-label]', labelRow) : [];
 
       let activeIndex = frames.findIndex((el) => el.classList.contains('is-active'));
       if (activeIndex < 0) activeIndex = 0;
@@ -685,13 +717,44 @@
         frames[activeIndex].classList.add('is-active');
 
         if (!labels.length) return;
-        gsap.to(labels, {
-          ...SWING_OUT,
+        const [leftLabel, rightLabel] = labels;
+        gsap.to(leftLabel, {
+          ...SWING_OUT_UP,
           onComplete: () => {
             setLabelText();
-            gsap.fromTo(labels, SWING_IN_FROM, SWING_IN_TO);
+            gsap.fromTo(leftLabel, SWING_IN_FROM_BELOW, SWING_IN_TO);
+            if (rightLabel) gsap.fromTo(rightLabel, SWING_IN_FROM_ABOVE, SWING_IN_TO);
           },
         });
+        if (rightLabel) gsap.to(rightLabel, SWING_OUT_DOWN);
+      }, CYCLE_MS);
+    });
+  }
+
+  /* ---------------- Case study cycling image slots ----------------
+     .case2-shot--cycle (the "(gif)" slots in the case2 template) —
+     a plain crossfade through several still frames, same mechanic as
+     initProjectChips' chip above but simpler (no label text to swap
+     in lockstep, no swing motion). Real animated .gif files weren't
+     available for these slots, so this is the stand-in per direct
+     request. Skipped under reduced motion — the slot just shows
+     whichever frame is already .is-active, statically. */
+  function initCaseCycles() {
+    const groups = gsap.utils.toArray('.case2-shot--cycle');
+    if (!groups.length || prefersReducedMotion()) return;
+
+    const CYCLE_MS = 2200;
+    groups.forEach((group) => {
+      const frames = gsap.utils.toArray('.case2-cycle__frame', group);
+      if (frames.length < 2) return;
+
+      let activeIndex = frames.findIndex((el) => el.classList.contains('is-active'));
+      if (activeIndex < 0) activeIndex = 0;
+
+      setInterval(() => {
+        frames[activeIndex].classList.remove('is-active');
+        activeIndex = (activeIndex + 1) % frames.length;
+        frames[activeIndex].classList.add('is-active');
       }, CYCLE_MS);
     });
   }
@@ -759,6 +822,8 @@
     const statsSection = document.getElementById('stats-section');
     if (!statsSection || typeof IntersectionObserver === 'undefined') return;
 
+    positionStatCards();
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -768,6 +833,83 @@
       { root: null, rootMargin: '0px', threshold: 0.65 }
     );
     observer.observe(statsSection);
+  }
+
+  /* --stat-offset-x (styles.css) clears the portrait for a *generic*
+     card, but a wide two-line label like "35+ Brands / & Clients" can
+     still occupy nearly the card's full box — at some viewport widths
+     the label itself, not just the card's blank tucked corner, ended
+     up sitting behind the portrait and reading as missing/cut-off
+     text. Rather than hand-tune yet another CSS clamp() per card (the
+     same trap --stat-offset-x itself was already in), measure each
+     card's actual rendered label against the actual rendered portrait
+     rect and push it out by exactly however much it's short — content-
+     aware and viewport-proof by construction instead of by guesswork.
+
+     One shared push, not four separate ones: an earlier version set a
+     different --card-extra-x per card (whatever that card's own label
+     needed), which cleared the text fine but broke the four cards'
+     shared symmetry — each one ended up sitting a different distance
+     from the portrait, reading as randomly staggered instead of one
+     aligned set. Using the single largest requirement for all four
+     keeps every card the same distance from center (so their tilted
+     inner corner all lines up) while still clearing the widest label. */
+  function positionStatCards() {
+    const statsSection = document.getElementById('stats-section');
+    const portrait = document.querySelector('.portrait-placeholder');
+    if (!statsSection || !portrait) return;
+    const cards = statsSection.querySelectorAll('.stat-card');
+    if (!cards.length) return;
+
+    const wasShown = statsSection.classList.contains('show-stats');
+    statsSection.classList.add('show-stats');
+    statsSection.style.setProperty('--card-extra-x-left', '0px');
+    statsSection.style.setProperty('--card-extra-x-right', '0px');
+    cards.forEach((card) => {
+      card.style.transition = 'none';
+    });
+    // eslint-disable-next-line no-unused-expressions
+    statsSection.offsetHeight; // force layout so the reset above is measured, not last frame's transform
+
+    const portraitRect = portrait.getBoundingClientRect();
+    const isLeftCard = (card) => card.classList.contains('stat-card--1') || card.classList.contains('stat-card--2');
+    const BUFFER = 6;
+
+    let maxLeft = 0;
+    let maxRight = 0;
+    cards.forEach((card) => {
+      const textNode = [...card.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+      const range = document.createRange();
+      if (textNode) {
+        range.selectNodeContents(textNode);
+      } else {
+        range.selectNodeContents(card);
+      }
+      const textRect = range.getBoundingClientRect();
+      if (isLeftCard(card)) {
+        const overlap = textRect.right - portraitRect.left;
+        if (overlap > maxLeft) maxLeft = overlap;
+      } else {
+        const overlap = portraitRect.right - textRect.left;
+        if (overlap > maxRight) maxRight = overlap;
+      }
+    });
+    const extraLeft = maxLeft > 0 ? Math.ceil(maxLeft + BUFFER) : 0;
+    const extraRight = maxRight > 0 ? Math.ceil(maxRight + BUFFER) : 0;
+    statsSection.style.setProperty('--card-extra-x-left', `${extraLeft}px`);
+    statsSection.style.setProperty('--card-extra-x-right', `${extraRight}px`);
+
+    // Undo the temporary forced reveal before re-enabling transitions,
+    // so a card that wasn't actually on screen yet doesn't visibly
+    // spring open and then snap back before its real reveal later.
+    if (!wasShown) {
+      statsSection.classList.remove('show-stats');
+      // eslint-disable-next-line no-unused-expressions
+      statsSection.offsetHeight;
+    }
+    cards.forEach((card) => {
+      card.style.transition = '';
+    });
   }
 
   /* ---------------- Testimonials accordion ----------------
@@ -925,16 +1067,20 @@
                                unique little closed loop via layered
                                sine/cosine, so it reads as organic
                                "flowing" rather than a robotic back-
-                               and-forth) PLUS a scroll-linked
-                               horizontal sweep at its own per-doodle
-                               speed — this second part is what flies
-                               each one in from off-screen as #about
-                               arrives and back out, the same way it
-                               came, by the time #philosophy-section
-                               begins (see driftX below — per direct
-                               request, exit is enter played in
-                               reverse, not a continued pass-through to
-                               the opposite edge).
+                               and-forth) PLUS a scroll-linked diagonal
+                               sweep — this second part is what flies
+                               each one in from an off-screen corner as
+                               #about arrives and back out the same
+                               diagonal, in reverse, by the time
+                               #philosophy-section begins (see
+                               driftX/driftY and DOODLE_MOTION below).
+                               Each doodle's corner is fixed, not
+                               random, specifically so 2 of the 4 travel
+                               one diagonal and the other 2 travel the
+                               opposite one — reading as an "X" of
+                               paths crossing near the centre, the same
+                               way on every load and at every viewport
+                               width, per direct request.
        .about-doodle__inner — cursor-proximity repel + scale-up, same
                                "flinch away" language as the WHY
                                heading's magnetic letters. */
@@ -948,34 +1094,59 @@
       return;
     }
 
-    const entries = doodles.map((el) => ({
-      el,
-      inner: el.querySelector('.about-doodle__inner'),
-      freqX: gsap.utils.random(0.12, 0.22),
-      freqY: gsap.utils.random(0.1, 0.2),
-      phase: gsap.utils.random(0, Math.PI * 2),
-      ampX: gsap.utils.random(10, 20),
-      ampY: gsap.utils.random(8, 16),
-      // two overlapping tilt waves at different speeds/amplitudes,
-      // not one — a single sine reads as a metronome; layering a
-      // slow big wave with a faster small one is what makes it read
-      // as an organic tilting float, like a leaf drifting down,
-      // rather than a mechanical back-and-forth
-      tiltAmp1: gsap.utils.random(10, 18),
-      tiltFreq1: gsap.utils.random(0.05, 0.09),
-      tiltAmp2: gsap.utils.random(4, 8),
-      tiltFreq2: gsap.utils.random(0.15, 0.24),
-      // +/- so some drift leftward and some rightward relative to the
-      // page's own scroll, at visibly different speeds — this
-      // spread, not any single value, is what sells "flowing". Sign
-      // also decides which edge a doodle enters from below (driftX) —
-      // it exits back off that exact same edge, reversed, not the
-      // opposite one.
-      parallaxRange: gsap.utils.random(160, 420) * (gsap.utils.random(0, 1) < 0.5 ? -1 : 1),
-    }));
+    // Fixed (not random) per-doodle diagonal corner + drift magnitude —
+    // per direct request, the entrance/exit needs to look identical on
+    // every load and at every viewport width instead of reading
+    // differently depending on which way gsap.utils.random happened to
+    // roll that time (sometimes all 4 drifting the same way, sometimes
+    // split — the split version is the "cross" look that was actually
+    // wanted, every time). Two doodles share one diagonal (top-left <->
+    // bottom-right), the other two share the other (top-right <->
+    // bottom-left), entering from opposite corners of their own
+    // diagonal so their paths visibly cross near the centre as all 4
+    // fly in together — see driftX/driftY below for how dirX/dirY
+    // become actual off-screen corner positions.
+    const DOODLE_MOTION = {
+      'about-doodle--1': { dirX: 1, dirY: 1, parallaxRange: 260 }, // flower: enters bottom-right
+      'about-doodle--6': { dirX: -1, dirY: -1, parallaxRange: -300 }, // enters top-left (crosses --1)
+      'about-doodle--2': { dirX: -1, dirY: 1, parallaxRange: -220 }, // enters bottom-left
+      'about-doodle--3': { dirX: 1, dirY: -1, parallaxRange: 340 }, // key: enters top-right (crosses --2)
+    };
 
-    const ENTER_END = 0.14; // scroll-progress fraction spent flying in from off-screen
-    const EXIT_START = 0.86; // and flying back out, symmetrically, at the other end
+    const entries = doodles.map((el) => {
+      const key = [...el.classList].find((c) => DOODLE_MOTION[c]);
+      const motion = DOODLE_MOTION[key] || { dirX: 1, dirY: 1, parallaxRange: 260 };
+      return {
+        el,
+        inner: el.querySelector('.about-doodle__inner'),
+        freqX: gsap.utils.random(0.12, 0.22),
+        freqY: gsap.utils.random(0.1, 0.2),
+        phase: gsap.utils.random(0, Math.PI * 2),
+        ampX: gsap.utils.random(10, 20),
+        ampY: gsap.utils.random(8, 16),
+        // two overlapping tilt waves at different speeds/amplitudes,
+        // not one — a single sine reads as a metronome; layering a
+        // slow big wave with a faster small one is what makes it read
+        // as an organic tilting float, like a leaf drifting down,
+        // rather than a mechanical back-and-forth
+        tiltAmp1: gsap.utils.random(10, 18),
+        tiltFreq1: gsap.utils.random(0.05, 0.09),
+        tiltAmp2: gsap.utils.random(4, 8),
+        tiltFreq2: gsap.utils.random(0.15, 0.24),
+        ...motion,
+      };
+    });
+
+    // 0.14/0.86 read fine on the original About->Projects range (much
+    // longer in scroll distance), but this range shrank to About->
+    // Philosophy per direct request (see the ScrollTrigger below) —
+    // the same fraction now covers far less actual scroll, so the
+    // enter/exit swept past in a fraction of the scroll distance and
+    // read as an abrupt snap rather than a smooth glide. Widened here
+    // to spend proportionally more of the (now shorter) range on the
+    // transition itself.
+    const ENTER_END = 0.32; // scroll-progress fraction spent flying in from off-screen
+    const EXIT_START = 0.68; // and flying back out, symmetrically, at the other end
     const enterEase = gsap.parseEase('power2.out');
     const exitEase = gsap.parseEase('power2.in');
 
@@ -990,30 +1161,47 @@
     }
 
     // Genuinely off the fixed viewport regardless of a given doodle's
-    // own resting left/right% — read live (not cached) so a window
-    // resize is reflected on the very next frame with no extra
-    // listener. Horizontal (viewport width), not vertical — per
-    // direct request, illustrations enter/exit from the left and
-    // right edges rather than top/bottom.
-    function offscreenDistance() {
+    // own resting position — read live (not cached) so a window resize
+    // is reflected on the very next frame with no extra listener.
+    function offscreenX() {
       return window.innerWidth * 0.85 + 220;
     }
+    function offscreenY() {
+      return window.innerHeight * 0.85 + 220;
+    }
 
+    // e.dirX/dirY (fixed per doodle, see DOODLE_MOTION above) name the
+    // off-screen *corner* this doodle flies in from — e.g. dirX:1,
+    // dirY:1 starts at (+offX, +offY), off the bottom-right, and eases
+    // in to (its horizontal mid-drift, 0) i.e. plain rest position.
+    // Exit reverses back to that exact same corner, not the opposite
+    // one, so the whole trip reads as one diagonal line travelled
+    // forward then backward — this is what makes 4 doodles on 2
+    // opposing diagonals actually cross paths as they all fly in.
     function driftX(progress, e) {
-      const sign = e.parallaxRange < 0 ? -1 : 1;
-      const off = offscreenDistance();
+      const off = offscreenX();
       if (progress <= ENTER_END) {
         const t = enterEase(Math.max(0, progress) / ENTER_END);
-        return gsap.utils.interpolate(-sign * off, midDrift(ENTER_END, e.parallaxRange), t);
+        return gsap.utils.interpolate(e.dirX * off, midDrift(ENTER_END, e.parallaxRange), t);
       }
       if (progress >= EXIT_START) {
         const t = exitEase((Math.min(1, progress) - EXIT_START) / (1 - EXIT_START));
-        // Same edge as the entrance (-sign*off, not +sign*off) — per
-        // direct request, each doodle leaves back the way it arrived
-        // rather than continuing through to the opposite edge.
-        return gsap.utils.interpolate(midDrift(EXIT_START, e.parallaxRange), -sign * off, t);
+        return gsap.utils.interpolate(midDrift(EXIT_START, e.parallaxRange), e.dirX * off, t);
       }
       return midDrift(progress, e.parallaxRange);
+    }
+
+    function driftY(progress, e) {
+      const off = offscreenY();
+      if (progress <= ENTER_END) {
+        const t = enterEase(Math.max(0, progress) / ENTER_END);
+        return gsap.utils.interpolate(e.dirY * off, 0, t);
+      }
+      if (progress >= EXIT_START) {
+        const t = exitEase((Math.min(1, progress) - EXIT_START) / (1 - EXIT_START));
+        return gsap.utils.interpolate(0, e.dirY * off, t);
+      }
+      return 0;
     }
 
     // 0 before #about arrives, 1 once #philosophy-section's own pin
@@ -1032,7 +1220,7 @@
     // it (the WHY/TV section, right before About) depends on viewport
     // *height* — a short phone viewport reaches that condition while
     // WHY/TV is still fully visible, so the doodles' entrance (first
-    // 14% of this range, ENTER_END above) was fading tiles in on top
+    // ENTER_END fraction of this range, above) was fading tiles in on top
     // of the still-on-screen TV scene instead of after it. A tall
     // desktop viewport doesn't hit this — WHY/TV has already scrolled
     // well clear by the time this condition is met there. Mobile-only:
@@ -1068,7 +1256,7 @@
       entries.forEach((e) => {
         gsap.set(e.el, {
           x: Math.sin(t * e.freqX + e.phase) * e.ampX + driftX(scrollProgress, e),
-          y: Math.cos(t * e.freqY + e.phase * 1.3) * e.ampY,
+          y: Math.cos(t * e.freqY + e.phase * 1.3) * e.ampY + driftY(scrollProgress, e),
           rotate:
             Math.sin(t * e.tiltFreq1 + e.phase) * e.tiltAmp1 +
             Math.sin(t * e.tiltFreq2 + e.phase * 1.7) * e.tiltAmp2,
@@ -1165,14 +1353,15 @@
     // jump. hasTarget gets the very first call to snap instantly
     // instead of lerping in from these zeroed defaults (which would
     // itself look like the card flying in from the top-left on load).
-    const target = { x: 0, y: 0, scaleX: 1, scaleY: 1, rotateY: 0, opacity: 1 };
-    const current = { x: 0, y: 0, scaleX: 1, scaleY: 1, rotateY: 0, opacity: 1 };
+    // opacity deliberately isn't part of this position/rotation lerp —
+    // see the direct-opacity comment inside updateCard below for why.
+    const target = { x: 0, y: 0, scaleX: 1, scaleY: 1, rotateY: 0 };
+    const current = { x: 0, y: 0, scaleX: 1, scaleY: 1, rotateY: 0 };
     let hasTarget = false;
 
     function applyCard() {
       flyingCard.style.transform = `translate3d(${current.x}px, ${current.y}px, 0) scale(${current.scaleX}, ${current.scaleY})`;
       flipper.style.transform = `rotateY(${current.rotateY}deg)`;
-      flyingCard.style.opacity = String(current.opacity);
     }
 
     gsap.ticker.add(() => {
@@ -1183,7 +1372,6 @@
       current.scaleX += (target.scaleX - current.scaleX) * LERP;
       current.scaleY += (target.scaleY - current.scaleY) * LERP;
       current.rotateY += (target.rotateY - current.rotateY) * LERP;
-      current.opacity += (target.opacity - current.opacity) * LERP;
       applyCard();
     });
 
@@ -1255,25 +1443,36 @@
       fadeElements.forEach((el) => { el.style.opacity = opacity; });
 
       // The card itself fades out right as it lands (last 5% of the
-      // flight) — #end-placeholder sits at that exact same rect and
-      // is a real, visible element now (not an invisible measurement
-      // anchor like #start-placeholder), since it's the photo
-      // initPhilosophyScroll's pinned timeline goes on to animate for
-      // the rest of the section. Without this the now-motionless
-      // flying card would sit frozen on top of that photo the instant
-      // the timeline starts moving it somewhere else.
-      target.opacity = progress > 0.95 ? 1 - (progress - 0.95) * 20 : 1;
+      // flight), while #end-placeholder — a real, visible element now,
+      // not an invisible measurement anchor like #start-placeholder —
+      // fades in as its exact complement. Both set directly here, from
+      // the same progress value in the same frame, deliberately NOT
+      // run through the position/rotation lerp above and NOT left to
+      // a CSS transition on #end-placeholder's side (see the long
+      // comment on .portrait-placeholder in styles.css): two
+      // independently-timed fades (a smoothed JS one for the card, a
+      // separate fixed-duration CSS one for the photo) can drift apart
+      // on a fast or reversed scroll — a gap where both read as
+      // nearly transparent (a flash/momentary disappearance right as
+      // the flip lands), or an overlap where both are partly visible
+      // at once (two portraits on screen together on the way back).
+      // Setting both, unsmoothed, from one shared value removes any
+      // window for either.
+      const cardOpacity = progress > 0.95 ? Math.max(0, 1 - (progress - 0.95) * 20) : 1;
+      flyingCard.style.opacity = String(cardOpacity);
+      endEl.style.opacity = String(1 - cardOpacity);
 
-      // The lerp smoothing in the ticker above exists solely to keep a
-      // FAST scroll *through* the actual 0..1 flight from visibly
-      // glitching between frames — it was never meant to add drag
-      // while the card is simply at rest, glued to a placeholder that
-      // itself is just scrolling normally with the page. ScrollTrigger
-      // clamps progress to exactly 0 before the flight starts and
-      // exactly 1 after it ends, so outside that open interval nothing
-      // is "in flight": snap current straight to target on every such
-      // frame (not just the very first ever) instead of leaving it to
-      // the ticker to slowly catch up. Without this, scrolling back up
+      // The lerp smoothing in the ticker above (position/scale/rotate
+      // only now — see above) exists solely to keep a FAST scroll
+      // *through* the actual 0..1 flight from visibly glitching
+      // between frames — it was never meant to add drag while the
+      // card is simply at rest, glued to a placeholder that itself is
+      // just scrolling normally with the page. ScrollTrigger clamps
+      // progress to exactly 0 before the flight starts and exactly 1
+      // after it ends, so outside that open interval nothing is "in
+      // flight": snap current straight to target on every such frame
+      // (not just the very first ever) instead of leaving it to the
+      // ticker to slowly catch up. Without this, scrolling back up
       // past #about (or fast-forwarding through the flight) let the
       // card visibly lag behind the placeholder's real, continuously-
       // changing position — reading as the photo floating/trailing
@@ -1286,42 +1485,43 @@
         current.scaleX = target.scaleX;
         current.scaleY = target.scaleY;
         current.rotateY = target.rotateY;
-        current.opacity = target.opacity;
         applyCard();
       }
 
-      // #end-placeholder itself stays invisible (see .portrait-
-      // placeholder in styles.css) until this exact moment, so the
-      // real photo only appears once the flying card has actually
-      // arrived over it — crossfading in as the flying card crossfades
-      // out, one continuous photo rather than two overlapping ones.
+      // Still toggled for .philosophy-photo-container:has(...)'s own
+      // shadow rule in styles.css — unrelated to opacity now (the
+      // inline value above already overrides whatever this class sets).
       endEl.classList.toggle('is-visible', progress > 0.95);
     }
 
     // Progress (0 at #start-placeholder's center crossing viewport
-    // center, 1 at #end-placeholder's) used to be computed by hand from
+    // center, 1 once the flight lands) used to be computed by hand from
     // a one-time window.scrollY + getBoundingClientRect snapshot of
-    // each placeholder. That snapshot goes stale the moment anything
-    // between them changes height AFTER it was taken — and
-    // #end-placeholder sits *inside* .philosophy-pin-wrapper, whose own
-    // +=400% pin-spacer (initPhilosophyScroll) can finish sizing itself
-    // later than this snapshot did (e.g. a slow web-font/layout pass on
-    // mobile) with no resize event to catch it, since nothing about the
-    // *viewport* changed. The result: this card's "progress" and the
-    // paragraph timeline's ScrollTrigger progress quietly drift apart —
-    // sometimes landing right on time, sometimes only finishing well
-    // after all four paragraphs have already played through. A real
-    // ScrollTrigger here (same trigger/endTrigger pattern used
-    // elsewhere) fixes that at the root: it's refreshed on exactly the
-    // same cycle as every other ScrollTrigger on the page — including
-    // .philosophy-pin-wrapper's own — so both timelines are always
-    // measured against the current, settled layout together instead of
-    // two independently-snapshotted ones that can disagree.
+    // each placeholder — that snapshot going stale (a pin-spacer
+    // settling late, a web-font swap) was one source of the card and
+    // the paragraph text drifting out of sync. Switching to a real
+    // ScrollTrigger fixed *that*, but end:'center center' on endTrigger
+    // (#end-placeholder) is its own, separately-measured scroll
+    // position — #end-placeholder's centre crossing viewport centre is
+    // simply a different point than .philosophy-pin-wrapper's top
+    // crossing viewport top (the paragraph timeline's own start, see
+    // initPhilosophyScroll), even though the two usually land close
+    // together. That gap is exactly the window where the flight was
+    // reporting "done" while the text hadn't started yet, or the text
+    // had already started while the card was still mid-handoff — two
+    // independently-true measurements that just don't have to agree.
+    // end is locked directly to the paragraph timeline's own trigger
+    // instead (same technique already used for the about-doodles exit
+    // — see initAboutDoodles), so the flight can only ever finish at
+    // the exact scroll position the text timeline calls its own start:
+    // one shared reference instead of two that can drift apart.
+    const philTrigger = ScrollTrigger.getAll().find(
+      (t) => t.vars.pin && t.trigger && t.trigger.classList && t.trigger.classList.contains('philosophy-pin-wrapper')
+    );
     const flightTrigger = ScrollTrigger.create({
       trigger: startEl,
       start: 'center center',
-      endTrigger: endEl,
-      end: 'center center',
+      end: () => (philTrigger ? philTrigger.start : '+=2000'),
     });
     updateCard(flightTrigger.progress);
 
@@ -1572,12 +1772,9 @@
       },
     });
 
-    // Idle float — the set gently bobs and sways, like it's just
-    // sitting there running, rather than a perfectly static image.
-    // No cursor-driven tilt — the set's orientation stays static
-    // regardless of mouse movement, only this ambient bob/sway moves it.
-    gsap.to(frame, { y: -10, duration: 3.2, ease: 'sine.inOut', yoyo: true, repeat: -1 });
-    gsap.to(frame, { rotation: -0.6, duration: 4, ease: 'sine.inOut', yoyo: true, repeat: -1 });
+    // The set itself stays static (no bob/sway, no cursor-driven tilt)
+    // — only the antenna's own CSS keyframe sway (styles.css) still
+    // moves, independent of this element.
   }
 
   function initProjectsMarquee() {
@@ -1930,7 +2127,18 @@
     let resizeTimer;
     const refresh = () => {
       clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(() => ScrollTrigger.refresh(), 200);
+      resizeTimer = setTimeout(() => {
+        // Re-measure before ScrollTrigger.refresh() — the arc's own
+        // char positions don't need recomputing (their translateY/
+        // rotate are fixed px/deg per character index, not width-
+        // dependent), only whether the sentence still fits at the new
+        // container width, since resizing wider without this would
+        // leave it stuck at whatever smaller size a previous, narrower
+        // width required.
+        fitWhyStatement();
+        positionStatCards();
+        ScrollTrigger.refresh();
+      }, 200);
     };
     window.addEventListener('resize', refresh);
     window.addEventListener('orientationchange', refresh);
@@ -1946,7 +2154,15 @@
     // view"), consuming its one shot before the page has actually
     // scrolled there.
     if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(() => ScrollTrigger.refresh());
+      document.fonts.ready.then(() => {
+        // The real display font (vs whatever fallback rendered first)
+        // can be measurably wider/narrower per character, which shifts
+        // exactly how much shrink .why-statement needs to stay on one
+        // line — re-fit before refreshing everything else's layout.
+        fitWhyStatement();
+        positionStatCards();
+        ScrollTrigger.refresh();
+      });
     }
   }
 
@@ -1958,20 +2174,20 @@
     initSpiralField();
     initMagneticNav();
     initScrollReveals();
-    initWhyPause();
     initCurveFloat();
     initSectionColorTransitions();
     initProjectsMarquee();
     initTvShowcase();
+    initProjectChips();
     initFooterMarquee();
     initAboutStats();
     initTestimonials();
     initPhilosophyScroll();
     initFlyingCard();
-    initProjectChips();
     initAboutDoodles();
     initCaseStudyReveals();
     initCaseNav();
+    initCaseCycles();
     initCustomCursor();
     initResizeRefresh();
   });

@@ -10,6 +10,9 @@
   --color-why: #FF7140; /* client's exact color-picker value (R255 G113 B64) — "WHY?" heading only */
   --color-pink: #DC346E; /* client's exact color-picker value (R220 G52 B110) */
   --color-on-ink: #FAF5EC;
+  --color-on-ink-soft: rgba(250, 245, 236, 0.7); /* muted body copy on dark sections (case2-*) — same on-ink white, dimmed instead of a separate hardcoded gray */
+  --color-case2-bg: #1A1A1A; /* client-supplied swatch, per direct request — a neutral near-black, distinct from --color-ink's warm brown-black, scoped to the case2 (detailed project) template only */
+  --color-case2-text: var(--color-cream); /* was a separate #EBE5DC swatch, now updated to a second client-supplied swatch that reads as the same value as --color-cream — reusing that existing token instead of a near-duplicate hex. Case2's own body/heading text color (the orange pill and "Next Project" button keep their own dark text for contrast against orange, not this). */
 
   --font-display: "Poppins", ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, sans-serif;
@@ -738,43 +741,39 @@ a { color: inherit; }
   font-size: var(--fs-statement);
   line-height: 2.3214;
   letter-spacing: -0.032em;
-  max-width: 20ch;
   text-align: center;
-  text-wrap: balance;
+  /* Per direct request, this line never wraps at any viewport width —
+     see fitWhyStatement in script.js, which measures the real
+     rendered width against the container on load (and resize) and
+     shrinks font-size (inline, overriding --fs-statement) by exactly
+     however much is needed to keep the whole sentence on one line,
+     down to any width. That JS is what actually guarantees the fit;
+     max-width:none plus white-space:nowrap here are just the
+     initial/no-JS-yet state so there's nothing to visually correct
+     once it runs (text-wrap:balance and a ch-based max-width, both
+     multi-line-wrapping tools, no longer apply to a line that's never
+     allowed to wrap). isSingleLine in initScrollReveals already
+     applies the arc automatically whenever the text is one line —
+     forcing that condition here is what makes the arc unconditional
+     instead of degrading to flat past ~700px, without needing any
+     change on that side. */
+  max-width: none;
+  white-space: nowrap;
 }
 
-@container why (min-width: 700px) {
-  .why-statement {
-    max-width: none;
-  }
-}
-/* the 2.3214 ratio above reads fine at the width the client's spec
-   was measured against (the statement barely wraps past 1-2 lines
-   there), but combined with max-width:20ch it wraps to 3-4 lines on
-   a phone, and that same generous leading compounds across every one
-   of them — the paragraph ends up looking like it has huge random
-   gaps between lines rather than reading as one deliberate block. */
+/* the 2.3214 line-height ratio above is the client's own spec (see
+   above), kept as-is here — the max-width/wrap overrides that used to
+   live in this query were specifically shaped around this sentence
+   wrapping to 2-3 lines on a phone, which can no longer happen now
+   that .why-statement never wraps at all; fitWhyStatement (script.js)
+   handles fitting it at this width by shrinking font-size instead. */
 @media (max-width: 480px) {
-  .why-statement {
-    line-height: 1.45;
-    /* 20ch (above) only ever gives this ~67-character sentence room
-       for 4-5 words per line, so it wraps to 3 uneven lines no matter
-       what text-wrap:balance does with them — there just isn't a good
-       3-line split of this particular sentence. Enough width for
-       text-wrap:balance to settle on 2 lines instead. */
-    max-width: 27ch;
-  }
   /* .tv-antenna's rod tips are positioned by a fixed upward reach off
-     .tv-frame (translate:-50% -52%, styles.css), tuned for however
-     tall .why-statement's block was at the width this scene was
-     designed against. At this width the statement still wraps to 3
-     lines (see above — genuinely unavoidable without shrinking the
-     font below its floor), and that extra line's real content pushes
-     the antenna's fixed reach-up zone into text that used to be clear
-     space above it. Rather than touch the antenna's own geometry
-     (risking its sway animation's pivot math), give the scene below
-     the statement more headroom instead, so the antenna's reach lands
-     in air again regardless of exactly how tall the text block is. */
+     .tv-frame (translate:-50% -52%, styles.css). .why-statement no
+     longer wraps to multiple lines at all (see above), so this has
+     more headroom to work with than when this was originally tuned
+     against a 3-line wrap — kept as a safety margin regardless, since
+     removing it outright wasn't re-verified against every width. */
   .tv-showcase {
     margin-top: clamp(2.5rem, 8vw, 4rem);
   }
@@ -939,37 +938,6 @@ a { color: inherit; }
   background: radial-gradient(ellipse, rgba(33, 26, 20, 0.28) 0%, rgba(33, 26, 20, 0) 72%);
   pointer-events: none;
 }
-.tv-prop {
-  position: absolute;
-  z-index: 1;
-  width: clamp(56px, 7vw, 104px);
-  pointer-events: none;
-  animation: tv-prop-float 5s ease-in-out infinite;
-}
-.tv-prop img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 16px rgba(33, 26, 20, 0.2));
-}
-.tv-prop--left {
-  left: clamp(-1rem, 2vw, 2rem);
-  bottom: 8%;
-  animation-delay: -1.2s;
-}
-.tv-prop--right {
-  right: clamp(-0.5rem, 3vw, 3rem);
-  top: 6%;
-  animation-delay: -3s;
-}
-@keyframes tv-prop-float {
-  0%, 100% { transform: translateY(0) rotate(-4deg); }
-  50% { transform: translateY(-16px) rotate(4deg); }
-}
-@media (max-width: 700px) {
-  .tv-prop { display: none; }
-}
-
 .tv-antenna {
   position: absolute;
   top: 0;
@@ -1007,7 +975,6 @@ a { color: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   .tv-scene-glow,
-  .tv-prop,
   .tv-antenna,
   .tv-antenna__rod,
   .tv-antenna__tip {
@@ -1202,7 +1169,9 @@ a { color: inherit; }
   overflow: hidden;
   background: var(--color-ink);
   color: var(--color-on-ink);
-  padding-top: clamp(4rem, 9vw, 6.5rem);
+  /* was clamp(4rem, 9vw, 6.5rem) — per direct request, more breathing
+     room between the top wave and the heading/chip row right under it */
+  padding-top: clamp(6rem, 13vw, 10rem);
 }
 /* same treatment as .curve--about-top: a wave at the top of this
    section, flat-filled to match the section right before it
@@ -1223,26 +1192,35 @@ a { color: inherit; }
 }
 
 /* ---------------------------------------------------------------
-   Project categories — replaces the old pinned scroll-reel above.
-   Each .project-category is: a label row (the category name repeated
-   on either side of a small chip that auto-cycles through a few of
-   that category's images) followed by a 5-thumbnail grid. The grid
-   is two independent flex columns rather than a single CSS Grid with
+   Projects — cycling label/chip heading above a plain static masonry
+   grid. The grid replaced the old pinned scroll-reel; the label/chip
+   heading (crossfading thumbnail + swinging category text, see
+   initProjectChips in script.js) was removed in that same pass, then
+   restored above the new grid per a direct follow-up request. Two
+   independent flex columns rather than a single CSS Grid with
    row-spans — each column just stacks its own two thumbnails with
-   their own aspect-ratios, and the "staggered brick" look (matches
-   the client wireframe) falls out naturally from one column's first
-   item being shorter than the other's, no manual row-span math
-   needed. See initProjectChips in script.js for the chip cycling. */
+   their own aspect-ratios, and the "staggered brick" look falls out
+   naturally from one column's first item being shorter than the
+   other's, no manual row-span math needed. Each thumbnail also
+   carries its own plain caption (.project-thumb__caption) underneath,
+   in a small .project-thumb-group wrapper so the caption sits close
+   to its own thumbnail while the column's own `gap` still spaces one
+   whole group from the next. */
 .project-categories {
   display: flex;
   flex-direction: column;
   gap: clamp(4rem, 9vw, 7rem);
-  /* the client wireframe is a mobile-proportioned layout (narrow
-     columns, a compact grid) — capping well short of --content-max
-     keeps those same proportions at any viewport width instead of
-     the grid stretching edge-to-edge and each thumbnail's fixed
-     aspect-ratio inflating into an oversized column on wide screens */
-  max-width: 640px;
+  /* was capped at 640px (mobile-proportioned, per the original client
+     wireframe) then clamp(640px, 82vw, 1200px) — still a fixed
+     ceiling that stalled well short of a real laptop/monitor's actual
+     width, the same "locking the ratio instead of scaling fluidly"
+     issue already fixed on the case2 detailed-project template (see
+     --case2-col-width there) — per direct request to match that same
+     fluid full-viewport behavior here. var(--content-max) is the same
+     1400px ceiling every other section on the site already scales up
+     to, so this grows with the viewport instead of stopping at a
+     number picked ahead of time. */
+  max-width: var(--content-max);
   margin-inline: auto;
   padding-inline: var(--container-pad);
   padding-block: clamp(2rem, 6vw, 4rem);
@@ -1253,7 +1231,6 @@ a { color: inherit; }
   align-items: center;
   justify-content: center;
   gap: clamp(1rem, 3vw, 2rem);
-  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
 }
 /* Clips the label's swing transition (see initProjectChips in
    script.js) to exactly one line's height — sized to content (no
@@ -1271,20 +1248,29 @@ a { color: inherit; }
 .project-category__label {
   display: inline-block;
   font-family: var(--font-display);
-  font-weight: 800;
-  font-size: clamp(1.75rem, 2vw + 1.2rem, 3.5rem);
+  /* was 800 (extra bold) — per direct request, semibold */
+  font-weight: 600;
+  /* was clamp(1.75rem, 2vw + 1.2rem, 3.5rem) — per direct request */
+  font-size: clamp(2.25rem, 2.5vw + 1.6rem, 4.5rem);
   letter-spacing: -0.01em;
   text-transform: capitalize;
-  line-height: 1;
-  /* the swing's hinge point — matches .projects-reel__word's own
-     transform-origin from the pinned-reel version this replaced */
+  /* not 1 — this bold display font's descenders (the "g" in
+     "Campaign"/"Packaging") sit far enough below the baseline that a
+     line-height of exactly 1 crops them against .project-category__
+     label-mask's overflow:hidden right above. 1.75 is a verified real
+     safety margin (checked via Range.getBoundingClientRect on the
+     text node at both clamp extremes), not just "large enough to
+     look fine once." */
+  line-height: 1.75;
+  /* the swing's hinge point */
   transform-origin: center bottom;
   will-change: transform, opacity, filter;
 }
 .project-category__chip {
   position: relative;
   flex: none;
-  width: clamp(90px, 11vw, 150px);
+  /* was clamp(90px, 11vw, 150px) — per direct request */
+  width: clamp(120px, 14vw, 200px);
   aspect-ratio: 16 / 10;
   overflow: hidden;
   background: var(--color-ink-soft);
@@ -1301,33 +1287,30 @@ a { color: inherit; }
 .project-category__chip-img.is-active {
   opacity: 1;
 }
-/* the 5th (not-yet-real) project's chip frame — a plain div, not an
-   img, so there's no broken-image icon to hide while it has no src */
-.project-category__chip-img--placeholder {
-  background: var(--color-ink-soft);
+
+/* Real CSS Grid, not flex columns — a plain 2-column flow with
+   align-items:start lets each row's shorter item stay its own actual
+   height (not stretched to match its taller row-mate) while still
+   sharing that row's top edge, which independent per-column flex
+   stacks couldn't do once the two columns' item heights differed.
+   Auto-placement handles the row/column slotting from plain DOM
+   order; .project-thumb-group--wide's own grid-column is the only
+   explicit placement needed, for the single full-width 5th item. */
+.project-category__grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  gap: clamp(1rem, 4vw, 3.5rem);
+}
+.project-thumb-group--wide {
+  grid-column: 1 / -1;
 }
 
-.project-category__grid {
-  display: flex;
-  align-items: flex-start;
-  gap: clamp(1rem, 2.5vw, 1.75rem);
-  flex-wrap: wrap;
-}
-.project-category__col {
-  flex: 1 1 0;
-  min-width: 220px;
+.project-thumb-group {
   display: flex;
   flex-direction: column;
-  gap: clamp(1rem, 2.5vw, 1.75rem);
+  gap: 0.6rem;
 }
-/* pushed down slightly so its first thumbnail starts lower than the
-   other column's — this offset plus each thumbnail's own aspect-
-   ratio is the entire "brick stagger" effect, both columns are
-   otherwise identical flex stacks */
-.project-category__col--offset {
-  margin-top: clamp(1.5rem, 5vw, 3rem);
-}
-
 .project-thumb {
   display: block;
   width: 100%;
@@ -1346,14 +1329,14 @@ a { color: inherit; }
   transform: scale(1.05);
 }
 .project-thumb--short { aspect-ratio: 6 / 5; }
-.project-thumb--tall { aspect-ratio: 4 / 5.4; }
-.project-thumb--wide {
-  width: 100%;
-  aspect-ratio: 16 / 6;
-  margin-top: clamp(1rem, 2.5vw, 1.75rem);
-}
-.project-thumb--placeholder {
-  background: var(--color-ink-soft);
+/* was 4/5.4 — per direct request, less extreme vertically */
+.project-thumb--tall { aspect-ratio: 4 / 4.5; }
+.project-thumb--wide { aspect-ratio: 21 / 8; }
+/* plain caption per direct reference — inherits .projects-section's
+   own on-ink color, no color/background of its own needed */
+.project-thumb__caption {
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 @media (max-width: 640px) {
@@ -1371,15 +1354,6 @@ a { color: inherit; }
   }
   .project-category__chip {
     width: clamp(64px, 20vw, 100px);
-  }
-  .project-category__grid {
-    flex-wrap: nowrap;
-  }
-  .project-category__col--offset {
-    margin-top: clamp(1rem, 6vw, 2rem);
-  }
-  .project-thumb--wide {
-    aspect-ratio: 4 / 3;
   }
 }
 
@@ -1483,6 +1457,11 @@ a { color: inherit; }
   max-width: 56rem;
   margin-inline: auto;
   min-height: clamp(380px, 50vw, 580px);
+  /* .portrait-placeholder's own width, hoisted to a shared variable —
+     see the long comment on --stat-offset-x/y below for why the stat
+     cards need to read this same number rather than each side tuning
+     its own independent clamp(). */
+  --portrait-width: clamp(190px, 46vw, 320px);
 }
 
 /* Fixed-position illustration field (script.js's initAboutDoodles) —
@@ -1529,7 +1508,10 @@ a { color: inherit; }
 
 .about-doodle--1 { width: clamp(180px, 18vw, 300px); top: 8%; left: 4vw; }
 .about-doodle--2 { top: 14%; right: 6vw; }
-.about-doodle--3 { top: 78%; left: 8vw; }
+/* was top:78% — per direct request, too low in the viewport to read
+   clearly; moved up to sit just right-and-below the flower (--1)
+   instead */
+.about-doodle--3 { top: 26%; left: 19vw; }
 .about-doodle--6 { width: clamp(100px, 10vw, 160px); top: 50%; right: 8vw; }
 
 @media (min-width: 720px) {
@@ -1548,8 +1530,10 @@ a { color: inherit; }
   /* floor was 240px, 64% of a 375px phone's width on its own — not
      technically clipped (it's centered, so it stayed on-screen), but
      left barely any room for the stat cards to spread around it
-     without running off the edges (see .stat-card below) */
-  width: clamp(190px, 46vw, 320px);
+     without running off the edges (see .stat-card below). Reads
+     .stats-cluster's --portrait-width instead of its own literal
+     clamp() now — see the long comment on --stat-offset-x/y below. */
+  width: var(--portrait-width, clamp(190px, 46vw, 320px));
   aspect-ratio: 4 / 5;
   opacity: 0;
   pointer-events: none;
@@ -1617,25 +1601,62 @@ a { color: inherit; }
   justify-content: flex-start;
   text-align: left;
 }
-/* rotation alternates sign top-to-bottom on each side (--1 negative/
-   --2 positive on the left, --3 negative/--4 positive on the right)
-   per the client reference — each side reads as its own small X
-   crossing behind the portrait, not four cards all leaning the same
-   way */
+/* rotation alternates sign top-to-bottom on each side (--1 positive/
+   --2 negative on the left, --3 negative/--4 positive on the right) —
+   diagonal pairs (1&4, 2&3) share a sign, so it reads as an X crossing
+   behind the portrait. All four now share the same |11deg| magnitude
+   (was 10/15/8/12, a different angle per card) — a bigger tilt angle
+   inflates a rotated box's on-screen footprint even though the box
+   itself is one shared size, which is what made same-size cards read
+   as different sizes. */
 /* was a fixed px offset (155/155/130/170) regardless of viewport —
    fine at tablet widths but on a real phone (~375px) that pushed each
    card's center well past the screen edge, since the card's own
    "-50%" half-width plus a flat 155px offset doesn't scale down with
    a narrower viewport. --stat-offset-x/y below scale with vw instead,
-   same fix already applied to the desktop tier further down. */
+   same fix already applied to the desktop tier further down.
+
+   --stat-offset-x used to be its own independent clamp() that only
+   *happened* to clear .portrait-placeholder's width at the couple of
+   widths it was checked against — at ~455px the portrait's half-width
+   (~104.5px) outgrew the old 100px ceiling and swallowed each card's
+   text. It's now derived from the same --portrait-width the photo
+   itself uses (set on this element, see .stats-cluster below), so the
+   card's anchor point is mathematically guaranteed to sit at or past
+   the photo's edge at every viewport instead of merely close to it.
+   --stat-offset-y is untouched: it only staggers card 1/2 up/down by a
+   small amount and never needed to clear the photo on its own, since
+   --stat-offset-x already pushes every card fully to one side. */
 #stats-section {
-  --stat-offset-x: clamp(58px, 22vw, 100px);
+  --stat-offset-x: calc(var(--portrait-width) / 2 + 10px);
   --stat-offset-y: clamp(24px, 9vw, 42px);
 }
-#stats-section.show-stats .stat-card--1 { opacity: 1; transform: translate(calc(-50% - var(--stat-offset-x)), calc(-50% - var(--stat-offset-y))) rotate(10deg) scale(0.85); }
-#stats-section.show-stats .stat-card--2 { opacity: 1; transform: translate(calc(-50% - var(--stat-offset-x)), calc(-50% + var(--stat-offset-y) + 8px)) rotate(-15deg) scale(0.85); }
-#stats-section.show-stats .stat-card--3 { opacity: 1; transform: translate(calc(-50% + var(--stat-offset-x) - 10px), calc(-50% - var(--stat-offset-y) + 6px)) rotate(-8deg) scale(0.85); }
-#stats-section.show-stats .stat-card--4 { opacity: 1; transform: translate(calc(-50% + var(--stat-offset-x) + 8px), calc(-50% + var(--stat-offset-y) + 12px)) rotate(12deg) scale(0.85); }
+/* --card-extra-x-left/-right: one shared top-up per side on top of
+   --stat-offset-x, set by script.js (positionStatCards) once it
+   measures both of that side's actual rendered labels against the
+   actual rendered portrait rect. The CSS-only offset above clears the
+   photo for a *generic* card, but a wide two-line label ("35+ Brands
+   / & Clients") can still occupy nearly the card's full box, so the
+   widest label on each side needs an exact, content-aware push rather
+   than one shared guess. Both cards on a side always get the SAME
+   push (whichever of the two needs more) rather than each card
+   getting its own — a per-card push cleared the text fine but broke
+   the pair's alignment, since the shorter label's card would sit
+   closer to the portrait than its neighbour instead of at the same
+   distance. Defaults to 0px so nothing shifts before script.js has
+   had a chance to measure.
+
+   All four cards below are now a plain mirror of each other — same
+   +/-var(--stat-offset-x)/var(--stat-offset-y) distance from center,
+   same rotation magnitude, only the signs (which quadrant) differ.
+   The old version added a different one-off pixel nudge to each card
+   (-10px/+8px/+6px/+8px/+12px/...) on top of the shared offset, which
+   is exactly what made each card sit a random-looking distance from
+   the portrait instead of reading as one aligned, symmetric set. */
+#stats-section.show-stats .stat-card--1 { opacity: 1; transform: translate(calc(-50% - var(--stat-offset-x) - var(--card-extra-x-left, 0px)), calc(-50% - var(--stat-offset-y))) rotate(11deg) scale(0.85); }
+#stats-section.show-stats .stat-card--2 { opacity: 1; transform: translate(calc(-50% - var(--stat-offset-x) - var(--card-extra-x-left, 0px)), calc(-50% + var(--stat-offset-y))) rotate(-11deg) scale(0.85); }
+#stats-section.show-stats .stat-card--3 { opacity: 1; transform: translate(calc(-50% + var(--stat-offset-x) + var(--card-extra-x-right, 0px)), calc(-50% - var(--stat-offset-y))) rotate(-11deg) scale(0.85); }
+#stats-section.show-stats .stat-card--4 { opacity: 1; transform: translate(calc(-50% + var(--stat-offset-x) + var(--card-extra-x-right, 0px)), calc(-50% + var(--stat-offset-y))) rotate(11deg) scale(0.85); }
 @media (min-width: 720px) {
   /* the old fixed-px offsets (+-195/200px) only cleared the portrait
      at the viewport width they were measured against — .portrait-
@@ -1649,13 +1670,17 @@ a { color: inherit; }
      ever correct at one width) so the gap stays a tucked corner at
      any width instead of ballooning back into buried text. */
   #stats-section {
-    --stat-offset-x: clamp(170px, 6vw + 120px, 215px);
+    /* same var(--portrait-width)-derived guarantee as the mobile tier
+       above, with a gap that still grows with viewport (10px at
+       720px up to 55px at 1600px+) to preserve the original design's
+       extra breathing room at wide screens. */
+    --stat-offset-x: calc(var(--portrait-width) / 2 + clamp(10px, 6vw - 40px, 55px));
     --stat-offset-y: clamp(33px, 3.5vw, 58px);
   }
-  #stats-section.show-stats .stat-card--1 { transform: translate(calc(-50% - var(--stat-offset-x)), calc(-50% - var(--stat-offset-y))) rotate(10deg) scale(1); }
-  #stats-section.show-stats .stat-card--2 { transform: translate(calc(-50% - var(--stat-offset-x)), calc(-50% + var(--stat-offset-y) + 10px)) rotate(-15deg) scale(1); }
-  #stats-section.show-stats .stat-card--3 { transform: translate(calc(-50% + var(--stat-offset-x) - 30px), calc(-50% - var(--stat-offset-y) + 10px)) rotate(-8deg) scale(1); }
-  #stats-section.show-stats .stat-card--4 { transform: translate(calc(-50% + var(--stat-offset-x) + 20px), calc(-50% + var(--stat-offset-y) + 20px)) rotate(12deg) scale(1); }
+  #stats-section.show-stats .stat-card--1 { transform: translate(calc(-50% - var(--stat-offset-x) - var(--card-extra-x-left, 0px)), calc(-50% - var(--stat-offset-y))) rotate(11deg) scale(1); }
+  #stats-section.show-stats .stat-card--2 { transform: translate(calc(-50% - var(--stat-offset-x) - var(--card-extra-x-left, 0px)), calc(-50% + var(--stat-offset-y))) rotate(-11deg) scale(1); }
+  #stats-section.show-stats .stat-card--3 { transform: translate(calc(-50% + var(--stat-offset-x) + var(--card-extra-x-right, 0px)), calc(-50% - var(--stat-offset-y))) rotate(-11deg) scale(1); }
+  #stats-section.show-stats .stat-card--4 { transform: translate(calc(-50% + var(--stat-offset-x) + var(--card-extra-x-right, 0px)), calc(-50% + var(--stat-offset-y))) rotate(11deg) scale(1); }
 }
 
 /* ---------------------------------------------------------------
@@ -1785,7 +1810,22 @@ a { color: inherit; }
   background: var(--color-ink);
   border-radius: inherit;
   overflow: hidden;
-  transition: opacity 200ms ease;
+  /* no transition here — initFlyingCard's updateCard sets this
+     element's real, moment-to-moment opacity directly (inline,
+     overriding this base value) as the exact complement of
+     #flying-card's own opacity, both computed from the same progress
+     value in the same frame. A CSS transition here used to animate
+     toward each new inline value on its own 200ms timeline, separate
+     from and unsynchronized with the flying card's own fade — on a
+     fast or reversed scroll the two could easily drift apart, reading
+     as either a flash where both are briefly near-transparent or an
+     overlap where both are partly visible at once. This class/rule
+     still exists for is-visible's other purpose (see the :has()
+     shadow rule below) — opacity:1 here is basically inert now, since
+     the inline value already overrides it, but it's kept as a
+     visible-content fallback for anything that reads this class
+     without JS (e.g. prefers-reduced-motion's static path). */
+  transition: none;
 }
 .philosophy-photo-container .portrait-placeholder.is-visible {
   opacity: 1;
@@ -2963,6 +3003,295 @@ a { color: inherit; }
   letter-spacing: 0.08em;
   font-weight: 700;
   margin-bottom: 1.25rem;
+}
+
+/* ---------------------------------------------------------------
+   Case study v2 — dark template (branding.html)
+   ---------------------------------------------------------------
+   Replaces the cream/centered .case-hero + .case-story language
+   above for individual case studies, per the client's own reference
+   mockup: dark canvas, left-aligned huge title, an orange "My Role"
+   pill row, and plain numbered image slots instead of the old
+   masonry/grid galleries with their hover-tilt/desaturate treatment.
+   Namespaced "case2-" (not a modifier on the old .case-* classes)
+   because so much differs at once — alignment, section order, pill
+   styling, image layout — that reusing the old classes with overrides
+   would mean fighting their existing rules rather than just writing
+   the new ones. Colors reuse the site's own dark-section palette
+   (--color-ink/--color-on-ink/--color-why) rather than inventing new
+   ones, so this reads as the same site's dark mode, not a different
+   product. No .case-nav here — the reference has no side nav, and
+   initCaseNav (script.js) already no-ops when it finds none in the
+   page. One project = one <article class="case2">, so multiple case
+   studies stacked on the same page (Common Ground + BGL) just repeat
+   the block with their own content. */
+.case2 {
+  background: var(--color-case2-bg);
+  color: var(--color-case2-text);
+  /* shared by .case2-section and .case2-shots below so the text
+     column and the image row always share one width (keeps their
+     left/right edges aligned). First was a flat 46rem (dead void on a
+     real laptop screen), then a clamp() capped at 62.5rem — still a
+     fixed ceiling that stopped filling the screen well short of a
+     wide laptop/monitor's actual width, per direct follow-up
+     feedback ("fluid scaling... instead of locking the ratios").
+     100% removes the separate cap entirely: this column now simply
+     fills .case2__inner, the same var(--content-max) (1400px)
+     container every other section on the site scales up to, so it
+     keeps growing with the viewport instead of stalling at a number
+     picked ahead of time. */
+  --case2-col-width: 100%;
+  /* top needs to clear .site-header, which is position:fixed and so
+     floats over whatever's at the top of the page regardless of its
+     own height — the old .case-hero used clamp(7rem,14vw,10rem) for
+     the same reason; matched here (was 3.5rem floor, which is what
+     let the header sit directly on top of "Back to Work" on a real
+     phone). */
+  padding-block: clamp(7rem, 14vw, 9rem) clamp(3.5rem, 8vw, 6rem);
+}
+.case2__inner {
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding-inline: var(--container-pad);
+}
+.case2-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-case2-text);
+  font-weight: 600;
+  font-size: 1.05rem;
+  text-decoration: none;
+  margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+  transition: color 200ms ease;
+}
+.case2-back svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 200ms ease;
+}
+.case2-back:hover,
+.case2-back:focus-visible {
+  color: var(--color-why);
+}
+.case2-back:hover svg,
+.case2-back:focus-visible svg {
+  transform: translateX(-3px);
+}
+.case2-title {
+  font-family: var(--font-display);
+  /* was 800 (extra bold) — per direct request, dialed back to semibold */
+  font-weight: 600;
+  text-transform: uppercase;
+  /* was clamp(3.25rem, 5vw + 1.9rem, 6.5rem) — per a second direct
+     follow-up request */
+  font-size: clamp(3.75rem, 5.5vw + 2.2rem, 7.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  /* per direct request — the title centers within the same column the
+     rest of the hero (back link, meta, pills) stays left-aligned in */
+  text-align: center;
+}
+.case2-meta {
+  margin-top: clamp(0.85rem, 2vw, 1.25rem);
+  color: var(--color-case2-text);
+  font-weight: 600;
+  font-size: clamp(1.1rem, 0.5vw + 1rem, 1.25rem);
+}
+.case2-role {
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+.case2-role__label {
+  font-weight: 600;
+  font-size: clamp(1.05rem, 0.3vw + 1rem, 1.15rem);
+  margin-bottom: 0.75rem;
+}
+.case2-role__pills {
+  /* was display:flex + justify-content:space-between — each pill
+     sized to its own text, so "Concept Development" was much wider
+     than "Moodboard". A grid of equal 1fr columns makes every pill
+     the same width (per direct request) and auto-fit reflows the
+     column count as the container narrows (4 across when there's
+     room, then 2x2, etc.) instead of one fixed row wrapping unevenly
+     or a pill's own text wrapping to a second line once it's
+     squeezed.
+     310px is sized to fit BGL's longest label, "Brand Identity
+     Development", on one line at .case2-pill's largest font-size and
+     current (narrower) padding — measured directly against the real
+     rendered text, not guessed. Re-measure this floor any time
+     .case2-pill's font-size or horizontal padding changes again;
+     it's been 540px, 280px, 335px, 325px, 318px, then 314px across
+     earlier follow-up requests as those two values moved. min(310px,
+     100%) keeps this floor from overflowing a phone-width screen. */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(310px, 100%), 1fr));
+  /* was 1rem — per a direct follow-up request, all 4 of Common
+     Ground's pills were wrapping to 3+1 at some in-between laptop
+     widths (the row's available width was a few px short of 4
+     columns + 3 gaps). Tightened back down. */
+  gap: 0.5rem;
+}
+.case2-pill {
+  /* rounded-rect "keycap" style per direct reference — was a plain
+     999px pill with dark text; now a squarer rounded corner and bold
+     white text. Per a follow-up request: the bottom bevel shadow is
+     gone, the corners are a little less rounded, and the text is
+     semibold rather than extra-bold. */
+  background: var(--color-why);
+  color: var(--color-on-ink);
+  font-weight: 600;
+  /* was clamp(1.1rem, 0.7vw + 0.95rem, 1.35rem), then briefly grown to
+     clamp(1.1rem, 1.5vw + 0.7rem, 2rem) so text filled the button
+     better at wide viewports — but that made each pill too wide for
+     all 4 of Common Ground's to fit on one row at normal laptop
+     widths, per direct follow-up request prioritizing "all 4 on one
+     line" over maximizing text size. Backed down, then nudged up
+     again slightly per a further follow-up request (bigger text,
+     shorter width, taller height) — padding follows the same
+     direction: more vertical, less horizontal. */
+  /* was clamp(0.95rem, 0.25vw + 0.85rem, 1.05rem), then clamp(1.05rem,
+     0.35vw + 0.9rem, 1.2rem) — per a second direct follow-up request */
+  font-size: clamp(1.15rem, 0.45vw + 1rem, 1.35rem);
+  /* was 0.7rem horizontal, then 0.45rem, 0.3rem, then 0.18rem — per a
+     fourth direct follow-up request, text size unchanged, just less
+     padding. Getting close to the floor of what padding alone can
+     give here — BGL's longest label is most of this width now. */
+  padding: 0.85rem 0.1rem;
+  border-radius: 0.4rem;
+  /* equal-width grid columns above mean a short label like
+     "Moodboard" now sits in a wider box than its own text — center it
+     instead of leaving it flush left with empty space on the right */
+  text-align: center;
+  white-space: nowrap;
+}
+.case2-section {
+  max-width: var(--case2-col-width);
+  margin-top: clamp(3rem, 7vw, 5rem);
+}
+.case2-section__heading {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: clamp(1.75rem, 1.8vw + 1.3rem, 2.6rem);
+  /* was 0.85rem — per direct request, tightened the gap to the body
+     copy right under it */
+  margin-bottom: 0.4rem;
+}
+.case2-section p {
+  color: var(--color-case2-text);
+  /* was 1.7 — per direct request, tighter line spacing */
+  line-height: 1.45;
+  /* was clamp(1rem, 0.3vw + 0.95rem, 1.1rem), then bumped once to
+     clamp(1.15rem, 0.5vw + 1.05rem, 1.35rem) — per a second direct
+     request to size up every text element in this section */
+  font-size: clamp(1.3rem, 0.6vw + 1.2rem, 1.55rem);
+  font-weight: 500;
+}
+.case2-section p + p {
+  margin-top: 1rem;
+}
+.case2-shots {
+  margin-top: clamp(2rem, 5vw, 3rem);
+  display: grid;
+  gap: clamp(1rem, 2.5vw, 1.75rem);
+  /* matches .case2-section's own max-width (same shared variable) —
+     per direct request, so the left edge of the left image and the
+     right edge of the right image line up exactly with the body
+     text's edges instead of spanning the wider .case2__inner
+     container */
+  max-width: var(--case2-col-width);
+}
+.case2-shots--pair {
+  grid-template-columns: 1fr 1fr;
+}
+@media (max-width: 640px) {
+  .case2-shots--pair {
+    grid-template-columns: 1fr;
+  }
+}
+.case2-shot {
+  /* reference mockup's images are plain sharp-cornered rectangles —
+     no rounding, unlike the old .case-gallery__item's rounded cards */
+  background: var(--color-ink-soft);
+  /* <figure>'s UA stylesheet default is margin: 1em 40px — without
+     resetting it, the image sat 40px inset from its own grid cell on
+     each side, throwing off the edge alignment with the text above */
+  margin: 0;
+}
+.case2-shot img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.case2-shots--pair .case2-shot img {
+  /* client-specified crop, 566x495 — expressed as a ratio (not a
+     fixed px size) so it still scales to whatever width the aligned
+     .case2-shots column above gives it at any viewport */
+  aspect-ratio: 566 / 495;
+}
+.case2-shots--wide .case2-shot img {
+  /* was 16/9 — the reference's full-width shots are a noticeably
+     shorter banner crop than that */
+  aspect-ratio: 21 / 9;
+}
+.case2-shot__caption {
+  margin-top: 0.6rem;
+  font-size: 1rem;
+  color: var(--color-case2-text);
+}
+
+/* .case2-shot--cycle: a slot that crossfades through several frames
+   instead of showing one static image, per direct request for the
+   "(gif)" slots in the reference mockup — real animated .gif files
+   weren't available, so this reuses the same crossfade approach
+   already built for the homepage's cycling chip (initCaseCycles in
+   script.js), applied to plain photos instead. Needs its own
+   position:relative + aspect-ratio here because the frames inside are
+   absolutely positioned (stacked on top of each other to crossfade),
+   so they contribute no size of their own the way a plain <img>
+   would — the aspect-ratio has to live on the container instead. */
+.case2-shot--cycle {
+  position: relative;
+}
+.case2-shots--pair .case2-shot--cycle {
+  aspect-ratio: 566 / 495;
+}
+.case2-cycle__frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+.case2-cycle__frame.is-active {
+  opacity: 1;
+}
+.case2-next {
+  margin-top: clamp(3rem, 7vw, 5rem);
+  text-align: center;
+}
+.case2-next__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--color-why);
+  /* was var(--color-ink) — per direct request, not black */
+  color: var(--color-on-ink);
+  font-weight: 700;
+  font-size: 1.15rem;
+  padding: 0.85rem 1.75rem;
+  /* was 999px (full pill/capsule) — per direct request, a plain
+     rounded-rect corner matching .case2-pill's own radius */
+  border-radius: 0.6rem;
+  text-decoration: none;
+  transition: transform 200ms ease;
+}
+.case2-next__link:hover,
+.case2-next__link:focus-visible {
+  transform: translateY(-2px);
 }
 
 @media (prefers-reduced-motion: reduce) {

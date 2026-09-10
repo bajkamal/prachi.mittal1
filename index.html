@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=2">
+<link rel="stylesheet" href="styles.css?v=71">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
@@ -213,22 +213,16 @@
     <!--
       Purely decorative "room scene" dressing around the TV, per direct
       request to push this section's aesthetics further — a warm glow
-      spilling from the screen, rabbit-ear antenna, a grounding shadow,
-      and two illustrations reused from the About section's original
-      set (removed from there earlier, not deleted from disk) recast
-      here as knick-knacks sitting either side of the set. All
+      spilling from the screen, rabbit-ear antenna, a grounding shadow.
+      The two static prop illustrations that used to sit either side of
+      the set (reused from the About section's original doodle set)
+      were removed per direct request — keep the 4 illustrations moving
+      in the About section only, not static duplicates here. All
       aria-hidden (decorative only); see .tv-scene-* in styles.css for
-      the glow pulse / antenna sway / prop float keyframes.
+      the glow pulse / antenna sway keyframes.
     -->
     <div class="tv-showcase">
       <div class="tv-scene-glow" aria-hidden="true"></div>
-
-      <div class="tv-prop tv-prop--left" aria-hidden="true">
-        <img src="assets/illustrations/illsutrations-74.png" alt="">
-      </div>
-      <div class="tv-prop tv-prop--right" aria-hidden="true">
-        <img src="assets/illustrations/illsutrations-73.png" alt="">
-      </div>
 
       <div class="tv-frame">
         <div class="tv-scene-shadow" aria-hidden="true"></div>
@@ -370,58 +364,60 @@
     </div>
   </section>
 
-  <!--
-    Per direct request: ONE layout, not one per category — exactly 5
-    thumbnails total, each a different PROJECT (Common Ground, BGL,
-    Hamleys, Toblerone, + a 5th TBD), not 5 images of the same
-    project repeated per category. The label row's chip cycles through
-    all 5 projects in lockstep with the two .project-category__label
-    spans (each chip frame carries its own data-label, read and
-    applied to both labels together on every cycle tick — see
-    initProjectChips in script.js) — e.g. the chip shows Common
-    Ground's thumbnail while the labels read "Branding", then both
-    the chip image and the labels change together the moment it
-    advances to BGL, then to Hamleys ("Campaign"), then Toblerone
-    ("Packaging"), then the 5th slot.
-  -->
   <section id="projects" class="projects-section" aria-labelledby="projects-heading">
     <svg class="curve curve--projects-top" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
       <path d="M0,70 C80,15 160,5 240,45 C320,85 400,95 480,55 C560,15 640,5 720,45 C800,85 880,95 960,55 C1040,15 1120,5 1200,45 L1200,0 L0,0 Z"/>
     </svg>
     <h2 class="sr-only" id="projects-heading">Projects</h2>
 
+    <!--
+      Layout per direct reference: a top-aligned 2x2 grid (Common
+      Ground/Hamleys sharing row 1's top edge, BGL/Cook Book sharing
+      row 2's) plus one full-width item (Big Bang Theory) spanning
+      both columns below. Real CSS Grid now (auto-placement handles
+      the row/column slotting; .project-thumb-group--wide's own
+      grid-column spans both), not the old independent-per-column flex
+      stacks — those couldn't share a row's top edge like this without
+      row 1's differing heights throwing row 2 out of alignment.
+      Placeholder colour boxes for every slot for now, per direct
+      request — Cook Book and Big Bang Theory aren't real projects yet
+      (no page to link to, href="#"); Common Ground/Hamleys/BGL already
+      have real case-study pages, just no photo here yet. Toblerone
+      dropped from this grid entirely, per the reference (its own page
+      at motion.html is untouched, just not featured here for now).
+    -->
     <div class="project-categories">
-      <div class="project-category">
-        <div class="project-category__label-row">
-          <span class="project-category__label-mask"><span class="project-category__label" data-cycle-label>Branding</span></span>
-          <div class="project-category__chip" data-category-chip>
-            <img class="project-category__chip-img is-active" data-label="Branding" src="assets/common-ground/mockup-2.jpg" alt="">
-            <img class="project-category__chip-img" data-label="Branding" src="assets/bgl/mockup-2.jpg" alt="">
-            <img class="project-category__chip-img" data-label="Campaign" src="assets/hamleys/mockup-2.jpg" alt="">
-            <img class="project-category__chip-img" data-label="Packaging" src="assets/toblerone/mockup-2.jpg" alt="">
-            <div class="project-category__chip-img project-category__chip-img--placeholder" data-label="Coming Soon"></div>
-          </div>
-          <span class="project-category__label-mask"><span class="project-category__label" data-cycle-label>Branding</span></span>
+      <div class="project-category__label-row">
+        <span class="project-category__label-mask"><span class="project-category__label" data-cycle-label>Branding</span></span>
+        <div class="project-category__chip" data-category-chip>
+          <img class="project-category__chip-img is-active" data-label="Branding" src="assets/common-ground/mockup-2.jpg" alt="">
+          <img class="project-category__chip-img" data-label="Branding" src="assets/bgl/mockup-2.jpg" alt="">
+          <img class="project-category__chip-img" data-label="Campaign" src="assets/hamleys/mockup-2.jpg" alt="">
         </div>
-        <div class="project-category__grid">
-          <div class="project-category__col">
-            <a class="project-thumb project-thumb--short" href="branding.html" aria-label="Common Ground branding">
-              <img src="assets/common-ground/mockup-1.jpg" alt="">
-            </a>
-            <a class="project-thumb project-thumb--tall" href="branding.html" aria-label="BGL branding">
-              <img src="assets/bgl/mockup-1.jpg" alt="">
-            </a>
-          </div>
-          <div class="project-category__col project-category__col--offset">
-            <a class="project-thumb project-thumb--tall" href="editorial.html" aria-label="Hamleys Share A Smile campaign">
-              <img src="assets/hamleys/mockup-1.jpg" alt="">
-            </a>
-            <a class="project-thumb project-thumb--short" href="motion.html" aria-label="Toblerone packaging redesign">
-              <img src="assets/toblerone/mockup-1.jpg" alt="">
-            </a>
-          </div>
-          <!-- 5th project — swap this placeholder for a real thumbnail + href once that project is ready -->
-          <a class="project-thumb project-thumb--wide project-thumb--placeholder" href="#" aria-label="Project coming soon"></a>
+        <span class="project-category__label-mask"><span class="project-category__label" data-cycle-label>Branding</span></span>
+      </div>
+      <div class="project-category__grid">
+        <div class="project-thumb-group">
+          <a class="project-thumb project-thumb--short" href="branding.html" aria-label="Common Ground branding">
+            <img src="assets/common-ground/mockup-1.jpg" alt="">
+          </a>
+          <span class="project-thumb__caption">Common Ground</span>
+        </div>
+        <div class="project-thumb-group">
+          <a class="project-thumb project-thumb--tall project-thumb--placeholder" href="editorial.html" aria-label="Hamleys Share A Smile campaign"></a>
+          <span class="project-thumb__caption">Hamleys</span>
+        </div>
+        <div class="project-thumb-group">
+          <a class="project-thumb project-thumb--tall project-thumb--placeholder" href="branding.html" aria-label="BGL branding"></a>
+          <span class="project-thumb__caption">BGL</span>
+        </div>
+        <div class="project-thumb-group">
+          <a class="project-thumb project-thumb--short project-thumb--placeholder" href="#" aria-label="Cook Book project (coming soon)"></a>
+          <span class="project-thumb__caption">Cook Book</span>
+        </div>
+        <div class="project-thumb-group project-thumb-group--wide">
+          <a class="project-thumb project-thumb--wide project-thumb--placeholder" href="#" aria-label="Big Bang Theory project (coming soon)"></a>
+          <span class="project-thumb__caption">Big Bang Theory</span>
         </div>
       </div>
     </div>
@@ -657,6 +653,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
-<script src="script.js?v=2"></script>
+<script src="script.js?v=71"></script>
 </body>
 </html>
