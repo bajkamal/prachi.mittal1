@@ -895,6 +895,12 @@ a { color: inherit; }
   display: flex;
   justify-content: center;
   padding-block: clamp(1rem, 3vw, 2rem);
+  /* was un-set, leaving only a ~3-4px gap between .why-statement's own
+     text and the antenna tips above the TV at most widths — the
+     antennas' own sway animation dips into that gap, reading as the
+     antennas covering the text. Pushes the whole TV (antennas
+     included) down for real clearance, per direct request. */
+  margin-top: clamp(1.5rem, 4vw, 3rem);
 }
 
 /* ---- decorative room-scene dressing around the TV ---- */
@@ -3320,7 +3326,7 @@ a { color: inherit; }
      only a little instead of zooming in aggressively. */
   aspect-ratio: 17 / 15;
 }
-.case2-shots--pair .case2-shot img[src*="storefront.png"] {
+.case2-shots--pair .case2-shot img[src*="tousebgl/1.jpg"] {
   /* less than the shared 1.1 scale, per direct request — the
      storefront's signage/counter was cropped in a bit too tight. */
   transform: scale(1.045);
@@ -3331,28 +3337,35 @@ a { color: inherit; }
      the pair ratio above. */
   aspect-ratio: 24 / 11;
 }
-.case2-shots--wide .case2-shot img[src*="takeaway-bag.png"] {
+/* All three case-study folders (tousecg/tousebgl/tousepackaging) now
+   share the same plain numeric filenames (1.jpg-8.jpg), since the
+   pages were repointed at those numbered-file folders directly
+   instead of the old per-project descriptive filenames — every
+   per-image override below has to match the full folder+file path,
+   not just the filename, or it'd fire on the wrong project's image. */
+.case2-shots--wide .case2-shot img[src*="tousebgl/6.jpg"] {
   /* a touch more than the shared 1.1 scale, per direct request. */
   transform: scale(1.18);
 }
-.case2-shots--wide .case2-shot img[src*="moodboard.png"] {
+.case2-shots--wide .case2-shot img[src*="tousebgl/5.jpg"] {
   /* a touch more than the shared 1.1 scale, per direct request. */
   transform: scale(1.18);
 }
-.case2-shots--wide .case2-shot img[src*="/5.png"] {
+.case2-shots--wide .case2-shot img[src*="tousecg/5.jpg"] {
   /* Common Ground's "Reference Board" moodboard — a touch more than
      the shared 1.1 scale, per direct request. */
   transform: scale(1.16);
 }
-.case2-shots--wide .case2-shot img[src*="6.png"] {
+.case2-shots--wide .case2-shot img[src*="tousecg/6.jpg"] {
   /* a touch more than the shared 1.1 scale, per direct request just
      for this slot — its logo lockups still sat slightly inside the
      frame at the shared scale. */
   transform: scale(1.14);
 }
-.case2-shots--wide .case2-shot img[src*="open-vault-prototype"] {
-  /* same reasoning as the 6.png override above — more zoom than the
-     shared 1.1 scale, per direct request (and a follow-up "more"). */
+.case2-shots--wide .case2-shot img[src*="tousepackaging/5.jpg"] {
+  /* same reasoning as the tousecg/6.jpg override above — more zoom
+     than the shared 1.1 scale, per direct request (and a follow-up
+     "more"). */
   transform: scale(1.24);
 }
 /* Hamleys placeholder image slots — a plain coloured box (reuses
