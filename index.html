@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=106">
+<link rel="stylesheet" href="styles.css?v=124">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
@@ -233,7 +233,7 @@
           <circle class="tv-antenna__tip tv-antenna__tip--right" cx="160" cy="8" r="7" fill="#FF7140" stroke="#211A14" stroke-width="3"/>
           <circle cx="100" cy="112" r="8" fill="#DC346E" stroke="#211A14" stroke-width="3"/>
         </svg>
-        <video class="tv-frame__video" src="assets/tv/showcase-reel.mp4" autoplay muted loop playsinline></video>
+        <video class="tv-frame__video" src="assets/tv/showreel.mp4" autoplay muted loop playsinline></video>
         <div class="tv-frame__noise" aria-hidden="true"></div>
         <img class="tv-frame__shell" src="assets/tv/tv-frame.png" alt="" aria-hidden="true">
         <button class="tv-frame__sound" type="button" aria-pressed="false" aria-label="Turn sound on">
@@ -372,19 +372,18 @@
 
     <!--
       Layout per direct reference: a top-aligned 2x2 grid (Common
-      Ground/Hamleys sharing row 1's top edge, BGL/Cook Book sharing
+      Ground/Hamleys sharing row 1's top edge, BGL/Toblerone sharing
       row 2's) plus one full-width item (Big Bang Theory) spanning
       both columns below. Real CSS Grid now (auto-placement handles
       the row/column slotting; .project-thumb-group--wide's own
       grid-column spans both), not the old independent-per-column flex
       stacks — those couldn't share a row's top edge like this without
       row 1's differing heights throwing row 2 out of alignment.
-      Placeholder colour boxes for every slot for now, per direct
-      request — Cook Book and Big Bang Theory aren't real projects yet
-      (no page to link to, href="#"); Common Ground/Hamleys/BGL already
-      have real case-study pages, just no photo here yet. Toblerone
-      dropped from this grid entirely, per the reference (its own page
-      at motion.html is untouched, just not featured here for now).
+      Cook Book's placeholder slot now points to motion.html
+      (Toblerone), per direct request, with a real thumbnail. Big Bang
+      Theory is still a colour-placeholder box — no page to link to yet
+      (href="#"). Hamleys/BGL still have no photo here yet even though
+      their case-study pages exist.
     -->
     <div class="project-categories">
       <div class="project-category__label-row">
@@ -412,8 +411,10 @@
           <span class="project-thumb__caption">BGL</span>
         </div>
         <div class="project-thumb-group">
-          <a class="project-thumb project-thumb--short project-thumb--placeholder" href="#" aria-label="Cook Book project (coming soon)"></a>
-          <span class="project-thumb__caption">Cook Book</span>
+          <a class="project-thumb project-thumb--short" href="motion.html" aria-label="Toblerone packaging redesign">
+            <img src="assets/toblerone/hexagon-vault-open.png" alt="">
+          </a>
+          <span class="project-thumb__caption">Toblerone</span>
         </div>
         <div class="project-thumb-group project-thumb-group--wide">
           <a class="project-thumb project-thumb--wide project-thumb--placeholder" href="#" aria-label="Big Bang Theory project (coming soon)"></a>
@@ -653,6 +654,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
-<script src="script.js?v=106"></script>
+<script src="script.js?v=124"></script>
 </body>
 </html>

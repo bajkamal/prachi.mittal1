@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=106">
+<link rel="stylesheet" href="styles.css?v=124">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
@@ -38,149 +38,98 @@
 <main id="main-content">
 
   <!--
-    Campaigns — two projects stacked on one page, same convention as
-    branding.html will use for Common Ground + BGL: a full .case-hero/
-    .case-nav/.case-story for the first project (Hamleys — Share A
-    Smile, in full), a quiet .case-project-divider, then a second
-    .case-hero + .case-story for the second (Mattel — Barbie Campaign).
-    Both now use the SAME shared template as branding.html/motion.html
-    (previously this page had its own bespoke .ed-* magazine template
-    — replaced per direct request that every project's detailed
-    breakdown share one identical layout). initCaseStudyReveals and
-    initCaseNav (script.js) both already support more than one
-    .case-hero per page.
-
-    Hamleys assets: /hamleys-assets (source: "3) campaigns/hamleys"),
-    including campaign-video.mp4 (a copy of hamleys/2.mp4) embedded via
-    .case-video. Barbie has no image assets yet, only its own campaign
-    film (/assets/barbie/campaign-video.mp4) and the one paragraph of
-    copy provided so far — no numbered beats until fuller case-study
-    text (Role/Brief/Idea/Learned) is supplied, matching how BGL's
-    copy is still pending for branding.html.
-
-    Both videos are large (58–68MB, no compression tooling available
-    on this machine) and use preload="metadata" + controls so nothing
-    downloads beyond a first frame until the viewer presses play.
+    Hamleys — Share A Smile. Rebuilt on the same case2 template as
+    Common Ground/BGL (branding.html/bgl.html) per direct request to
+    match "the exact same format/layout" — replacing the page's older
+    bespoke .case-hero/.case-nav/.case-story/.case-gallery structure.
+    Per direct follow-up, this is a structural clone only: placeholder
+    copy and placeholder image boxes (.case2-shot--placeholder, no img)
+    stand in for Hamleys' real content for now, the same way Cook Book/
+    Big Bang Theory are colour-placeholder stand-ins on the homepage
+    grid — swap in the real Hamleys text/photos later using BGL's
+    markup as the reference. The previous real Hamleys copy (Brief/
+    Idea/Campaign/Role/Learned, social + mockup galleries, campaign
+    video) is not deleted from the project, just no longer wired into
+    this page — see git history if it's needed again.
   -->
-
-  <section class="case-hero" id="case-hero">
-    <div class="case-hero__inner">
-      <a class="case-back" href="index.html#projects">
+  <article class="case2" id="case-hero-hamleys">
+    <div class="case2__inner">
+      <a class="case2-back" href="index.html#projects">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Back to Work
       </a>
-      <div class="case-hero__tags">
-        <span class="case-tag">Campaign</span>
-        <span class="case-tag">Social Impact</span>
+      <h1 class="case2-title">Hamleys &mdash; Share A Smile</h1>
+      <p class="case2-tagline">Reimagining Hamleys as a more inclusive, accessible brand for children across India.</p>
+      <p class="case2-meta">Campaign Design | Designer Briefs</p>
+
+      <div class="case2-role">
+        <p class="case2-role__label">My Role:</p>
+        <div class="case2-role__pills">
+          <span class="case2-pill">Campaign Concept &amp; Ideation</span>
+          <span class="case2-pill">Visual Identity</span>
+          <span class="case2-pill">Art Direction</span>
+          <span class="case2-pill">Illustration</span>
+          <span class="case2-pill">Social Media Design</span>
+          <span class="case2-pill">Outdoor &amp; Print Collaterals</span>
+          <span class="case2-pill">Mockups</span>
+        </div>
       </div>
-      <h1 class="case-hero__title split-text">Hamleys — Share A Smile</h1>
-      <p class="case-hero__intro">Reimagining Hamleys as a more inclusive, accessible brand for children across India.</p>
+
+      <div class="case2-section">
+        <h2 class="case2-section__heading">The Brief</h2>
+        <p>Reimagine Hamleys and its positioning to make the joy of play feel accessible to every child, especially in Tier 2 and Tier 3 cities and underserved communities.</p>
+        <p>The challenge was to move beyond a premium toy-store perception and build a campaign around inclusivity, play, and community.</p>
+      </div>
+      <div class="case2-shots case2-shots--pair">
+        <figure class="case2-shot case2-shot--placeholder"></figure>
+        <figure class="case2-shot case2-shot--placeholder"></figure>
+      </div>
+
+      <div class="case2-section">
+        <h2 class="case2-section__heading">The Idea</h2>
+        <p>Share A Smile was built around a simple thought: every child deserves the chance to play.</p>
+        <p>The campaign brings children from different backgrounds together through creativity, sharing, and play &mdash; turning everyday public spaces into places where children can draw, create, exchange toys, and share joy.</p>
+      </div>
+      <div class="case2-shots case2-shots--pair">
+        <figure class="case2-shot case2-shot--placeholder"></figure>
+        <figure class="case2-shot case2-shot--placeholder"></figure>
+      </div>
+      <p class="case2-shot__caption">Share A Smile</p>
+
+      <div class="case2-section">
+        <h2 class="case2-section__heading">The Campaign</h2>
+        <p>The campaign centred around three simple actions: Draw. Share. Give.</p>
+        <p>Children could participate in street doodle zones, exchange pre-loved toys for new ones, and donate refurbished toys to children who may not have access to them.</p>
+      </div>
+      <div class="case2-shots case2-shots--wide">
+        <figure class="case2-shot case2-shot--placeholder"></figure>
+      </div>
+      <p class="case2-shot__caption">Draw. Share. Give.</p>
+
+      <div class="case2-section">
+        <h2 class="case2-section__heading">Bringing It To Life</h2>
+        <p>I developed the campaign&rsquo;s visual identity and communication system across social media, flyers, posters, billboards, and outdoor applications.</p>
+        <p>Hand-drawn doodles, playful typography, bright colours, and a chalk-inspired campaign logo created a visual language that felt childlike, inclusive, and community-driven.</p>
+      </div>
+      <div class="case2-shots case2-shots--wide">
+        <figure class="case2-shot case2-shot--placeholder"></figure>
+      </div>
+      <div class="case2-shots case2-shots--pair">
+        <figure class="case2-shot case2-shot--placeholder"></figure>
+        <figure class="case2-shot case2-shot--placeholder"></figure>
+      </div>
+
+      <div class="case2-section">
+        <h2 class="case2-section__heading">What I Learned</h2>
+        <p>This project taught me that repositioning isn&rsquo;t always about changing what a brand sells &mdash; it can be about changing who gets to feel included in it.</p>
+      </div>
+
+      <div class="case2-next">
+        <a class="case2-next__link" href="branding.html"><span aria-hidden="true">&larr;</span> Previous Project</a>
+        <a class="case2-next__link" href="bgl.html">Next Project <span aria-hidden="true">&rarr;</span></a>
+      </div>
     </div>
-    <figure class="case-hero__figure">
-      <img src="assets/hamleys/thumbnail-1.jpg" alt="Children drawing a Hamleys Smile chalk mural on the pavement, seen from above." loading="lazy">
-    </figure>
-  </section>
-
-  <nav class="case-nav" aria-label="Case study sections">
-    <span class="case-nav__indicator" aria-hidden="true"></span>
-    <a class="case-nav__link" href="#role" data-case-nav="role"><span class="case-nav__dot"></span><span class="case-nav__label">My Role</span></a>
-    <a class="case-nav__link" href="#brief" data-case-nav="brief"><span class="case-nav__dot"></span><span class="case-nav__label">The Brief</span></a>
-    <a class="case-nav__link" href="#idea" data-case-nav="idea"><span class="case-nav__dot"></span><span class="case-nav__label">The Idea</span></a>
-    <a class="case-nav__link" href="#campaign" data-case-nav="campaign"><span class="case-nav__dot"></span><span class="case-nav__label">The Campaign</span></a>
-    <a class="case-nav__link" href="#life" data-case-nav="life"><span class="case-nav__dot"></span><span class="case-nav__label">In Practice</span></a>
-    <a class="case-nav__link" href="#learned" data-case-nav="learned"><span class="case-nav__dot"></span><span class="case-nav__label">Learned</span></a>
-  </nav>
-
-  <section class="case-story" aria-label="Hamleys project story">
-
-    <div class="case-beat case-beat--text case-beat--role" id="role">
-      <p class="case-beat__eyebrow">01</p>
-      <h2 class="case-beat__heading">My Role</h2>
-      <ul class="case-role-list">
-        <li>Campaign Concept &amp; Ideation</li>
-        <li>Visual Identity</li>
-        <li>Art Direction</li>
-        <li>Illustration</li>
-        <li>Social Media Design</li>
-        <li>Outdoor &amp; Print Collaterals</li>
-        <li>Mockups</li>
-      </ul>
-    </div>
-
-    <div class="case-beat case-beat--text" id="brief">
-      <p class="case-beat__eyebrow">02</p>
-      <h2 class="case-beat__heading">The Brief</h2>
-      <p>Reimagine Hamleys and its positioning to make the joy of play feel accessible to every child, especially in Tier 2 and Tier 3 cities and underserved communities.</p>
-      <p>The challenge was to move beyond a premium toy-store perception and build a campaign around inclusivity, play, and community.</p>
-    </div>
-
-    <div class="case-beat case-beat--text" id="idea">
-      <p class="case-beat__eyebrow">03</p>
-      <h2 class="case-beat__heading">The Idea</h2>
-      <p>Share A Smile was built around a simple thought: every child deserves the chance to play.</p>
-      <p>The campaign brings children from different backgrounds together through creativity, sharing, and play — turning everyday public spaces into places where children can draw, create, exchange toys, and share joy.</p>
-    </div>
-
-    <div class="case-gallery case-gallery--masonry" aria-label="Campaign design process">
-      <figure class="case-gallery__item"><img src="assets/hamleys/social-1.jpg" alt="Hamleys Smile social media post — The Bay of Smiles." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/social-2.jpg" alt="Hamleys Smile social media post — toy exchange." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/social-3.jpg" alt="Hamleys Smile social media post — event countdown." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/social-4.jpg" alt="Hamleys Smile social media post." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/social-5.jpg" alt="Hamleys Smile social media post — Share A Smile badge." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/social-6.jpg" alt="Hamleys Smile social media post — street doodle zone." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/social-7.jpg" alt="Instagram profile mockup for HamleysSmileOfficial showing the full Share A Smile social grid." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/illustration-sheet.jpg" alt="Hand-drawn illustration sheet developed for the Share A Smile campaign." loading="lazy"></figure>
-    </div>
-
-    <div class="case-beat case-beat--text" id="campaign">
-      <p class="case-beat__eyebrow">04</p>
-      <h2 class="case-beat__heading">The Campaign</h2>
-      <p>The campaign centred around three simple actions: Draw. Share. Give.</p>
-      <p>Children could participate in street doodle zones, exchange pre-loved toys for new ones, and donate refurbished toys to children who may not have access to them.</p>
-    </div>
-
-    <div class="case-pullquote">
-      <span class="case-pullquote__mark" aria-hidden="true">&ldquo;</span>
-      <p>Draw. Share. Give.</p>
-    </div>
-
-    <div class="case-video">
-      <video src="assets/hamleys/campaign-video.mp4" poster="assets/hamleys/thumbnail-1.jpg" controls preload="metadata" playsinline></video>
-      <p class="case-video__caption">Share A Smile — campaign film</p>
-    </div>
-
-    <div class="case-beat case-beat--text" id="life">
-      <p class="case-beat__eyebrow">05</p>
-      <h2 class="case-beat__heading">Bringing It To Life</h2>
-      <p>I developed the campaign&rsquo;s visual identity and communication system across social media, flyers, posters, billboards, and outdoor applications.</p>
-      <p>Hand-drawn doodles, playful typography, bright colours, and a chalk-inspired campaign logo created a visual language that felt childlike, inclusive, and community-driven.</p>
-    </div>
-
-    <div class="case-gallery case-gallery--grid" aria-label="Hamleys campaign mockups">
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-1.jpg" alt="'Let's Fill the Streets with Colours' poster mockup, flat paper version." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-2.jpg" alt="'Let's Fill the Streets with Colours' poster mockup, alternate angle." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-3.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-4.jpg" alt="Hamleys Smile stationery mockup." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-5.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-6.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-7.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-8.jpg" alt="Street billboard mockup reading 'Let's Fill the Streets with Colours!' inviting families to a chalk-doodle playground." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-9.jpg" alt="Hamleys Smile shopping bag mockup with the hand-drawn logo and illustrations." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-10.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
-      <figure class="case-gallery__item"><img src="assets/hamleys/mockup-11.jpg" alt="Hamleys Smile campaign mockup." loading="lazy"></figure>
-    </div>
-
-    <div class="case-beat case-beat--text case-beat--closing" id="learned">
-      <p class="case-beat__eyebrow">06</p>
-      <h2 class="case-beat__heading">What I Learned</h2>
-      <p>This project taught me that repositioning isn&rsquo;t always about changing what a brand sells &mdash; it can be about changing who gets to feel included in it.</p>
-    </div>
-
-  </section>
-
-  <div class="case-project-divider">
-    <span class="case-project-divider__label">Next Campaign</span>
-  </div>
+  </article>
 
   <!--
     Mattel — Barbie Campaign. Only a short description and the
@@ -242,6 +191,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
-<script src="script.js?v=106"></script>
+<script src="script.js?v=124"></script>
 </body>
 </html>

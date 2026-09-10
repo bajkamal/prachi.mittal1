@@ -2553,6 +2553,15 @@ a { color: inherit; }
   max-width: 38rem;
   margin: 1.5rem auto 0;
 }
+/* Hamleys only, per direct request for its updated copy — a small
+   brief-number line under the intro, same role as .case2-meta on the
+   case2 template pages (Common Ground/BGL). */
+.case-hero__meta {
+  font-weight: 600;
+  color: var(--color-ink);
+  font-size: clamp(0.95rem, 0.3vw + 0.85rem, 1.05rem);
+  margin-top: 0.85rem;
+}
 /* the big first-look image every case study was missing — previously
    nothing but text until whatever the first gallery happened to be,
    several beats in. One large frame right under the intro, same
@@ -3104,6 +3113,16 @@ a { color: inherit; }
      rest of the hero (back link, meta, pills) stays left-aligned in */
   text-align: center;
 }
+/* BGL only — a one-line tagline under the title, above the existing
+   brief-number meta line, per direct request for the page's updated
+   copy. */
+.case2-tagline {
+  margin-top: clamp(0.75rem, 1.8vw, 1.1rem);
+  color: var(--color-on-ink);
+  font-weight: 600;
+  font-size: clamp(1.2rem, 0.7vw + 1.05rem, 1.45rem);
+  text-align: center;
+}
 .case2-meta {
   margin-top: clamp(0.85rem, 2vw, 1.25rem);
   color: var(--color-case2-text);
@@ -3202,6 +3221,23 @@ a { color: inherit; }
   flex-wrap: wrap;
   gap: 0.6rem;
 }
+/* BGL's pills were still using the shared default's space-between,
+   which spreads leftover row width unevenly between content-sized
+   pills — reading as a much bigger gap than Common Ground's fixed
+   0.6rem, per direct request to match. */
+#case-hero-bgl .case2-role__pills {
+  justify-content: flex-start;
+  gap: 0.6rem;
+}
+/* Matches Common Ground's #case-hero .case2-pill above — flex-grow
+   fills the row's full width so the last pill's right edge lines up
+   with the text below it, per direct request, instead of leaving
+   empty space after the last content-sized pill. */
+#case-hero-bgl .case2-pill {
+  flex: 1 1 0;
+  min-width: fit-content;
+  text-align: center;
+}
 .case2-section {
   max-width: var(--case2-col-width);
   margin-top: clamp(3rem, 7vw, 5rem);
@@ -3284,17 +3320,52 @@ a { color: inherit; }
      only a little instead of zooming in aggressively. */
   aspect-ratio: 17 / 15;
 }
+.case2-shots--pair .case2-shot img[src*="storefront.png"] {
+  /* less than the shared 1.1 scale, per direct request — the
+     storefront's signage/counter was cropped in a bit too tight. */
+  transform: scale(1.045);
+}
 .case2-shots--wide .case2-shot img {
   /* was 21/9 (guessed) — replaced with the real average ratio of the
      wide-slot source images (5.png/6.png, ~2.19:1), same reasoning as
      the pair ratio above. */
   aspect-ratio: 24 / 11;
 }
+.case2-shots--wide .case2-shot img[src*="takeaway-bag.png"] {
+  /* a touch more than the shared 1.1 scale, per direct request. */
+  transform: scale(1.18);
+}
+.case2-shots--wide .case2-shot img[src*="moodboard.png"] {
+  /* a touch more than the shared 1.1 scale, per direct request. */
+  transform: scale(1.18);
+}
+.case2-shots--wide .case2-shot img[src*="/5.png"] {
+  /* Common Ground's "Reference Board" moodboard — a touch more than
+     the shared 1.1 scale, per direct request. */
+  transform: scale(1.16);
+}
 .case2-shots--wide .case2-shot img[src*="6.png"] {
   /* a touch more than the shared 1.1 scale, per direct request just
      for this slot — its logo lockups still sat slightly inside the
      frame at the shared scale. */
   transform: scale(1.14);
+}
+.case2-shots--wide .case2-shot img[src*="open-vault-prototype"] {
+  /* same reasoning as the 6.png override above — more zoom than the
+     shared 1.1 scale, per direct request (and a follow-up "more"). */
+  transform: scale(1.24);
+}
+/* Hamleys placeholder image slots — a plain coloured box (reuses
+   .case2-shot's own background) instead of an <img>, so it needs its
+   own aspect-ratio directly on the figure since there's no image to
+   size it. Same ratios as the real pair/wide slots elsewhere on this
+   template, so the layout reads identically once real photos replace
+   these. */
+.case2-shot--placeholder {
+  aspect-ratio: 17 / 15;
+}
+.case2-shots--wide .case2-shot--placeholder {
+  aspect-ratio: 24 / 11;
 }
 .case2-shot__caption {
   margin-top: 0.6rem;
@@ -3337,6 +3408,14 @@ a { color: inherit; }
 .case2-next {
   margin-top: clamp(3rem, 7vw, 5rem);
   text-align: center;
+  /* was just text-align:center for a single "Explore More Work" link —
+     BGL now carries two buttons (Previous/Next Project) side by side,
+     per direct request; flex+gap keeps them centered as a pair and
+     wraps cleanly on narrow viewports instead of overflowing. */
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 .case2-next__link {
   display: inline-flex;
