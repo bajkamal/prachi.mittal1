@@ -2081,6 +2081,11 @@ body:has(.case2) .footer {
   font-weight: 400;
   font-size: clamp(1.15rem, 2.1vw, 1.6rem);
   line-height: 1.6;
+  /* belt-and-suspenders against a lone word stranded on the last
+     line — the copy itself also joins each paragraph's final two
+     words with a &nbsp; (guaranteed everywhere), this catches the
+     same case in browsers that support it without relying on that. */
+  text-wrap: pretty;
 }
 
 .philosophy-copy__quote {
@@ -3469,6 +3474,13 @@ body:has(.case2) .footer {
      request to size up every text element in this section */
   font-size: clamp(1.3rem, 0.6vw + 1.2rem, 1.55rem);
   font-weight: 500;
+  /* per direct request, a lone word should never be stranded on the
+     last line — this text reflows at every viewport width (fluid
+     font-size clamp above, plus --case2-col-width itself scaling),
+     so a single hardcoded &nbsp; between two words (fine for a fixed
+     string) can't cover every width the way this browser-native
+     orphan-avoidance layout does. */
+  text-wrap: pretty;
 }
 .case2-section p + p {
   margin-top: 1rem;
@@ -3740,34 +3752,89 @@ body:has(.case2) .footer {
 
 /* ---------------- Brand guidelines flip-book ----------------
    A real page-turn, not a plain image gallery — see initFlipbook in
-   script.js. Pages sit absolutely stacked in native document order;
-   perspective on .flipbook__stage (not the pages themselves, which
-   can't be their own perspective root) is what makes each page's
-   rotateY read as an actual 3D turn away from the viewer rather than
-   a flat horizontal squash. */
+   script.js. .flipbook__left is one static, non-animating panel (the
+   left-hand page never itself moves, exactly like a real book); the
+   real pages live in .flipbook__right-stack, absolutely stacked in
+   native document order and each pivoting at their own left edge —
+   which lands exactly on the stage's centre spine, not the book's
+   outer edge, per direct request ("the page should flip like a book
+   from the middle"). Perspective sits on .flipbook__stage (not the
+   pages themselves, which can't be their own perspective root) so
+   each page's rotateY reads as an actual 3D turn away from the
+   viewer, not a flat horizontal squash. */
 .flipbook {
   margin: 2.5rem auto 0;
-  max-width: 640px;
+  /* an open book shows both the left and right page at once, per
+     direct request, so the stage is twice as wide as one page. */
+  max-width: 1080px;
 }
 .flipbook__stage {
   position: relative;
   width: 100%;
-  /* the real source PDF's own page proportions (~711x475), not a
-     round number guessed to look right */
-  aspect-ratio: 711 / 475;
+  /* double the real source PDF page's own ~711x475 proportions —
+     two pages side by side, not one. */
+  aspect-ratio: 1422 / 475;
   perspective: 2400px;
   border-radius: 10px;
   box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
 }
+/* A permanent, non-animating shadow down the centre — sells the
+   spine even while a page is mid-flip above it (z-index below every
+   .flipbook__page). */
+.flipbook__stage::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 24px;
+  margin-left: -12px;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.16),
+    rgba(0, 0, 0, 0.04) 35%,
+    rgba(0, 0, 0, 0.04) 65%,
+    rgba(0, 0, 0, 0.16)
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+.flipbook__left,
+.flipbook__right-stack {
+  position: absolute;
+  top: 0;
+  width: 50%;
+  height: 100%;
+}
+.flipbook__left {
+  left: 0;
+  /* the "inside cover" look before the first page has been turned —
+     initFlipbook swaps in the real (already-turned) page's image
+     here once there is one. */
+  background: var(--color-ink-soft);
+  border-radius: 10px 0 0 10px;
+  overflow: hidden;
+}
+.flipbook__left img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.flipbook__right-stack {
+  right: 0;
+}
 .flipbook__page {
   position: absolute;
   inset: 0;
+  /* this page's own left edge is the right-hand half's left edge —
+     i.e. the stage's centre spine, so it turns like a real page
+     rather than the whole spread swinging from the book's outer
+     edge. */
   transform-origin: left center;
-  /* so a flipped page visually vanishes once it's rotated past 90deg
-     instead of showing a mirrored duplicate of its own front face */
   backface-visibility: hidden;
   transition: transform 0.85s cubic-bezier(0.65, 0, 0.35, 1);
-  border-radius: 10px;
+  border-radius: 0 10px 10px 0;
   overflow: hidden;
 }
 .flipbook__page img {

@@ -794,32 +794,46 @@
   }
 
   /* ---------------- Brand guidelines flip-book ----------------
-     .flipbook (case2-shots come between .case2-section blocks;
-     see editorial.html's "Brand Guidelines" section) — a circular
-     stack of absolutely-positioned pages (styles.css), turned one at
-     a time via CSS 3D rotateY instead of a scroll/opacity crossfade,
-     to actually read as a page-turn per direct request ("it should
-     feel like a flip book"). No library: "next" rotates the current
-     top page to -180deg (transform-origin left, backface-visibility
-     hidden so it visually disappears once past 90deg), then drops it
-     to the back of the stack once the transition ends so it's ready
-     to be flipped again on the next lap. "prev" does the same in
-     reverse — raise the previous page back to the top of the stack
-     first, then rotate it from -180 back to 0. Sample of 5 pages for
-     now, per direct request, to gauge the effect before rendering
-     the rest of the PDF's real pages the same way. */
+     .flipbook (case2-shots come between .case2-section blocks; see
+     editorial.html's "Brand Guidelines" section) — a real page-turn,
+     not a plain image gallery or a whole-spread swap. Per direct
+     follow-up request ("the page should flip like a book from the
+     middle"), the left-hand page (.flipbook__left) never itself
+     moves — only the right-hand page turns, pivoting at the stage's
+     centre spine, exactly like an actual book. The real pages sit
+     stacked in .flipbook__right-stack, each with transform-origin:
+     left center — since that stack is positioned at the stage's own
+     right half, "left" for each page IS the spine, not the book's
+     outer edge.
+
+     "next": rotate the current top of the right stack to -180deg;
+     once it's rotated past 90deg (backface-visibility hidden makes it
+     vanish at that point, HALF_MS below), copy that same page's image
+     into .flipbook__left — the page has visually "landed" on the left
+     at exactly the moment it disappears from the right, same as
+     turning a real leaf. Once the full transition ends, drop it to
+     the back of the right stack (z-index 0) so it's ready to flip
+     again on the next lap. "prev" does the same in reverse: raise the
+     previous page back to the top of the right stack, animate it from
+     -180 back to 0, and swap .flipbook__left back to whatever was
+     showing before it (or blank, at the very first page). Sample of 5
+     pages for now, per direct request, to gauge the effect before
+     rendering the rest of the PDF's real pages the same way. */
   function initFlipbook() {
     const books = gsap.utils.toArray('[data-flipbook]');
     books.forEach((book) => {
       const pages = gsap.utils.toArray('[data-flipbook-page]', book);
+      const leftImg = book.querySelector('[data-flipbook-left-img]');
       const prevBtn = book.querySelector('[data-flipbook-prev]');
       const nextBtn = book.querySelector('[data-flipbook-next]');
       const currentEl = book.querySelector('[data-flipbook-current]');
       const totalEl = book.querySelector('[data-flipbook-total]');
-      if (pages.length < 2 || !prevBtn || !nextBtn) return;
+      if (pages.length < 2 || !prevBtn || !nextBtn || !leftImg) return;
 
       const total = pages.length;
-      let current = 0; // index of the page currently face-up on top
+      // How many pages have been turned onto the left so far — the
+      // page still face-up on the right is pages[current].
+      let current = 0;
       let animating = false;
       const reduceMotion = prefersReducedMotion();
 
@@ -834,19 +848,32 @@
         prevBtn.disabled = current <= 0;
         nextBtn.disabled = current >= total - 1;
       };
+      const setLeft = (page) => {
+        if (!page) {
+          leftImg.hidden = true;
+          leftImg.removeAttribute('src');
+          return;
+        }
+        const src = page.querySelector('img');
+        leftImg.src = src.src;
+        leftImg.alt = src.alt;
+        leftImg.hidden = false;
+      };
       updateCount();
       updateButtons();
 
       const TURN_MS = reduceMotion ? 0 : 850;
+      const HALF_MS = TURN_MS / 2;
 
       function goNext() {
         if (animating || current >= total - 1) return;
         animating = true;
         const page = pages[current];
         page.style.transform = 'rotateY(-180deg)';
-        current += 1;
-        updateCount();
         updateButtons();
+        setTimeout(() => {
+          setLeft(page);
+        }, HALF_MS);
         setTimeout(() => {
           page.style.transition = 'none';
           page.style.transform = 'rotateY(0deg)';
@@ -854,6 +881,8 @@
           // eslint-disable-next-line no-unused-expressions
           page.offsetHeight; // force reflow so the next transition re-applies
           page.style.transition = '';
+          current += 1;
+          updateCount();
           animating = false;
         }, TURN_MS);
       }
@@ -861,8 +890,7 @@
       function goPrev() {
         if (animating || current <= 0) return;
         animating = true;
-        current -= 1;
-        const page = pages[current];
+        const page = pages[current - 1];
         page.style.transition = 'none';
         page.style.zIndex = total + 1;
         page.style.transform = 'rotateY(-180deg)';
@@ -870,10 +898,14 @@
         page.offsetHeight; // force reflow before re-enabling the transition
         page.style.transition = '';
         page.style.transform = 'rotateY(0deg)';
-        updateCount();
         updateButtons();
         setTimeout(() => {
+          setLeft(current - 2 >= 0 ? pages[current - 2] : null);
+        }, HALF_MS);
+        setTimeout(() => {
+          current -= 1;
           page.style.zIndex = total - current;
+          updateCount();
           animating = false;
         }, TURN_MS);
       }
@@ -1947,6 +1979,20 @@
     }
 
     applySoundState();
+
+    // On a real host (GitHub Pages, unlike an instant localhost dev
+    // server) the video file can still be buffering when the line
+    // above's play() call fires — that first attempt can silently
+    // fail (the returned promise rejects, caught above with a no-op),
+    // and nothing else was retrying it, so the frame just sat frozen
+    // on its poster until an unrelated click happened to call play()
+    // again with the file now fully loaded. muted autoplay itself was
+    // never the problem here (every major browser allows it); this
+    // retries the instant the browser actually has enough of the file
+    // buffered, per its own 'canplay' event, so it starts on its own
+    // with no visitor interaction required. once:true since this is
+    // only ever needed for that first, possibly-too-early attempt.
+    video.addEventListener('canplay', () => applySoundState(), { once: true });
 
     if (!frame || prefersReducedMotion()) return;
 
