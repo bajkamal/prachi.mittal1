@@ -872,13 +872,17 @@
       updateCount();
       updateButtons();
 
+      // TURN_MS must match .flipbook__page's own transition-duration
+      // (styles.css), which every setTimeout below is keyed off of —
+      // the flip motion itself was fine as-is per direct follow-up
+      // request, only the rest period between flips (AUTO_MS) needed
+      // shortening, not the turn.
       const TURN_MS = reduceMotion ? 0 : 850;
       const HALF_MS = TURN_MS / 2;
       // How long each page stays put before auto-advancing to the
-      // next — long enough to actually read a slide's content, same
-      // idea as the case-study cycle slots (initCaseCycles) elsewhere
-      // on this site, just longer since these pages carry real text.
-      const AUTO_MS = 3200;
+      // next — was 3200, shortened per direct request (the flip
+      // itself stays untouched; this is purely the dwell/rest time).
+      const AUTO_MS = 1800;
 
       let autoTimer = null;
       function scheduleAuto() {
@@ -1971,42 +1975,93 @@
      ticker is the only thing that ever touches the track's position. */
   /* ---------------- TV showcase (Index.html) ----------------
      Autoplay, muted (every major browser blocks autoplay-with-sound
-     without prior user interaction) — a manual play/pause button was
-     tried here per direct request when GitHub Pages' autoplay wasn't
-     reliably kicking in on its own, then dropped again per a direct
-     follow-up request ("the video should play from itself"). What's
-     left of that detour: the retry loop below, which just keeps
-     calling play() every 500ms until the browser actually confirms
-     it's playing, instead of trusting a single attempt to land after
-     the file's finished buffering on a slower real host. */
+     without prior user interaction), PLUS a play/pause button — per
+     direct follow-up request, back after briefly being dropped: the
+     viewport-pause rule and the retry loop below still do the work of
+     starting/resuming playback on their own, but browser autoplay
+     policy can still silently block that path on some hosts or
+     connections, so the button is a guaranteed-to-work fallback input
+     a visitor can always fall back on. Linked to sound per direct
+     request — pressing play also turns sound on, not just playback.
+
+     Sound defaults to on — soundOn starts true and the sound button
+     reads "on" immediately, but the video itself still has to stay
+     muted until userInteracted flips true, since no browser allows
+     unmuted autoplay before a real gesture regardless of what the
+     visitor's own preference is. That first gesture doesn't have to
+     be either button here — anything anywhere on the page (scroll,
+     click, keypress) unmutes it, so sound turns on as soon as the
+     visitor does anything at all. */
   function initTvShowcase() {
     const video = document.querySelector('.tv-frame__video');
+    const playBtn = document.querySelector('.tv-frame__play');
     const soundBtn = document.querySelector('.tv-frame__sound');
     const frame = document.querySelector('.tv-frame');
     const showcase = document.querySelector('.tv-showcase');
-    if (!video || !soundBtn) return;
+    if (!video || !playBtn || !soundBtn) return;
 
     video.muted = true;
-    let soundOn = false;
+    let soundOn = true;
+    let userInteracted = false;
+    // True only while paused *because it scrolled out of view* — kept
+    // separate from a visitor's own manual pause (the play button) so
+    // scrolling back into view doesn't override a deliberate choice.
+    let autoPaused = false;
 
     const updateSoundButton = () => {
       soundBtn.setAttribute('aria-pressed', String(soundOn));
       soundBtn.setAttribute('aria-label', soundOn ? 'Turn sound off' : 'Turn sound on');
     };
+    const updatePlayButton = () => {
+      const playing = !video.paused;
+      playBtn.setAttribute('aria-pressed', String(playing));
+      playBtn.setAttribute('aria-label', playing ? 'Pause video' : 'Play video with sound');
+    };
     const applyMuted = () => {
       const inView = !showcase || showcase.dataset.inView !== 'false';
-      video.muted = !(soundOn && inView);
+      video.muted = !(soundOn && inView && userInteracted);
     };
+
+    playBtn.addEventListener('click', () => {
+      if (video.paused) {
+        userInteracted = true;
+        soundOn = true;
+        autoPaused = false;
+        applyMuted();
+        updateSoundButton();
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+    });
 
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
+      userInteracted = true;
       applyMuted();
       updateSoundButton();
     });
 
+    video.addEventListener('play', updatePlayButton);
+    video.addEventListener('pause', updatePlayButton);
+
+    if (!userInteracted) {
+      const interactionTypes = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
+      const unmuteOnFirstInteraction = () => {
+        userInteracted = true;
+        applyMuted();
+        interactionTypes.forEach((type) => document.removeEventListener(type, unmuteOnFirstInteraction));
+      };
+      interactionTypes.forEach((type) => {
+        document.addEventListener(type, unmuteOnFirstInteraction, { passive: true });
+      });
+    }
+
     // Pauses (not just mutes) once the TV scrolls out of the viewport,
-    // and resumes from exactly where it left off on the way back in,
-    // per direct request.
+    // and resumes from exactly where it left off on the way back in —
+    // per direct request — but only if it was actually playing, and
+    // only if this observer is what paused it (not a visitor's own
+    // manual pause via the play button).
     if (showcase && 'IntersectionObserver' in window) {
       showcase.dataset.inView = 'true';
       const observer = new IntersectionObserver(
@@ -2014,8 +2069,12 @@
           showcase.dataset.inView = String(entry.isIntersecting);
           applyMuted();
           if (entry.isIntersecting) {
-            if (video.paused) video.play().catch(() => {});
+            if (autoPaused) {
+              autoPaused = false;
+              video.play().catch(() => {});
+            }
           } else if (!video.paused) {
+            autoPaused = true;
             video.pause();
           }
         },
@@ -2025,6 +2084,7 @@
     }
 
     updateSoundButton();
+    updatePlayButton();
     applyMuted();
     if (video.paused) video.play().catch(() => {});
 

@@ -906,16 +906,7 @@ body:has(.case2) .footer {
 --------------------------------------------------------------- */
 .tv-showcase {
   position: relative;
-  /* shared with .tv-controls below (a --tv-frame-w value set on
-     .tv-frame itself wouldn't inherit sideways to its own sibling) so
-     the control row's own pull-up margin can stay in sync with the
-     set's actual fluid width without duplicating the clamp(). */
-  --tv-frame-w: clamp(330px, 56vw, 860px);
   display: flex;
-  /* was a row (only .tv-frame in flow) — .tv-controls below now needs
-     to stack under the set rather than sit beside it. */
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
   padding-block: clamp(1rem, 3vw, 2rem);
   /* was un-set, leaving only a ~3-4px gap between .why-statement's own
@@ -1014,7 +1005,7 @@ body:has(.case2) .footer {
 .tv-frame {
   position: relative;
   z-index: 2;
-  width: var(--tv-frame-w);
+  width: clamp(330px, 56vw, 860px);
   /* matches tv-frame.png's own pixel dimensions (3645x2317) exactly
      — anything else would let the browser's own aspect-ratio guess
      drift from the real image and throw off the screen-cutout math
@@ -1086,28 +1077,32 @@ body:has(.case2) .footer {
   pointer-events: none;
   filter: drop-shadow(0 24px 40px rgba(33, 26, 20, 0.25));
 }
-/* A plain control row under the set, not a button sitting over the
-   picture — per direct follow-up request for better aesthetics.
-   margin-top pulls it up out of tv-frame.png's own transparent lower
-   27% (documented on .tv-scene-shadow above: the illustrated cabinet
-   itself stops at 73% of the frame box's height) so it sits right
-   under the actual cabinet base rather than leaving a dead gap, using
-   the same --tv-frame-w (.tv-showcase) the frame's own width comes
-   from, so it stays in sync at every viewport size without
-   duplicating that clamp(). Just the sound toggle now — the play/
-   pause button that briefly lived here was dropped per direct
-   follow-up request in favour of plain autoplay again. */
-.tv-controls {
-  position: relative;
-  z-index: 2;
+/* Sitting on the speaker grille (the horizontal black-line panel
+   below the two dials, right side of tv-frame.png) per direct
+   follow-up request — a play button is back (guaranteed to work even
+   when autoplay policy silently blocks the retry loop in
+   initTvShowcase, script.js), and the pre-existing sound toggle sits
+   right beside it. Percentages read off the source image directly:
+   the grille spans roughly right 6.7%-26.1% and top 44%-73.1% of the
+   full frame box (tv-frame.png is 3645x2317) — right:8%/bottom:35%
+   centers the pair inside that band, comfortably clear of both the
+   dial box above and the cabinet's own real edge below (the full
+   image box carries ~27% of its own height as transparent padding
+   under the illustrated cabinet, so bottom here is deliberately well
+   inside 27%, not floating past the art into that empty margin). */
+.tv-frame__controls {
+  position: absolute;
+  z-index: 4;
+  right: 12%;
+  bottom: 35%;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  margin-top: calc(var(--tv-frame-w) * (2317 / 3645) * -0.27 + 0.9rem);
+  gap: 0.5rem;
 }
+.tv-frame__play,
 .tv-frame__sound {
-  width: clamp(40px, 6vw, 52px);
-  height: clamp(40px, 6vw, 52px);
+  width: clamp(32px, 5vw, 44px);
+  height: clamp(32px, 5vw, 44px);
   border-radius: 50%;
   border: none;
   background: var(--color-on-ink);
@@ -1116,14 +1111,17 @@ body:has(.case2) .footer {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(33, 26, 20, 0.25);
+  box-shadow: 0 4px 12px rgba(33, 26, 20, 0.25);
   transition: transform 200ms ease, background 200ms ease;
 }
+.tv-frame__play:hover,
+.tv-frame__play:focus-visible,
 .tv-frame__sound:hover,
 .tv-frame__sound:focus-visible {
-  transform: translateY(-2px);
+  transform: scale(1.08);
   background: var(--color-cream);
 }
+.tv-frame__play-icon,
 .tv-frame__sound-icon {
   width: 44%;
   height: 44%;
@@ -1131,6 +1129,9 @@ body:has(.case2) .footer {
 .tv-frame__sound-icon--on { display: none; }
 .tv-frame__sound[aria-pressed="true"] .tv-frame__sound-icon--off { display: none; }
 .tv-frame__sound[aria-pressed="true"] .tv-frame__sound-icon--on { display: block; }
+.tv-frame__play-icon--pause { display: none; }
+.tv-frame__play[aria-pressed="true"] .tv-frame__play-icon--play { display: none; }
+.tv-frame__play[aria-pressed="true"] .tv-frame__play-icon--pause { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .tv-frame__noise {
     animation: none;
@@ -3850,6 +3851,10 @@ body:has(.case2) .footer {
      edge. */
   transform-origin: left center;
   backface-visibility: hidden;
+  /* the flip's own duration was correct as-is per direct follow-up
+     request — only the rest period between flips was too long, not
+     the turn itself. Must match TURN_MS in initFlipbook (script.js),
+     which keys its setTimeout calls off this same duration. */
   transition: transform 0.85s cubic-bezier(0.65, 0, 0.35, 1);
   border-radius: 0 10px 10px 0;
   overflow: hidden;
