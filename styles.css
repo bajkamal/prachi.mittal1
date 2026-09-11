@@ -1086,15 +1086,17 @@ body:has(.case2) .footer {
   pointer-events: none;
   filter: drop-shadow(0 24px 40px rgba(33, 26, 20, 0.25));
 }
-/* A plain control row under the set, not two buttons scattered over
-   the picture — per direct follow-up request for better aesthetics.
+/* A plain control row under the set, not a button sitting over the
+   picture — per direct follow-up request for better aesthetics.
    margin-top pulls it up out of tv-frame.png's own transparent lower
    27% (documented on .tv-scene-shadow above: the illustrated cabinet
    itself stops at 73% of the frame box's height) so it sits right
    under the actual cabinet base rather than leaving a dead gap, using
    the same --tv-frame-w (.tv-showcase) the frame's own width comes
    from, so it stays in sync at every viewport size without
-   duplicating that clamp(). */
+   duplicating that clamp(). Just the sound toggle now — the play/
+   pause button that briefly lived here was dropped per direct
+   follow-up request in favour of plain autoplay again. */
 .tv-controls {
   position: relative;
   z-index: 2;
@@ -1103,7 +1105,6 @@ body:has(.case2) .footer {
   gap: 0.85rem;
   margin-top: calc(var(--tv-frame-w) * (2317 / 3645) * -0.27 + 0.9rem);
 }
-.tv-frame__play,
 .tv-frame__sound {
   width: clamp(40px, 6vw, 52px);
   height: clamp(40px, 6vw, 52px);
@@ -1118,14 +1119,11 @@ body:has(.case2) .footer {
   box-shadow: 0 6px 16px rgba(33, 26, 20, 0.25);
   transition: transform 200ms ease, background 200ms ease;
 }
-.tv-frame__play:hover,
-.tv-frame__play:focus-visible,
 .tv-frame__sound:hover,
 .tv-frame__sound:focus-visible {
   transform: translateY(-2px);
   background: var(--color-cream);
 }
-.tv-frame__play-icon,
 .tv-frame__sound-icon {
   width: 44%;
   height: 44%;
@@ -1133,9 +1131,6 @@ body:has(.case2) .footer {
 .tv-frame__sound-icon--on { display: none; }
 .tv-frame__sound[aria-pressed="true"] .tv-frame__sound-icon--off { display: none; }
 .tv-frame__sound[aria-pressed="true"] .tv-frame__sound-icon--on { display: block; }
-.tv-frame__play-icon--pause { display: none; }
-.tv-frame__play[aria-pressed="true"] .tv-frame__play-icon--play { display: none; }
-.tv-frame__play[aria-pressed="true"] .tv-frame__play-icon--pause { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .tv-frame__noise {
     animation: none;
@@ -3305,13 +3300,6 @@ body:has(.case2) .footer {
   /* per direct request — the title centers within the same column the
      rest of the hero (back link, meta, pills) stays left-aligned in */
   text-align: center;
-}
-/* BGL's title only, per direct request — just the "BGL" part in the
-   site's existing orange accent (var(--color-why), already reused for
-   the role pills/next-project buttons elsewhere), the rest of the
-   title stays the default cream. */
-.case2-title__accent {
-  color: var(--color-why);
 }
 /* BGL only — a one-line tagline under the title, above the existing
    brief-number meta line, per direct request for the page's updated

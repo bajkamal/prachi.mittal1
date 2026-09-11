@@ -1970,73 +1970,33 @@
      releasing eases the multiplier back to the steady baseline. The
      ticker is the only thing that ever touches the track's position. */
   /* ---------------- TV showcase (Index.html) ----------------
-     EXPERIMENTAL — see the HTML comment above .tv-showcase. Autoplay
-     has to start muted (every major browser blocks autoplay-with-
-     sound without prior user interaction); this button is what
-     actually gets it playing "with the sound," per the direct
-     request that the video keep its audio — a real user click/tap
-     counts as the interaction that unlocks it. */
-  /* Two attempts at autoplay-with-sound-by-default on this TV both
-     turned out to depend on browser/host autoplay-policy timing that
-     can't be guaranteed (worked on a local dev server, silently
-     failed to actually start on a real host until some unrelated
-     click happened to unstick it) — see git history for those if
-     ever revisited. Per direct follow-up request, this replaces that
-     with an explicit .tv-frame__play button: nothing plays until a
-     visitor actually clicks it, which is a real user gesture and so
-     is *guaranteed* to both start playback and allow sound, on any
-     browser or host, no guessing required. */
+     Autoplay, muted (every major browser blocks autoplay-with-sound
+     without prior user interaction) — a manual play/pause button was
+     tried here per direct request when GitHub Pages' autoplay wasn't
+     reliably kicking in on its own, then dropped again per a direct
+     follow-up request ("the video should play from itself"). What's
+     left of that detour: the retry loop below, which just keeps
+     calling play() every 500ms until the browser actually confirms
+     it's playing, instead of trusting a single attempt to land after
+     the file's finished buffering on a slower real host. */
   function initTvShowcase() {
     const video = document.querySelector('.tv-frame__video');
-    const playBtn = document.querySelector('.tv-frame__play');
     const soundBtn = document.querySelector('.tv-frame__sound');
     const frame = document.querySelector('.tv-frame');
     const showcase = document.querySelector('.tv-showcase');
-    if (!video || !playBtn || !soundBtn) return;
+    if (!video || !soundBtn) return;
 
     video.muted = true;
-    // Has the visitor ever pressed play — distinct from whether it's
-    // *currently* playing, since scrolling out of view pauses it
-    // without this going back to false (so scrolling back in knows to
-    // resume rather than waiting for another click).
-    let started = false;
-    // True only while paused *because it scrolled out of view* — kept
-    // separate from a visitor's own manual pause so scrolling back
-    // into view doesn't override a deliberate "I paused this" choice.
-    let autoPaused = false;
-    // Sound is linked to the play button per direct request (pressing
-    // play turns sound on) but stays independently toggleable via the
-    // sound button afterward, and both respect being scrolled out of
-    // view the same way the old implementation did.
     let soundOn = false;
 
     const updateSoundButton = () => {
       soundBtn.setAttribute('aria-pressed', String(soundOn));
       soundBtn.setAttribute('aria-label', soundOn ? 'Turn sound off' : 'Turn sound on');
     };
-    const updatePlayButton = () => {
-      const playing = started && !video.paused;
-      playBtn.setAttribute('aria-pressed', String(playing));
-      playBtn.setAttribute('aria-label', playing ? 'Pause video' : 'Play video with sound');
-    };
     const applyMuted = () => {
       const inView = !showcase || showcase.dataset.inView !== 'false';
       video.muted = !(soundOn && inView);
     };
-
-    playBtn.addEventListener('click', () => {
-      if (video.paused) {
-        started = true;
-        autoPaused = false;
-        soundOn = true;
-        applyMuted();
-        video.play().catch(() => {});
-      } else {
-        video.pause();
-      }
-      updateSoundButton();
-      updatePlayButton();
-    });
 
     soundBtn.addEventListener('click', () => {
       soundOn = !soundOn;
@@ -2044,28 +2004,19 @@
       updateSoundButton();
     });
 
-    video.addEventListener('play', updatePlayButton);
-    video.addEventListener('pause', updatePlayButton);
-
     // Pauses (not just mutes) once the TV scrolls out of the viewport,
-    // and resumes from exactly where it left off on the way back in —
-    // per direct request — but only if it was actually playing, and
-    // only if this observer is what paused it (not a visitor's own
-    // manual pause).
+    // and resumes from exactly where it left off on the way back in,
+    // per direct request.
     if (showcase && 'IntersectionObserver' in window) {
       showcase.dataset.inView = 'true';
       const observer = new IntersectionObserver(
         ([entry]) => {
           showcase.dataset.inView = String(entry.isIntersecting);
           applyMuted();
-          if (!entry.isIntersecting) {
-            if (started && !video.paused) {
-              autoPaused = true;
-              video.pause();
-            }
-          } else if (autoPaused) {
-            autoPaused = false;
-            video.play().catch(() => {});
+          if (entry.isIntersecting) {
+            if (video.paused) video.play().catch(() => {});
+          } else if (!video.paused) {
+            video.pause();
           }
         },
         { threshold: 0.15 }
@@ -2074,7 +2025,24 @@
     }
 
     updateSoundButton();
-    updatePlayButton();
+    applyMuted();
+    if (video.paused) video.play().catch(() => {});
+
+    // Keeps asking, on a plain timer, until the video actually reports
+    // it's playing — self-cancelling the moment it succeeds (or the
+    // TV scrolls out of view, which owns pausing from there).
+    let retries = 0;
+    const MAX_RETRIES = 20; // ~10s at 500ms apart
+    const retryTimer = setInterval(() => {
+      retries += 1;
+      const inView = !showcase || showcase.dataset.inView !== 'false';
+      if (!inView || (!video.paused && !video.ended)) {
+        clearInterval(retryTimer);
+        return;
+      }
+      video.play().catch(() => {});
+      if (retries >= MAX_RETRIES) clearInterval(retryTimer);
+    }, 500);
 
     if (!frame || prefersReducedMotion()) return;
 
