@@ -1968,125 +1968,105 @@
      actually gets it playing "with the sound," per the direct
      request that the video keep its audio — a real user click/tap
      counts as the interaction that unlocks it. */
+  /* Two attempts at autoplay-with-sound-by-default on this TV both
+     turned out to depend on browser/host autoplay-policy timing that
+     can't be guaranteed (worked on a local dev server, silently
+     failed to actually start on a real host until some unrelated
+     click happened to unstick it) — see git history for those if
+     ever revisited. Per direct follow-up request, this replaces that
+     with an explicit .tv-frame__play button: nothing plays until a
+     visitor actually clicks it, which is a real user gesture and so
+     is *guaranteed* to both start playback and allow sound, on any
+     browser or host, no guessing required. */
   function initTvShowcase() {
     const video = document.querySelector('.tv-frame__video');
-    const button = document.querySelector('.tv-frame__sound');
+    const playBtn = document.querySelector('.tv-frame__play');
+    const soundBtn = document.querySelector('.tv-frame__sound');
     const frame = document.querySelector('.tv-frame');
     const showcase = document.querySelector('.tv-showcase');
-    if (!video || !button) return;
+    if (!video || !playBtn || !soundBtn) return;
 
-    // Two independent inputs decide whether the video is actually
-    // audible: has the visitor unlocked sound at all (soundUnlocked —
-    // browsers require a real gesture before audio can play), and is
-    // the TV currently in view (inView — per direct request, audio
-    // should stop once the section scrolls off-screen). The video is
-    // only ever unmuted when both are true; either one going false
-    // mutes it again. The button's own on/off label reflects the
-    // *unlocked* intent, not the live muted state, so scrolling the
-    // TV out of view doesn't flip the button to "off" on its own.
-    //
-    // soundUnlocked starts from the HTML `muted` attribute's own
-    // intent (the markup always ships muted, so this reads false) —
-    // but forcing the live property true first, rather than trusting
-    // it already reflects the attribute by the time this runs, means
-    // the very first autoplay attempt below is never at the mercy of
-    // a browser/host quirk in exactly when that reflection happens.
     video.muted = true;
-    let soundUnlocked = false;
+    // Has the visitor ever pressed play — distinct from whether it's
+    // *currently* playing, since scrolling out of view pauses it
+    // without this going back to false (so scrolling back in knows to
+    // resume rather than waiting for another click).
+    let started = false;
+    // True only while paused *because it scrolled out of view* — kept
+    // separate from a visitor's own manual pause so scrolling back
+    // into view doesn't override a deliberate "I paused this" choice.
+    let autoPaused = false;
+    // Sound is linked to the play button per direct request (pressing
+    // play turns sound on) but stays independently toggleable via the
+    // sound button afterward, and both respect being scrolled out of
+    // view the same way the old implementation did.
+    let soundOn = false;
 
-    const applySoundState = () => {
+    const updateSoundButton = () => {
+      soundBtn.setAttribute('aria-pressed', String(soundOn));
+      soundBtn.setAttribute('aria-label', soundOn ? 'Turn sound off' : 'Turn sound on');
+    };
+    const updatePlayButton = () => {
+      const playing = started && !video.paused;
+      playBtn.setAttribute('aria-pressed', String(playing));
+      playBtn.setAttribute('aria-label', playing ? 'Pause video' : 'Play video with sound');
+    };
+    const applyMuted = () => {
       const inView = !showcase || showcase.dataset.inView !== 'false';
-      video.muted = !(soundUnlocked && inView);
-      button.setAttribute('aria-pressed', String(soundUnlocked));
-      button.setAttribute('aria-label', soundUnlocked ? 'Turn sound off' : 'Turn sound on');
-      // Actually stop (not just mute) once the TV scrolls out of view,
-      // per direct request — pause() leaves currentTime untouched, so
-      // play() here on the way back in resumes from exactly where it
-      // left off instead of restarting or continuing to play unheard
-      // in the background.
-      if (inView) {
-        if (video.paused) video.play().catch(() => {});
-      } else if (!video.paused) {
-        video.pause();
-      }
+      video.muted = !(soundOn && inView);
     };
 
-    button.addEventListener('click', () => {
-      soundUnlocked = !soundUnlocked;
-      applySoundState();
+    playBtn.addEventListener('click', () => {
+      if (video.paused) {
+        started = true;
+        autoPaused = false;
+        soundOn = true;
+        applyMuted();
+        video.play().catch(() => {});
+      } else {
+        video.pause();
+      }
+      updateSoundButton();
+      updatePlayButton();
     });
 
-    // Per direct request, the video should read as unmuted "by
-    // default" — but every major browser blocks autoplay-with-sound
-    // until a real user gesture happens, so it still has to start
-    // muted (HTML attribute) to guarantee it autoplays at all. This
-    // unmutes it automatically on the very first interaction anywhere
-    // on the page (not just the sound button itself), so sound turns
-    // on as soon as the visitor does anything rather than requiring
-    // them to find and click the TV's own button.
-    if (!soundUnlocked) {
-      const interactionTypes = ['pointerdown', 'keydown', 'wheel', 'touchstart'];
-      const unmuteOnFirstInteraction = () => {
-        soundUnlocked = true;
-        applySoundState();
-        interactionTypes.forEach((type) => document.removeEventListener(type, unmuteOnFirstInteraction));
-      };
-      interactionTypes.forEach((type) => {
-        document.addEventListener(type, unmuteOnFirstInteraction, { passive: true });
-      });
-    }
+    soundBtn.addEventListener('click', () => {
+      soundOn = !soundOn;
+      applyMuted();
+      updateSoundButton();
+    });
 
-    // Mutes the audio the moment the TV scrolls out of the viewport,
-    // and restores it (if sound was already unlocked) once it scrolls
-    // back in — per direct request. dataset.inView (read by
-    // applySoundState above) starts "true" since the observer's first
-    // callback only fires once the section is actually observed.
+    video.addEventListener('play', updatePlayButton);
+    video.addEventListener('pause', updatePlayButton);
+
+    // Pauses (not just mutes) once the TV scrolls out of the viewport,
+    // and resumes from exactly where it left off on the way back in —
+    // per direct request — but only if it was actually playing, and
+    // only if this observer is what paused it (not a visitor's own
+    // manual pause).
     if (showcase && 'IntersectionObserver' in window) {
       showcase.dataset.inView = 'true';
       const observer = new IntersectionObserver(
         ([entry]) => {
           showcase.dataset.inView = String(entry.isIntersecting);
-          applySoundState();
+          applyMuted();
+          if (!entry.isIntersecting) {
+            if (started && !video.paused) {
+              autoPaused = true;
+              video.pause();
+            }
+          } else if (autoPaused) {
+            autoPaused = false;
+            video.play().catch(() => {});
+          }
         },
         { threshold: 0.15 }
       );
       observer.observe(showcase);
     }
 
-    applySoundState();
-
-    // On a real host (GitHub Pages, unlike an instant localhost dev
-    // server) the video file can still be buffering when the line
-    // above's play() call fires — that first attempt can silently
-    // fail (the returned promise rejects, caught above with a no-op),
-    // and with nothing else retrying it, the frame just sat frozen on
-    // its poster until an unrelated click happened to call play()
-    // again with the file now fully loaded. muted autoplay itself was
-    // never the problem here (every major browser allows it) — this
-    // is purely a "the browser wasn't ready yet, and nobody asked
-    // again" bug. A single 'canplay' listener (this file's previous
-    // fix) covers the common case but still depends on that one event
-    // landing after this listener attaches; on a slower connection the
-    // file can take several distinct buffering stalls to become
-    // playable. This instead keeps asking, on a plain timer, until the
-    // video actually reports it's playing — cheap, and self-cancelling
-    // the moment it succeeds, so it never fights a visitor's own
-    // pause/mute choice once sound and playback are genuinely running.
-    let retries = 0;
-    const MAX_RETRIES = 20; // ~10s at 500ms apart — generous for a slow first load
-    const retryTimer = setInterval(() => {
-      retries += 1;
-      const inView = !showcase || showcase.dataset.inView !== 'false';
-      if (!inView || (!video.paused && !video.ended)) {
-        // either scrolled away (applySoundState's own IntersectionObserver
-        // callback owns pausing/resuming from here) or already playing —
-        // nothing left for this fallback to do.
-        clearInterval(retryTimer);
-        return;
-      }
-      video.play().catch(() => {});
-      if (retries >= MAX_RETRIES) clearInterval(retryTimer);
-    }, 500);
+    updateSoundButton();
+    updatePlayButton();
 
     if (!frame || prefersReducedMotion()) return;
 

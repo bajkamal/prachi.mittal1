@@ -906,7 +906,16 @@ body:has(.case2) .footer {
 --------------------------------------------------------------- */
 .tv-showcase {
   position: relative;
+  /* shared with .tv-controls below (a --tv-frame-w value set on
+     .tv-frame itself wouldn't inherit sideways to its own sibling) so
+     the control row's own pull-up margin can stay in sync with the
+     set's actual fluid width without duplicating the clamp(). */
+  --tv-frame-w: clamp(330px, 56vw, 860px);
   display: flex;
+  /* was a row (only .tv-frame in flow) — .tv-controls below now needs
+     to stack under the set rather than sit beside it. */
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   padding-block: clamp(1rem, 3vw, 2rem);
   /* was un-set, leaving only a ~3-4px gap between .why-statement's own
@@ -1005,7 +1014,7 @@ body:has(.case2) .footer {
 .tv-frame {
   position: relative;
   z-index: 2;
-  width: clamp(330px, 56vw, 860px);
+  width: var(--tv-frame-w);
   /* matches tv-frame.png's own pixel dimensions (3645x2317) exactly
      — anything else would let the browser's own aspect-ratio guess
      drift from the real image and throw off the screen-cutout math
@@ -1077,36 +1086,56 @@ body:has(.case2) .footer {
   pointer-events: none;
   filter: drop-shadow(0 24px 40px rgba(33, 26, 20, 0.25));
 }
+/* A plain control row under the set, not two buttons scattered over
+   the picture — per direct follow-up request for better aesthetics.
+   margin-top pulls it up out of tv-frame.png's own transparent lower
+   27% (documented on .tv-scene-shadow above: the illustrated cabinet
+   itself stops at 73% of the frame box's height) so it sits right
+   under the actual cabinet base rather than leaving a dead gap, using
+   the same --tv-frame-w (.tv-showcase) the frame's own width comes
+   from, so it stays in sync at every viewport size without
+   duplicating that clamp(). */
+.tv-controls {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: calc(var(--tv-frame-w) * (2317 / 3645) * -0.27 + 0.9rem);
+}
+.tv-frame__play,
 .tv-frame__sound {
-  position: absolute;
-  z-index: 4;
-  right: 14%;
-  bottom: 28%;
-  width: clamp(28px, 4.5vw, 40px);
-  height: clamp(28px, 4.5vw, 40px);
+  width: clamp(40px, 6vw, 52px);
+  height: clamp(40px, 6vw, 52px);
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--color-on-ink);
   color: var(--color-ink);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 16px rgba(33, 26, 20, 0.25);
   transition: transform 200ms ease, background 200ms ease;
 }
+.tv-frame__play:hover,
+.tv-frame__play:focus-visible,
 .tv-frame__sound:hover,
 .tv-frame__sound:focus-visible {
-  transform: scale(1.08);
+  transform: translateY(-2px);
   background: var(--color-cream);
 }
+.tv-frame__play-icon,
 .tv-frame__sound-icon {
-  width: 52%;
-  height: 52%;
+  width: 44%;
+  height: 44%;
 }
 .tv-frame__sound-icon--on { display: none; }
 .tv-frame__sound[aria-pressed="true"] .tv-frame__sound-icon--off { display: none; }
 .tv-frame__sound[aria-pressed="true"] .tv-frame__sound-icon--on { display: block; }
+.tv-frame__play-icon--pause { display: none; }
+.tv-frame__play[aria-pressed="true"] .tv-frame__play-icon--play { display: none; }
+.tv-frame__play[aria-pressed="true"] .tv-frame__play-icon--pause { display: block; }
 @media (prefers-reduced-motion: reduce) {
   .tv-frame__noise {
     animation: none;

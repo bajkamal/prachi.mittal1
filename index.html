@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=223">
+<link rel="stylesheet" href="styles.css?v=225">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
@@ -233,9 +233,23 @@
           <circle class="tv-antenna__tip tv-antenna__tip--right" cx="160" cy="8" r="7" fill="#FF7140" stroke="#211A14" stroke-width="3"/>
           <circle cx="100" cy="112" r="8" fill="#DC346E" stroke="#211A14" stroke-width="3"/>
         </svg>
-        <video class="tv-frame__video" src="assets/tv/showreel.mp4" autoplay muted loop playsinline></video>
+        <video class="tv-frame__video" src="assets/tv/showreel.mp4" muted loop playsinline preload="auto"></video>
         <div class="tv-frame__noise" aria-hidden="true"></div>
         <img class="tv-frame__shell" src="assets/tv/tv-frame.png" alt="" aria-hidden="true">
+      </div>
+
+      <!--
+        Moved off the screen itself (was centred over the picture,
+        plus a small corner button) to a plain control row underneath
+        the set, per direct follow-up request for better aesthetics —
+        nothing to fade in/out or hunt for over the video any more,
+        just two buttons that are always there.
+      -->
+      <div class="tv-controls">
+        <button class="tv-frame__play" type="button" aria-pressed="false" aria-label="Play video with sound">
+          <svg class="tv-frame__play-icon tv-frame__play-icon--play" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 5.5v13a1 1 0 0 0 1.53.848l10.4-6.5a1 1 0 0 0 0-1.696l-10.4-6.5A1 1 0 0 0 7 5.5Z" fill="currentColor"/></svg>
+          <svg class="tv-frame__play-icon tv-frame__play-icon--pause" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="6" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="14" y="5" width="4" height="14" rx="1" fill="currentColor"/></svg>
+        </button>
         <button class="tv-frame__sound" type="button" aria-pressed="false" aria-label="Turn sound on">
           <svg class="tv-frame__sound-icon tv-frame__sound-icon--off" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4Z" fill="currentColor"/><path d="M16 8l5 8M21 8l-5 8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           <svg class="tv-frame__sound-icon tv-frame__sound-icon--on" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 9v6h4l5 5V4L8 9H4Z" fill="currentColor"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a9 9 0 0 1 0 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -664,6 +678,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
-<script src="script.js?v=223"></script>
+<script src="script.js?v=225"></script>
 </body>
 </html>
