@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=176">
+<link rel="stylesheet" href="styles.css?v=212">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
@@ -387,37 +387,49 @@
     -->
     <div class="project-categories">
       <div class="project-category__label-row">
-        <span class="project-category__label-mask"><span class="project-category__label" data-cycle-label>Branding</span></span>
+        <span class="project-category__label-mask project-category__label-mask--cycle">
+          <span class="project-category__label is-active">Branding</span>
+          <span class="project-category__label">Packaging</span>
+          <span class="project-category__label">Editorial</span>
+          <span class="project-category__label">Campaigns</span>
+        </span>
         <div class="project-category__chip" data-category-chip>
-          <img class="project-category__chip-img is-active" data-label="Branding" src="assets/tousecg/mockup-2.jpg" alt="">
-          <img class="project-category__chip-img" data-label="Branding" src="assets/tousebgl/mockup-2.jpg" alt="">
-          <img class="project-category__chip-img" data-label="Campaign" src="assets/hamleys/mockup-2.jpg" alt="">
+          <img class="project-category__chip-img is-active" src="assets/smallchip/1 Branding.jpg" alt="">
+          <img class="project-category__chip-img" src="assets/smallchip/2 Packaging.jpg" alt="">
+          <img class="project-category__chip-img" src="assets/smallchip/3 Editorial.jpg" alt="">
+          <img class="project-category__chip-img" src="assets/smallchip/4 Campaign.jpg" alt="">
         </div>
-        <span class="project-category__label-mask"><span class="project-category__label" data-cycle-label>Branding</span></span>
+        <span class="project-category__label-mask project-category__label-mask--static"><span class="project-category__label">Project</span></span>
       </div>
       <div class="project-category__grid">
         <div class="project-thumb-group">
           <a class="project-thumb project-thumb--short" href="branding.html" aria-label="Common Ground branding">
-            <img src="assets/tousecg/mockup-1.jpg" alt="">
+            <img src="assets/thumbnails/commo grounds.jpg" alt="A circle of people sitting on a wooden deck at the Common Ground retreat, with the brand's logo painted on the concrete floor at the centre." loading="lazy">
           </a>
           <span class="project-thumb__caption">Common Ground</span>
         </div>
         <div class="project-thumb-group">
-          <a class="project-thumb project-thumb--tall project-thumb--placeholder" href="editorial.html" aria-label="Hamleys Share A Smile campaign"></a>
+          <a class="project-thumb project-thumb--tall" href="editorial.html" aria-label="Hamleys Share A Smile campaign">
+            <img src="assets/thumbnails/hamleys.jpg" alt="A Hamleys Smile shopping bag with a hand-drawn scene of a sun, clouds, house, and trees around the logo." loading="lazy">
+          </a>
           <span class="project-thumb__caption">Hamleys</span>
         </div>
         <div class="project-thumb-group">
-          <a class="project-thumb project-thumb--tall project-thumb--placeholder" href="bgl.html" aria-label="BGL branding"></a>
+          <a class="project-thumb project-thumb--tall" href="bgl.html" aria-label="BGL branding">
+            <img src="assets/thumbnails/bgl.jpg" alt="A hand reaching out of a car window to hand over a BGL bagel bag stamped &ldquo;Not Your Basic Bagel.&rdquo;" loading="lazy">
+          </a>
           <span class="project-thumb__caption">BGL</span>
         </div>
         <div class="project-thumb-group">
           <a class="project-thumb project-thumb--short" href="motion.html" aria-label="Toblerone packaging redesign">
-            <img src="assets/tousepackaging/2.jpg" alt="">
+            <img src="assets/thumbnails/packaging.jpg" alt="An open hexagonal Toblerone vault box beside its lid, which reads &ldquo;Open the Vault.&rdquo;" loading="lazy">
           </a>
           <span class="project-thumb__caption">Toblerone</span>
         </div>
         <div class="project-thumb-group project-thumb-group--wide">
-          <a class="project-thumb project-thumb--wide project-thumb--placeholder" href="bigbang.html" aria-label="Big Bang Theory project"></a>
+          <a class="project-thumb project-thumb--wide" href="bigbang.html" aria-label="Big Bang Theory project">
+            <img src="assets/thumbnails/bbt.jpg" alt="The Big Bang Theory book, front and back covers, showing the cast photo and a &ldquo;Free Stickers&rdquo; badge." loading="lazy">
+          </a>
           <span class="project-thumb__caption">Big Bang Theory</span>
         </div>
       </div>
@@ -648,12 +660,10 @@
   same mouse-only gating and quickTo-follow mechanics as .cursor-glow
   above. See initCustomCursor in script.js.
 -->
-<div class="cursor-tag" id="cursor-tag" aria-hidden="true"><span>Click to open</span></div>
-
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
-<script src="script.js?v=176"></script>
+<script src="script.js?v=212"></script>
 </body>
 </html>

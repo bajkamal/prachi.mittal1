@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=176">
+<link rel="stylesheet" href="styles.css?v=212">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
@@ -143,10 +143,18 @@
 
 </main>
 
+<!--
+  Trailing glow that rides alongside the recoloured native-shaped
+  cursor (styles.css) — see initCustomCursor in script.js. Fixed,
+  mouse-only, purely decorative. Same effect as index.html; this page
+  has no .project-thumb cards, so no .cursor-tag "Click to open" hint.
+-->
+<div class="cursor-glow" aria-hidden="true"></div>
+
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
-<script src="script.js?v=176"></script>
+<script src="script.js?v=212"></script>
 </body>
 </html>

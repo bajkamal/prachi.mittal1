@@ -665,70 +665,103 @@
      .project-category__chip (in the Projects section's label-row
      heading above the masonry grid) cycles through one thumbnail per
      project on a plain timer — a crossfade via opacity, not scroll-
-     driven. Each frame carries the project's category as a data-label
-     attribute; the two .project-category__label spans either side of
-     the chip update to match on every tick, so the chip image and the
-     labels always change together as one unit (Common Ground's
-     thumbnail + "Branding", then BGL's + "Branding" again, then
-     Hamleys' + "Campaign", then Toblerone's + "Packaging") rather than
-     the chip cycling independently of static label text. The label
-     swap itself is a "plank on a hinge" swing — outgoing text tips up
-     and away, incoming tips up from below into focus (rotationX +
-     opacity + blur + scale, .project-category__label's transform-
-     origin:center bottom is the hinge) — rather than an instant
-     textContent replace. Skipped under reduced motion — the chip just
-     shows its first (already .is-active) frame and label, statically,
-     no animation. Removed once, restored per a direct follow-up
-     request to bring the heading back above the new plain grid. The
-     label swap was a "plank on a hinge" swing (rotationX + blur +
-     scale, left/right mirrored) — replaced with a plain opacity
-     fade-out/fade-in per direct request for something simpler. */
+     driven. The right-hand label is plain static text ("Project",
+     set directly in index.html) — per direct request it no longer
+     changes at all. The left-hand label runs the same endlessly-
+     repeating Branding -> Packaging -> Editorial -> Campaigns loop
+     (LEFT_CATEGORY_SEQUENCE below), stacked as 4 always-present words
+     (index.html) crossfaded by the exact same setInterval tick and
+     the same plain CSS opacity transition as the chip's own image
+     frames — per direct request that the word change and image change
+     happen at the same time with identical timing, not two
+     independently-drifting animations. Skipped under reduced motion —
+     the chip and label both just show their first (already .is-active)
+     frame, statically. */
   function initProjectChips() {
     const chips = gsap.utils.toArray('.project-category__chip');
-    if (!chips.length || prefersReducedMotion()) return;
+    if (!chips.length) return;
 
-    const CYCLE_MS = 2600;
-    // Was 0.35s each (0.7s round trip) — the chip's own image crossfade
-    // is a single 0.7s opacity transition (see .project-category__chip-img
-    // in styles.css), so at the 0.35s mark the chip is only half-blended
-    // while the label had already gone fully invisible: the label was
-    // fading twice as fast as the chip. Matching each phase to the
-    // chip's 0.7s duration makes both change at the same rate, per
-    // direct request — the label's full round trip is now 1.4s, still
-    // well inside the 2.6s cycle.
-    const FADE_OUT = { opacity: 0, duration: 0.7, ease: 'power1.in' };
-    const FADE_IN = { opacity: 1, duration: 0.7, ease: 'power1.out' };
+    const LEFT_CATEGORY_SEQUENCE = ['Branding', 'Packaging', 'Editorial', 'Campaigns'];
+
+    // The row is `[left label] [chip] [right label]` under
+    // justify-content:center — if the left label's own box just
+    // sized to whichever word was currently showing, the chip would
+    // visibly shift left/right every time a longer or shorter word
+    // swapped in, per direct report ("the GIF should not even move
+    // by one pixel due to text change"). Locking that box to the
+    // widest word in the whole cycle, measured for real against the
+    // label's actual rendered font (not guessed), means its own
+    // outer width never changes no matter which word is inside it —
+    // so neither the chip beside it, nor the static "Project" label
+    // past that, ever moves. Re-measured on resize since the label's
+    // font-size itself is a fluid clamp().
+    // +6px safety margin — canvas measureText vs the DOM's own layout
+    // can differ by a stray sub-pixel even once the right font is
+    // loaded; landing exactly on the measured width left "Campaigns"
+    // clipped by the mask's own overflow:hidden on real runs, per
+    // direct report with a screenshot ("Campaigr").
+    const LABEL_WIDTH_BUFFER = 6;
+    function sizeCycleLabelMask(mask) {
+      const cs = getComputedStyle(mask.firstElementChild || mask);
+      const canvas = sizeCycleLabelMask._canvas || (sizeCycleLabelMask._canvas = document.createElement('canvas'));
+      const ctx = canvas.getContext('2d');
+      ctx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+      const widest = Math.max(...LEFT_CATEGORY_SEQUENCE.map((word) => ctx.measureText(word).width));
+      const width = `${Math.ceil(widest) + LABEL_WIDTH_BUFFER}px`;
+      // Set on the shared row, not just this mask, so the static
+      // "Project" label on the other side of the chip (styles.css,
+      // .project-category__label-mask--static) can match this same
+      // width too — otherwise the two sides' unequal widths push the
+      // chip off-center within the row's own justify-content:center.
+      const row = mask.closest('.project-category__label-row') || mask;
+      row.style.setProperty('--cycle-label-width', width);
+    }
 
     chips.forEach((chip) => {
       const frames = gsap.utils.toArray('.project-category__chip-img', chip);
-      if (frames.length < 2) return;
-
       const labelRow = chip.closest('.project-category__label-row');
-      const labels = labelRow ? gsap.utils.toArray('[data-cycle-label]', labelRow) : [];
+      const cycleMask = labelRow ? labelRow.querySelector('.project-category__label-mask--cycle') : null;
+      const labelFrames = cycleMask ? gsap.utils.toArray('.project-category__label', cycleMask) : [];
 
-      let activeIndex = frames.findIndex((el) => el.classList.contains('is-active'));
-      if (activeIndex < 0) activeIndex = 0;
+      if (cycleMask) {
+        sizeCycleLabelMask(cycleMask);
+        window.addEventListener('resize', () => sizeCycleLabelMask(cycleMask));
+        // Poppins loads async (Google Fonts <link>) — if this first
+        // measurement runs before it's actually ready, canvas measures
+        // against whatever fallback font is standing in for it, which
+        // reports narrower than Poppins Semibold's real glyph widths.
+        // The mask locks to that too-small number and the real text
+        // (once Poppins swaps in) clips against its own overflow:
+        // hidden — exactly the "Campaigr" cut-off reported directly,
+        // with a screenshot. Re-measuring once the real font is
+        // actually loaded catches that gap.
+        if (document.fonts && document.fonts.ready) {
+          document.fonts.ready.then(() => sizeCycleLabelMask(cycleMask));
+        }
+      }
 
-      const setLabelText = () => {
-        const text = frames[activeIndex].dataset.label;
-        if (text) labels.forEach((el) => { el.textContent = text; });
-      };
-      setLabelText();
-
-      setInterval(() => {
-        frames[activeIndex].classList.remove('is-active');
-        activeIndex = (activeIndex + 1) % frames.length;
-        frames[activeIndex].classList.add('is-active');
-
-        if (!labels.length) return;
-        gsap.to(labels, {
-          ...FADE_OUT,
-          onComplete: () => {
-            setLabelText();
-            gsap.fromTo(labels, { opacity: 0 }, FADE_IN);
-          },
-        });
-      }, CYCLE_MS);
+      // One shared timer drives both the chip's image frames and the
+      // label's word frames — same tick, same index, same plain CSS
+      // opacity transition (0.7s ease, set on both .project-category__
+      // chip-img and .project-category__label-mask--cycle .project-
+      // category__label in styles.css) — per direct request that the
+      // text change and image change "go hand in hand" with identical
+      // timing. Previously the label ran its own GSAP fade-out-then-
+      // fade-in (a sequential 1.4s round trip) on a separate interval,
+      // which drifted out of step with the chip's simultaneous 0.7s
+      // crossfade.
+      if (frames.length >= 2 && !prefersReducedMotion()) {
+        const CYCLE_MS = 2600;
+        let activeIndex = frames.findIndex((el) => el.classList.contains('is-active'));
+        if (activeIndex < 0) activeIndex = 0;
+        setInterval(() => {
+          frames[activeIndex].classList.remove('is-active');
+          if (labelFrames[activeIndex]) labelFrames[activeIndex].classList.remove('is-active');
+          activeIndex = (activeIndex + 1) % frames.length;
+          frames[activeIndex].classList.add('is-active');
+          if (labelFrames[activeIndex]) labelFrames[activeIndex].classList.add('is-active');
+        }, CYCLE_MS);
+      }
     });
   }
 
@@ -757,6 +790,96 @@
         activeIndex = (activeIndex + 1) % frames.length;
         frames[activeIndex].classList.add('is-active');
       }, CYCLE_MS);
+    });
+  }
+
+  /* ---------------- Brand guidelines flip-book ----------------
+     .flipbook (case2-shots come between .case2-section blocks;
+     see editorial.html's "Brand Guidelines" section) — a circular
+     stack of absolutely-positioned pages (styles.css), turned one at
+     a time via CSS 3D rotateY instead of a scroll/opacity crossfade,
+     to actually read as a page-turn per direct request ("it should
+     feel like a flip book"). No library: "next" rotates the current
+     top page to -180deg (transform-origin left, backface-visibility
+     hidden so it visually disappears once past 90deg), then drops it
+     to the back of the stack once the transition ends so it's ready
+     to be flipped again on the next lap. "prev" does the same in
+     reverse — raise the previous page back to the top of the stack
+     first, then rotate it from -180 back to 0. Sample of 5 pages for
+     now, per direct request, to gauge the effect before rendering
+     the rest of the PDF's real pages the same way. */
+  function initFlipbook() {
+    const books = gsap.utils.toArray('[data-flipbook]');
+    books.forEach((book) => {
+      const pages = gsap.utils.toArray('[data-flipbook-page]', book);
+      const prevBtn = book.querySelector('[data-flipbook-prev]');
+      const nextBtn = book.querySelector('[data-flipbook-next]');
+      const currentEl = book.querySelector('[data-flipbook-current]');
+      const totalEl = book.querySelector('[data-flipbook-total]');
+      if (pages.length < 2 || !prevBtn || !nextBtn) return;
+
+      const total = pages.length;
+      let current = 0; // index of the page currently face-up on top
+      let animating = false;
+      const reduceMotion = prefersReducedMotion();
+
+      pages.forEach((page, i) => {
+        page.style.zIndex = total - i;
+      });
+      if (totalEl) totalEl.textContent = String(total);
+      const updateCount = () => {
+        if (currentEl) currentEl.textContent = String(current + 1);
+      };
+      const updateButtons = () => {
+        prevBtn.disabled = current <= 0;
+        nextBtn.disabled = current >= total - 1;
+      };
+      updateCount();
+      updateButtons();
+
+      const TURN_MS = reduceMotion ? 0 : 850;
+
+      function goNext() {
+        if (animating || current >= total - 1) return;
+        animating = true;
+        const page = pages[current];
+        page.style.transform = 'rotateY(-180deg)';
+        current += 1;
+        updateCount();
+        updateButtons();
+        setTimeout(() => {
+          page.style.transition = 'none';
+          page.style.transform = 'rotateY(0deg)';
+          page.style.zIndex = 0;
+          // eslint-disable-next-line no-unused-expressions
+          page.offsetHeight; // force reflow so the next transition re-applies
+          page.style.transition = '';
+          animating = false;
+        }, TURN_MS);
+      }
+
+      function goPrev() {
+        if (animating || current <= 0) return;
+        animating = true;
+        current -= 1;
+        const page = pages[current];
+        page.style.transition = 'none';
+        page.style.zIndex = total + 1;
+        page.style.transform = 'rotateY(-180deg)';
+        // eslint-disable-next-line no-unused-expressions
+        page.offsetHeight; // force reflow before re-enabling the transition
+        page.style.transition = '';
+        page.style.transform = 'rotateY(0deg)';
+        updateCount();
+        updateButtons();
+        setTimeout(() => {
+          page.style.zIndex = total - current;
+          animating = false;
+        }, TURN_MS);
+      }
+
+      nextBtn.addEventListener('click', goNext);
+      prevBtn.addEventListener('click', goPrev);
     });
   }
 
@@ -1045,7 +1168,22 @@
     ScrollTrigger.create({
       trigger: wrapper,
       start: 'top top',
-      end: '+=400%',
+      // Was a flat '+=400%' — an arbitrary 4x-viewport pin duration
+      // with no relationship to how much scroll the content (below)
+      // actually needs to cycle through all 4 blocks. Whenever that
+      // fixed distance was longer than render()'s own pixel math
+      // (trackHeight + fadeRange*2 — the exact distance the text
+      // track travels from its very first block fading in to its
+      // last fading out), the leftover scroll stayed pinned on an
+      // already-fully-faded-out text column next to the still-static
+      // photo — a stretch of visible empty space on the text side,
+      // per direct report. Tying end to that same real pixel figure
+      // (a function, so it re-reads current trackHeight/fadeRange on
+      // every ScrollTrigger refresh rather than freezing whatever
+      // they were at creation) means the pin releases into the next
+      // section the instant there's nothing left to show — no
+      // leftover dead scroll, by construction, at any viewport size.
+      end: () => '+=' + (trackHeight + fadeRange * 2),
       scrub: 1,
       pin: true,
       anticipatePin: 1,
@@ -1441,25 +1579,23 @@
       const opacity = progress < 0.1 ? 1 - progress * 10 : progress > 0.9 ? (progress - 0.9) * 10 : 0;
       fadeElements.forEach((el) => { el.style.opacity = opacity; });
 
-      // The card itself fades out right as it lands (last 5% of the
-      // flight), while #end-placeholder — a real, visible element now,
-      // not an invisible measurement anchor like #start-placeholder —
-      // fades in as its exact complement. Both set directly here, from
-      // the same progress value in the same frame, deliberately NOT
-      // run through the position/rotation lerp above and NOT left to
-      // a CSS transition on #end-placeholder's side (see the long
-      // comment on .portrait-placeholder in styles.css): two
-      // independently-timed fades (a smoothed JS one for the card, a
-      // separate fixed-duration CSS one for the photo) can drift apart
-      // on a fast or reversed scroll — a gap where both read as
-      // nearly transparent (a flash/momentary disappearance right as
-      // the flip lands), or an overlap where both are partly visible
-      // at once (two portraits on screen together on the way back).
-      // Setting both, unsmoothed, from one shared value removes any
-      // window for either.
-      const cardOpacity = progress > 0.95 ? Math.max(0, 1 - (progress - 0.95) * 20) : 1;
-      flyingCard.style.opacity = String(cardOpacity);
-      endEl.style.opacity = String(1 - cardOpacity);
+      // Was a gradual 5%-window crossfade (card fading out, placeholder
+      // fading in as its exact complement) — but during that whole
+      // window the card's own position/scale are still catching up via
+      // the ticker's lerp above, not yet snapped to the placeholder's
+      // real rect. On a fast scroll the two can be a handful of px
+      // apart for a few frames, and blending two not-quite-aligned
+      // copies of the same photo at partial opacity reads as a visible
+      // tint/flash right as it lands — reported directly, with a
+      // screenshot, as the photo's color/opacity visibly changing
+      // rather than landing as one continuous image. A hard swap
+      // exactly at progress 1 — the same instant current is forced to
+      // snap onto target below — has nothing to blend: both elements
+      // are pixel-identical at that point, so there's no window where
+      // either shows a partial, misaligned copy of the other.
+      const landed = progress >= 1;
+      flyingCard.style.opacity = landed ? '0' : '1';
+      endEl.style.opacity = landed ? '1' : '0';
 
       // The lerp smoothing in the ticker above (position/scale/rotate
       // only now — see above) exists solely to keep a FAST scroll
@@ -1490,7 +1626,9 @@
       // Still toggled for .philosophy-photo-container:has(...)'s own
       // shadow rule in styles.css — unrelated to opacity now (the
       // inline value above already overrides whatever this class sets).
-      endEl.classList.toggle('is-visible', progress > 0.95);
+      // Matches the hard swap point exactly, so the shadow doesn't pop
+      // in before (or lag after) the photo itself actually lands.
+      endEl.classList.toggle('is-visible', landed);
     }
 
     // Progress (0 at #start-placeholder's center crossing viewport
@@ -2162,15 +2300,6 @@
       }
     };
 
-    // "Click to open" tag (Index.html only — .cursor-tag doesn't exist
-    // on the case-study pages) follows the same cursor position as the
-    // glow, just offset down-right so it doesn't sit directly under
-    // the pointer, and only actually shown while over a project card.
-    const tag = document.querySelector('.cursor-tag');
-    const setTagX = tag ? gsap.quickTo(tag, 'x', { duration: 0.35, ease: 'power3.out' }) : null;
-    const setTagY = tag ? gsap.quickTo(tag, 'y', { duration: 0.35, ease: 'power3.out' }) : null;
-    const TAG_OFFSET = 22;
-
     let visible = false;
     window.addEventListener('mousemove', (event) => {
       if (!visible) {
@@ -2180,29 +2309,10 @@
       setX(event.clientX);
       setY(event.clientY);
       setGlowColor(event.clientX, event.clientY);
-      if (setTagX && setTagY) {
-        setTagX(event.clientX + TAG_OFFSET);
-        setTagY(event.clientY + TAG_OFFSET);
-      }
     });
     document.addEventListener('mouseleave', () => {
       gsap.to(glow, { opacity: 0, duration: 0.3 });
       visible = false;
-    });
-
-    document.addEventListener('mouseover', (event) => {
-      if (tag && event.target.closest('.project-thumb')) {
-        gsap.to(tag, { opacity: 1, scale: 1, duration: 0.3, ease: 'power3.out' });
-      }
-    });
-    document.addEventListener('mouseout', (event) => {
-      if (tag) {
-        const leavingCard = event.target.closest('.project-thumb');
-        const enteringCard = event.relatedTarget && event.relatedTarget.closest && event.relatedTarget.closest('.project-thumb');
-        if (leavingCard && !enteringCard) {
-          gsap.to(tag, { opacity: 0, scale: 0.75, duration: 0.25, ease: 'power3.out' });
-        }
-      }
     });
   }
 
@@ -2271,6 +2381,7 @@
     initCaseStudyReveals();
     initCaseNav();
     initCaseCycles();
+    initFlipbook();
     initCustomCursor();
     initResizeRefresh();
   });

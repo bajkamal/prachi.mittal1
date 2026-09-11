@@ -170,32 +170,6 @@ a { color: inherit; }
   }
 }
 
-.cursor-tag {
-  position: fixed;
-  top: 0;
-  left: 0;
-  background: var(--color-ink);
-  color: var(--color-on-ink);
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 0.8rem;
-  letter-spacing: 0.01em;
-  padding: 0.6rem 1.15rem;
-  border-radius: 999px;
-  box-shadow: 0 10px 24px rgba(33, 26, 20, 0.25);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 9998;
-  opacity: 0;
-  scale: 0.75;
-  will-change: transform, opacity;
-}
-@media (pointer: coarse) {
-  .cursor-tag {
-    display: none;
-  }
-}
-
 .sr-only {
   position: absolute;
   width: 1px; height: 1px;
@@ -1291,6 +1265,49 @@ body:has(.case2) .footer {
   line-height: 1;
   perspective: 700px;
 }
+/* Fixed to the widest word in the cycle (measured in JS — see
+   initProjectChips, which sets --cycle-label-width) instead of
+   sizing to whichever word currently happens to be showing. The
+   chip sits between this and the static "Project" label in a
+   justify-content:center row — if this box's own width changed
+   every time the word inside it did, the chip would visibly shift
+   left/right on every cycle tick. Stacks all 4 words on top of each
+   other via CSS Grid (grid-area:1/1 below) instead of swapping one
+   span's textContent — that's what lets the word crossfade with the
+   exact same opacity transition as the chip's own image frames
+   (.project-category__chip-img), toggled by the same setInterval
+   tick in script.js, so text and image always change in lockstep. */
+.project-category__label-mask--cycle {
+  display: inline-grid;
+  width: var(--cycle-label-width, auto);
+}
+/* Right-aligned so the current word always sits flush against the
+   chip — paired with .project-category__label-mask--static's own
+   left alignment below, this makes the visible gap on each side of
+   the chip exactly the row's own `gap` value, not that plus however
+   much of each fixed-width box its (usually shorter) text doesn't
+   fill — per direct request, the two gaps have to match exactly. */
+.project-category__label-mask--cycle .project-category__label {
+  grid-area: 1 / 1;
+  text-align: right;
+  opacity: 0;
+  transition: opacity 0.7s ease;
+}
+.project-category__label-mask--cycle .project-category__label.is-active {
+  opacity: 1;
+}
+/* Matches the cycling label's own fixed width (same --cycle-label-width
+   var, set on their shared .project-category__label-row by
+   sizeCycleLabelMask in script.js) so both sides of the chip are equal
+   width — otherwise the static "Project" label's own (usually
+   narrower) content width pushes the chip off-center within the row's
+   justify-content:center. Left-aligned (not centered) so "Project"
+   sits flush against the chip on its side — see the cycle mask's own
+   right alignment above for why. */
+.project-category__label-mask--static {
+  width: var(--cycle-label-width, auto);
+  text-align: left;
+}
 .project-category__label {
   display: inline-block;
   font-family: var(--font-display);
@@ -1544,7 +1561,6 @@ body:has(.case2) .footer {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.18));
 }
 /* base box is square (matches most of the source illustrations'
    real proportions closely enough for object-fit:contain to barely
@@ -1818,13 +1834,19 @@ body:has(.case2) .footer {
     margin-inline: auto;
     padding-inline: var(--container-pad);
     justify-content: center;
-    gap: clamp(4rem, 9vw, 7.5rem);
-    /* shared by the photo/text translateX shifts below — was a flat
-       3.5rem, which overflowed the page horizontally at narrower
-       widths (871px content pushed past an 870px viewport) once both
-       columns are shifted apart by it with no room to spare. Scales
-       down at narrow widths instead of staying fixed. */
-    --philosophy-shift: clamp(0.5rem, 3vw, 3.5rem);
+    /* was clamp(4rem, 9vw, 7.5rem), then clamp(2.5rem, 6vw, 5rem), then
+       clamp(1.25rem, 3vw, 2.5rem), then a flat 40px — 50px per direct
+       follow-up. --philosophy-shift below is zeroed, so this value is
+       the whole visible gap now, not just a contribution to it. */
+    gap: 50px;
+    /* Was clamp(0.5rem, 3vw, 3.5rem) — this shift pushes the photo
+       and text apart on TOP of the gap above (each column's own
+       translateX), so the flat 40px gap request above wasn't actually
+       landing as a 40px visible gap — at 870px wide it was adding
+       ~52px more on top, per direct follow-up report that the gap
+       "wasn't changing" even after setting it. Zeroed so the gap
+       property above is the whole story now. */
+    --philosophy-shift: 0px;
   }
 }
 
@@ -1864,8 +1886,13 @@ body:has(.case2) .footer {
   .philosophy-text-col {
     /* was flex:1 (forced the other half) — a fixed readable measure
        instead, so the row's total width is just "photo + gap + text"
-       rather than always filling the full capped row width. */
-    flex: 0 1 32rem;
+       rather than always filling the full capped row width. Widened
+       from 32rem per direct request ("reduce the right padding so
+       text can end in less lines") — there's no actual padding-inline
+       here at this breakpoint (see the padding-inline:0 override
+       below), so this flex-basis is the real lever controlling how
+       many words fit per line before wrapping. */
+    flex: 0 1 38rem;
     /* Same transform reasoning as .philosophy-visual-col above — a
        margin-right here also got auto-corrected back to centered by
        the parent's justify-content:center. Shifts text right by the
@@ -1905,19 +1932,28 @@ body:has(.case2) .footer {
 }
 @media (min-width: 768px) {
   .philosophy-photo-container {
-    width: min(35vw, 70vh * 4 / 5);
+    /* Small nudge down off dead-center, per direct request — the
+       flying card's own JS-driven transform was removed a while back
+       (the photo stays fully static now), so this plain CSS translate
+       is safe: nothing else ever touches this element's transform. */
+    transform: translateY(30px);
+    /* was min(35vw, 70vh * 4/5) — per direct report, the photo read
+       as noticeably bigger than the text felt, sitting close enough
+       to the navbar that it lost the breathing room the text (whose
+       actual legible content only ever occupies part of its own
+       centered 70vh window, not the full box) visually has. Smaller
+       caps on both axes pull its edges in from both top and bottom
+       equally (it's still flex-centered on the same line), without
+       touching the text's own scroll-driven positioning. */
+    width: min(28vw, 58vh * 4 / 5);
   }
 }
-/* box-shadow only once the photo has actually landed — this container
-   has no background of its own (the real content is #flying-card
-   until it lands), so a shadow here at rest just draws a "ghost" card
-   outline with nothing in it, sitting in the pink section well before
-   the flying card ever arrives. Gated on the same .is-visible class
-   the portrait-placeholder crossfade already uses, so the shadow
-   appears in the same instant the photo does. */
-.philosophy-photo-container:has(.portrait-placeholder.is-visible) {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
-}
+/* Was a box-shadow once the photo actually landed — removed per
+   direct request to drop the dark shadow on the floating/flying
+   portrait (see .flying-card__face above, which carried the same
+   thing while the card is mid-flight). Removing both together keeps
+   the two states consistent — no shadow suddenly popping in right as
+   it lands. */
 /* visible here, unlike #start-placeholder in .about-section — that
    one stays an invisible measurement anchor for #flying-card the
    whole time (see initFlyingCard), but this one becomes the real,
@@ -2149,7 +2185,6 @@ body:has(.case2) .footer {
   -webkit-backface-visibility: hidden;
   border-radius: 1.4rem;
   background: var(--color-ink);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
 .flying-card__face--back {
@@ -3391,6 +3426,17 @@ body:has(.case2) .footer {
   flex: 0 0 auto;
   text-align: center;
 }
+/* Hamleys' pills, same fix as BGL/Common Ground above — per direct
+   request to match their tag properties instead of sitting on the
+   shared default's space-between. */
+#case-hero-hamleys .case2-role__pills {
+  justify-content: flex-start;
+  gap: 1.5rem;
+}
+#case-hero-hamleys .case2-pill {
+  flex: 0 0 auto;
+  text-align: center;
+}
 /* Toblerone's pills were still on the shared default's space-between
    too — same fix as Common Ground/BGL above, per direct request to
    match. */
@@ -3484,6 +3530,17 @@ body:has(.case2) .footer {
      only a little instead of zooming in aggressively. */
   aspect-ratio: 17 / 15;
 }
+/* Hamleys' real photos, unlike BGL/Common Ground's, aren't asked to
+   match the shared 17/15 crop ratio or the shared 1.1 crop-in zoom
+   (that zoom exists specifically to crop out other projects' baked-in
+   canvas margins, not a universal treatment) — per direct request,
+   this pair keeps each image's own true aspect ratio instead of
+   replicating BGL/Common Ground's box exactly. Both source files are
+   2377x2077. */
+.case2-shots--pair-native .case2-shot img {
+  aspect-ratio: 2377 / 2077;
+  transform: none;
+}
 .case2-shots--pair .case2-shot img[src*="tousebgl/1.jpg"] {
   /* less than the shared 1.1 scale, per direct request — the
      storefront's signage/counter was cropped in a bit too tight. */
@@ -3494,6 +3551,17 @@ body:has(.case2) .footer {
      wide-slot source images (5.png/6.png, ~2.19:1), same reasoning as
      the pair ratio above. */
   aspect-ratio: 24 / 11;
+}
+/* Same native-ratio/no-zoom opt-out as .case2-shots--pair-native
+   above, for Hamleys' three wide-format real photos (business card,
+   campaign hero, billboard — cropped to 1544x641 to remove a baked-in
+   white canvas margin, a visibly different ratio than the other wide
+   slots' own 2377x2077-derived pair). Has to come after the base rule
+   right above (same specificity — two classes vs one class + one
+   class), so source order is what lets this win. */
+.case2-shots--wide-native .case2-shot img {
+  aspect-ratio: 1421 / 590;
+  transform: none;
 }
 /* All three case-study folders (tousecg/tousebgl/tousepackaging) now
    share the same plain numeric filenames (1.jpg-8.jpg), since the
@@ -3580,6 +3648,17 @@ body:has(.case2) .footer {
 .case2-cycle__frame.is-active {
   opacity: 1;
 }
+/* Same native-ratio/no-zoom opt-out as .case2-shots--pair-native's
+   plain-img rule above, aimed at the cycle container and its frames
+   instead — has to come after the two base rules right above (same
+   specificity as each, two classes vs one class + one class), so
+   source order is what lets this actually win the tie. */
+.case2-shots--pair-native .case2-shot--cycle {
+  aspect-ratio: 2377 / 2077;
+}
+.case2-shots--pair-native .case2-cycle__frame {
+  transform: none;
+}
 .case2-next {
   margin-top: clamp(3rem, 7vw, 5rem);
   text-align: center;
@@ -3659,8 +3738,92 @@ body:has(.case2) .footer {
   flex-shrink: 0;
 }
 
+/* ---------------- Brand guidelines flip-book ----------------
+   A real page-turn, not a plain image gallery — see initFlipbook in
+   script.js. Pages sit absolutely stacked in native document order;
+   perspective on .flipbook__stage (not the pages themselves, which
+   can't be their own perspective root) is what makes each page's
+   rotateY read as an actual 3D turn away from the viewer rather than
+   a flat horizontal squash. */
+.flipbook {
+  margin: 2.5rem auto 0;
+  max-width: 640px;
+}
+.flipbook__stage {
+  position: relative;
+  width: 100%;
+  /* the real source PDF's own page proportions (~711x475), not a
+     round number guessed to look right */
+  aspect-ratio: 711 / 475;
+  perspective: 2400px;
+  border-radius: 10px;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.5);
+}
+.flipbook__page {
+  position: absolute;
+  inset: 0;
+  transform-origin: left center;
+  /* so a flipped page visually vanishes once it's rotated past 90deg
+     instead of showing a mirrored duplicate of its own front face */
+  backface-visibility: hidden;
+  transition: transform 0.85s cubic-bezier(0.65, 0, 0.35, 1);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.flipbook__page img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.flipbook__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+.flipbook__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-why);
+  color: var(--color-on-ink);
+  cursor: pointer;
+  transition: transform 200ms ease;
+}
+.flipbook__btn:hover,
+.flipbook__btn:focus-visible {
+  transform: translateY(-2px);
+}
+.flipbook__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  transform: none;
+}
+.flipbook__btn svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+.flipbook__count {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--color-on-ink);
+  min-width: 3.5rem;
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .case-image__frame::before {
+    transition-duration: 0.01ms !important;
+  }
+  .flipbook__page {
     transition-duration: 0.01ms !important;
   }
 }
