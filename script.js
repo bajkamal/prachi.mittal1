@@ -816,9 +816,18 @@
      again on the next lap. "prev" does the same in reverse: raise the
      previous page back to the top of the right stack, animate it from
      -180 back to 0, and swap .flipbook__left back to whatever was
-     showing before it (or blank, at the very first page). Sample of 5
-     pages for now, per direct request, to gauge the effect before
-     rendering the rest of the PDF's real pages the same way. */
+     showing before it (or blank, at the very first page).
+
+     Auto-advances on its own timer (scheduleAuto/AUTO_MS) — per direct
+     request, flipping is automatic, not something a visitor has to
+     click through — per a direct follow-up request, there are no
+     prev/next buttons at all any more (just the page counter); this
+     still tolerates them being there if a future page adds them back
+     (updateButtons/the click listeners below are no-ops without one).
+     Reaching the last page doesn't stop the loop — resetToStart()
+     fades the stage out, snaps every page back to its starting
+     transform/z-index (instant, not 49 reverse-flips), fades back in,
+     and autoplay carries on from page 1. */
   function initFlipbook() {
     const books = gsap.utils.toArray('[data-flipbook]');
     books.forEach((book) => {
@@ -828,7 +837,8 @@
       const nextBtn = book.querySelector('[data-flipbook-next]');
       const currentEl = book.querySelector('[data-flipbook-current]');
       const totalEl = book.querySelector('[data-flipbook-total]');
-      if (pages.length < 2 || !prevBtn || !nextBtn || !leftImg) return;
+      const stage = book.querySelector('.flipbook__stage');
+      if (pages.length < 2 || !leftImg) return;
 
       const total = pages.length;
       // How many pages have been turned onto the left so far — the
@@ -845,8 +855,8 @@
         if (currentEl) currentEl.textContent = String(current + 1);
       };
       const updateButtons = () => {
-        prevBtn.disabled = current <= 0;
-        nextBtn.disabled = current >= total - 1;
+        if (prevBtn) prevBtn.disabled = current <= 0;
+        if (nextBtn) nextBtn.disabled = current >= total - 1;
       };
       const setLeft = (page) => {
         if (!page) {
@@ -864,6 +874,60 @@
 
       const TURN_MS = reduceMotion ? 0 : 850;
       const HALF_MS = TURN_MS / 2;
+      // How long each page stays put before auto-advancing to the
+      // next — long enough to actually read a slide's content, same
+      // idea as the case-study cycle slots (initCaseCycles) elsewhere
+      // on this site, just longer since these pages carry real text.
+      const AUTO_MS = 3200;
+
+      let autoTimer = null;
+      function scheduleAuto() {
+        if (reduceMotion) return;
+        clearTimeout(autoTimer);
+        autoTimer = setTimeout(() => {
+          if (current >= total - 1) {
+            resetToStart();
+          } else {
+            goNext();
+          }
+        }, AUTO_MS);
+      }
+
+      function resetToStart() {
+        animating = true;
+        const restart = () => {
+          pages.forEach((page, i) => {
+            page.style.transition = 'none';
+            page.style.transform = 'rotateY(0deg)';
+            page.style.zIndex = total - i;
+            // eslint-disable-next-line no-unused-expressions
+            page.offsetHeight; // force reflow so the next transition re-applies
+            page.style.transition = '';
+          });
+          setLeft(null);
+          current = 0;
+          updateCount();
+          updateButtons();
+          if (stage) {
+            gsap.to(stage, {
+              opacity: 1,
+              duration: 0.4,
+              onComplete: () => {
+                animating = false;
+                scheduleAuto();
+              },
+            });
+          } else {
+            animating = false;
+            scheduleAuto();
+          }
+        };
+        if (stage) {
+          gsap.to(stage, { opacity: 0, duration: 0.4, onComplete: restart });
+        } else {
+          restart();
+        }
+      }
 
       function goNext() {
         if (animating || current >= total - 1) return;
@@ -884,6 +948,7 @@
           current += 1;
           updateCount();
           animating = false;
+          scheduleAuto();
         }, TURN_MS);
       }
 
@@ -907,11 +972,13 @@
           page.style.zIndex = total - current;
           updateCount();
           animating = false;
+          scheduleAuto();
         }, TURN_MS);
       }
 
-      nextBtn.addEventListener('click', goNext);
-      prevBtn.addEventListener('click', goPrev);
+      if (nextBtn) nextBtn.addEventListener('click', goNext);
+      if (prevBtn) prevBtn.addEventListener('click', goPrev);
+      scheduleAuto();
     });
   }
 
@@ -1917,7 +1984,15 @@
     // mutes it again. The button's own on/off label reflects the
     // *unlocked* intent, not the live muted state, so scrolling the
     // TV out of view doesn't flip the button to "off" on its own.
-    let soundUnlocked = !video.muted;
+    //
+    // soundUnlocked starts from the HTML `muted` attribute's own
+    // intent (the markup always ships muted, so this reads false) —
+    // but forcing the live property true first, rather than trusting
+    // it already reflects the attribute by the time this runs, means
+    // the very first autoplay attempt below is never at the mercy of
+    // a browser/host quirk in exactly when that reflection happens.
+    video.muted = true;
+    let soundUnlocked = false;
 
     const applySoundState = () => {
       const inView = !showcase || showcase.dataset.inView !== 'false';
@@ -1984,15 +2059,34 @@
     // server) the video file can still be buffering when the line
     // above's play() call fires — that first attempt can silently
     // fail (the returned promise rejects, caught above with a no-op),
-    // and nothing else was retrying it, so the frame just sat frozen
-    // on its poster until an unrelated click happened to call play()
+    // and with nothing else retrying it, the frame just sat frozen on
+    // its poster until an unrelated click happened to call play()
     // again with the file now fully loaded. muted autoplay itself was
-    // never the problem here (every major browser allows it); this
-    // retries the instant the browser actually has enough of the file
-    // buffered, per its own 'canplay' event, so it starts on its own
-    // with no visitor interaction required. once:true since this is
-    // only ever needed for that first, possibly-too-early attempt.
-    video.addEventListener('canplay', () => applySoundState(), { once: true });
+    // never the problem here (every major browser allows it) — this
+    // is purely a "the browser wasn't ready yet, and nobody asked
+    // again" bug. A single 'canplay' listener (this file's previous
+    // fix) covers the common case but still depends on that one event
+    // landing after this listener attaches; on a slower connection the
+    // file can take several distinct buffering stalls to become
+    // playable. This instead keeps asking, on a plain timer, until the
+    // video actually reports it's playing — cheap, and self-cancelling
+    // the moment it succeeds, so it never fights a visitor's own
+    // pause/mute choice once sound and playback are genuinely running.
+    let retries = 0;
+    const MAX_RETRIES = 20; // ~10s at 500ms apart — generous for a slow first load
+    const retryTimer = setInterval(() => {
+      retries += 1;
+      const inView = !showcase || showcase.dataset.inView !== 'false';
+      if (!inView || (!video.paused && !video.ended)) {
+        // either scrolled away (applySoundState's own IntersectionObserver
+        // callback owns pausing/resuming from here) or already playing —
+        // nothing left for this fallback to do.
+        clearInterval(retryTimer);
+        return;
+      }
+      video.play().catch(() => {});
+      if (retries >= MAX_RETRIES) clearInterval(retryTimer);
+    }, 500);
 
     if (!frame || prefersReducedMotion()) return;
 

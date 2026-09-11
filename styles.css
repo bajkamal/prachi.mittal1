@@ -3847,35 +3847,7 @@ body:has(.case2) .footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1.25rem;
   margin-top: 1.25rem;
-}
-.flipbook__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.6rem;
-  height: 2.6rem;
-  flex-shrink: 0;
-  border: none;
-  border-radius: 999px;
-  background: var(--color-why);
-  color: var(--color-on-ink);
-  cursor: pointer;
-  transition: transform 200ms ease;
-}
-.flipbook__btn:hover,
-.flipbook__btn:focus-visible {
-  transform: translateY(-2px);
-}
-.flipbook__btn:disabled {
-  opacity: 0.4;
-  cursor: default;
-  transform: none;
-}
-.flipbook__btn svg {
-  width: 1.1rem;
-  height: 1.1rem;
 }
 .flipbook__count {
   font-family: var(--font-display);

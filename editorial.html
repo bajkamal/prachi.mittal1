@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=220">
+<link rel="stylesheet" href="styles.css?v=223">
 <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 </head>
 <body>
@@ -142,45 +142,88 @@
 
       <div class="case2-section">
         <h2 class="case2-section__heading">Brand Guidelines</h2>
-        <p>The full identity was documented in a brand guidelines deck covering logo usage, colour, typography, and every brand element, keeping future applications consistent. A sample of pages, flip through&nbsp;below.</p>
+        <p>The full identity was documented in a brand guidelines deck covering logo usage, colour, typography, and every brand element, keeping future applications&nbsp;consistent.</p>
       </div>
       <!--
-        Sample flip-book, per direct request — a real page-turn feel
-        for a few pages of the brand guidelines PDF
+        Full flip-book, all 50 pages of the brand guidelines PDF
         (assets/tousehamleys/EA1_PrachiMittal_CDA-compressed.pdf),
-        rendered to assets/brandguidelines/page-N.jpg (PyMuPDF, then
-        compressed the same way as every other real photo on this
-        site). Only 5 pages for now to gauge the effect before
-        rendering all 50. Open-book layout per direct follow-up
-        request: .flipbook__left is a single static panel (blank until
-        the first page is turned), .flipbook__right-stack holds the
-        real page images as a circular rotateY stack pivoting at ITS
-        OWN left edge — which is the stage's centre spine, not the
-        book's outer edge — so only the right-hand page turns while
-        the left one stays fixed, same as an actual book. See
-        initFlipbook in script.js for the mechanic (no library).
+        rendered in order to assets/brandguidelines/page-1.jpg through
+        page-50.jpg (PyMuPDF, then compressed the same way as every
+        other real photo on this site) — per direct follow-up request,
+        replacing the original 5-page sample once the effect was
+        approved. Open-book layout: .flipbook__left is a single static
+        panel (blank until the first page is turned), .flipbook__
+        right-stack holds the real page images as a circular rotateY
+        stack pivoting at ITS OWN left edge — which is the stage's
+        centre spine, not the book's outer edge — so only the right-
+        hand page turns while the left one stays fixed, same as an
+        actual book. Auto-advances on its own timer per direct follow-
+        up request ("flipping of pages should be automatic not input
+        based") — the prev/next buttons still work too, for a visitor
+        who wants to jump around, but nobody has to click anything to
+        see the whole deck. See initFlipbook in script.js for the
+        mechanic (no library).
       -->
-      <div class="flipbook" id="hamleys-flipbook" data-flipbook aria-label="Hamleys Smile brand guidelines, sample pages">
+      <div class="flipbook" id="hamleys-flipbook" data-flipbook aria-label="Hamleys Smile brand guidelines, all pages">
         <div class="flipbook__stage">
           <div class="flipbook__left" data-flipbook-left>
             <img data-flipbook-left-img alt="" hidden>
           </div>
           <div class="flipbook__right-stack">
             <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-1.jpg" alt="Brand Guidelines cover page, presented by Prachi Mittal." loading="lazy"></div>
-            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-2.jpg" alt="Logo Meaning page explaining the Hamleys Smile wordmark's smile-shaped strokes and signature smile curve." loading="lazy"></div>
-            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-3.jpg" alt="Monochrome Identity page showing the logo reversed in solid black and solid white." loading="lazy"></div>
-            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-4.jpg" alt="Primary Colours page listing the Mint Jungle, Baby Pink, Vermilion, Ocean Blue, Charcoal Black, Sunny Yellow, Crimson Red, and Soft Blush palette with hex, RGB, and CMYK values." loading="lazy"></div>
-            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-5.jpg" alt="Using Tints page showing a 20% tint step system across the primary colour palette." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-2.jpg" alt="Welcome page introducing the purpose of the brand guidelines." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-3.jpg" alt="Contents page listing every section of the brand guidelines." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-4.jpg" alt="What's The Purpose Of This Guide page, covering consistency, identity, and communication." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-5.jpg" alt="Brand Overview section divider." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-6.jpg" alt="Brand Story page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-7.jpg" alt="Brand Purpose page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-8.jpg" alt="Brand Value page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-9.jpg" alt="Brand Vision page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-10.jpg" alt="Target Audience page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-11.jpg" alt="Brand Positioning page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-12.jpg" alt="Brand Personality page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-13.jpg" alt="Tone of Voice page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-14.jpg" alt="Brand Tagline page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-15.jpg" alt="Brand Logo section divider." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-16.jpg" alt="Primary Logo page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-17.jpg" alt="Logo Meaning page explaining the Hamleys Smile wordmark's smile-shaped strokes and signature smile curve." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-18.jpg" alt="Monochrome Identity page showing the logo reversed in solid black and solid white." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-19.jpg" alt="Scalable Identity page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-20.jpg" alt="Logo Safe Area page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-21.jpg" alt="Logo Size page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-22.jpg" alt="Logo On Collaterals page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-23.jpg" alt="Logo On Merch page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-24.jpg" alt="On The Web page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-25.jpg" alt="On Social Media page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-26.jpg" alt="Common Logo Errors page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-27.jpg" alt="Brand Colours section divider." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-28.jpg" alt="Primary Colours page listing the Mint Jungle, Baby Pink, Vermilion, Ocean Blue, Charcoal Black, Sunny Yellow, Crimson Red, and Soft Blush palette with hex, RGB, and CMYK values." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-29.jpg" alt="Using Tints page showing a 20% tint step system across the primary colour palette." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-30.jpg" alt="Colour Combinations page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-31.jpg" alt="Typography section divider." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-32.jpg" alt="Primary Typeface page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-33.jpg" alt="Using Weights & Styles page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-34.jpg" alt="Typography Rules page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-35.jpg" alt="Heading page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-36.jpg" alt="Body Text Hierarchy page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-37.jpg" alt="Don't Of Typography page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-38.jpg" alt="Brand Elements section divider." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-39.jpg" alt="Brand Mascot page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-40.jpg" alt="Character Illustrations page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-41.jpg" alt="Brand Illustrations page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-42.jpg" alt="Brand Pattern page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-43.jpg" alt="Brand Photography section divider." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-44.jpg" alt="Tone & Style page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-45.jpg" alt="Product Photography page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-46.jpg" alt="Brand Collaterals section divider." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-47.jpg" alt="Collateral Guide page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-48.jpg" alt="Thank You Card page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-49.jpg" alt="Loyalty Card page." loading="lazy"></div>
+            <div class="flipbook__page" data-flipbook-page><img src="assets/brandguidelines/page-50.jpg" alt="Shopping Bag page." loading="lazy"></div>
           </div>
         </div>
         <div class="flipbook__controls">
-          <button type="button" class="flipbook__btn" data-flipbook-prev aria-label="Previous page">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <span class="flipbook__count"><span data-flipbook-current>1</span> / <span data-flipbook-total>5</span></span>
-          <button type="button" class="flipbook__btn" data-flipbook-next aria-label="Next page">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 5 L16 12 L9 19" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
+          <span class="flipbook__count"><span data-flipbook-current>1</span> / <span data-flipbook-total>50</span></span>
         </div>
       </div>
 
@@ -272,6 +315,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/SplitText.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
-<script src="script.js?v=220"></script>
+<script src="script.js?v=223"></script>
 </body>
 </html>
