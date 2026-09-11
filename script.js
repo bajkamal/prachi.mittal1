@@ -1136,22 +1136,28 @@
   }
 
   /* ---------------- Testimonials accordion ----------------
-     Exactly one card expanded at a time — click a collapsed one to
-     expand it and collapse whichever was open. aria-expanded is both
-     the a11y state and what styles.css keys its CSS off of, so there
-     isn't a separate visual-only class to keep in sync with it.
-     .testimonial-row is wide enough to need its own horizontal scroll
-     below ~860px (7 cards, one expanded, don't all fit) — scrolling
-     the newly-expanded card into view there is what keeps this
-     feeling like the same considered interaction as desktop, where it
-     always just fits, instead of leaving a mobile visitor to hunt for
-     what they just opened. */
+     Exactly one card expanded at a time — hovering a collapsed one
+     expands it and collapses whichever was open, per direct request
+     (was click-to-expand). aria-expanded is both the a11y state and
+     what styles.css keys its CSS off of, so there isn't a separate
+     visual-only class to keep in sync with it. Also fires on focus
+     (not just mouseenter) so keyboard-only navigation still reaches
+     every card's content — hover has no equivalent for that input,
+     so this is the accessible fallback, not an extra click handler
+     nobody asked for. .testimonial-row is wide enough to need its own
+     horizontal scroll below ~860px (7 cards, one expanded, don't all
+     fit) — scrolling the newly-expanded card into view there is what
+     keeps this feeling like the same considered interaction as
+     desktop, where it always just fits, instead of leaving a mobile
+     visitor (hovering isn't a thing on touch anyway; tapping still
+     focuses the button, which fires this the same as a desktop hover
+     would) to hunt for what they just opened. */
   function initTestimonials() {
     const cards = gsap.utils.toArray('.testimonial-card');
     if (!cards.length) return;
 
     cards.forEach((card) => {
-      card.addEventListener('click', () => {
+      const expand = () => {
         if (card.getAttribute('aria-expanded') === 'true') return;
         cards.forEach((c) => c.setAttribute('aria-expanded', c === card ? 'true' : 'false'));
         card.scrollIntoView({
@@ -1159,7 +1165,9 @@
           inline: 'nearest',
           block: 'nearest',
         });
-      });
+      };
+      card.addEventListener('mouseenter', expand);
+      card.addEventListener('focus', expand);
     });
   }
 
